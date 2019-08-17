@@ -95,11 +95,11 @@ module Sandbox
         @shell.context = "/" if @shell.context.empty?
         return
 
-      when /^path$/
+      when "path"
         @shell.puts "Current path #{@shell.context}"
         return
           
-      when /^q(uit)?$/
+      when "quit"
         exit
 
       when "set"
@@ -577,15 +577,16 @@ module Sandbox
   
   class ContextChat < ContextBase
     def initialize(game, shell)
-      @rooms = Array.new
+      @rooms = Hash.new
       super(game, shell)
       @commands.merge!({
                          "open <room>" => "Open room",
-                         "close <id>" => "Close room",
+                         "close <room>" => "Close room",
                          "list" => "List opened rooms",
-                         "say <id> <text>" => "Say to the room",
-                         "talk <id>" => "Talk in the room"
+                         "say <room> <text>" => "Say to the room",
+                         "talk <room>" => "Talk in the room"
                        })
+      @mutex = Mutex.new
     end
 
     def exec(words)
@@ -598,17 +599,21 @@ module Sandbox
           return
         end
 
-        room = words[1].to_i
-        if room.nil?
+        if words[1].nil?
           @shell.puts "#{cmd}: Specify room ID"
           return
         end
 
-        @rooms.append([
-                        room,
-                        Thread.new {chat(room)},
-                      ])
-
+        room = words[1].to_i
+        if @rooms.key?(room)
+          @shell.puts("#{cmd}: Room #{room} already opened")
+          return
+        end
+        
+        @rooms[room] = [
+          Thread.new {chat(room)},
+          String.new,
+        ]
         return
 
       when "list"
@@ -618,76 +623,86 @@ module Sandbox
         end
         
         @shell.puts "Opened rooms:"
-        @rooms.each_index do |i|
-          @shell.puts " %-3d .. %d" % [i, @rooms[i][0]]
+        @rooms.each_key do |k|
+          @shell.puts " \e[1;33m\u2022\e[0m %d" % k
         end
         return
         
       when "close"
-        room = words[1].to_i
-        if room.nil?
+        if words[1].nil?
           @shell.puts "#{cmd}: Specify room ID"
           return
         end
 
-        if @rooms[room].nil?
+        room = words[1].to_i
+        unless @rooms.key?(room)
           @shell.puts "#{cmd}: No such opened room"
           return
         end
 
-        @rooms[room][1].kill
-        @rooms.delete_at(room)
+        @rooms[room][0].kill
+        @rooms.delete(room)
         return
 
       when "say"
-        room = words[1].to_i
-        if room.nil?
+        if words[1].nil?
           @shell.puts "#{cmd}: Specify room ID"
           return
         end
 
+        room = words[1].to_i
         if words[2].nil?
           @shell.puts "#{cmd}: Specify message"
           return
         end
 
-        if @rooms[room].nil?
+        unless @rooms.key?(room)
           @shell.puts("#{cmd}: No such opened room")
           return
         end
-        
-        response = @game.cmdChatSend(@rooms[room][0], words[2..-1].join(" "))
-        unless response
-          @shell.log("Chat send", :error)
-          return
-        end        
+
+        response = nil
+        @mutex.synchronize do
+          response = @game.cmdChatSend(room, words[2..-1].join(" "), @rooms[room][1])
+          unless response
+            @shell.log("Chat send", :error)
+            return
+          end
+
+          logMessages(room, response)
+        end
         return
 
       when "talk"
-        room = words[1].to_i
-        if room.nil?
+        if words[1].nil?
           @shell.puts("#{cmd}: Specify room ID")
           return
         end
 
-        if @rooms[room].nil?
+        room = words[1].to_i
+        unless @rooms.key?(room)
           @shell.puts("#{cmd}: No such opened room")
           return
         end
 
+        @shell.puts("Enter ! to quit")
         loop do
-          message = Readline.readline("#{@rooms[room][0]}: ", true)
+          message = Readline.readline("#{room} \e[1;33m\u2765\e[0m ", true)
           break if message.nil?
           message.strip!
           next if message.empty?
           break if message == "!"
-          response = @game.cmdChatSend(@rooms[room][0], message)
-          unless response
-            @shell.log("Chat send", :error)
-            next
-          end        
+          response = nil
+          @mutex.synchronize do
+            response = @game.cmdChatSend(room, message, @rooms[room][1])
+            unless response
+              @shell.log("Chat send", :error)
+              next
+            end
+
+            logMessages(room, response)
+          end
         end
-        
         return
         
       end
@@ -695,22 +710,31 @@ module Sandbox
       super(words)
     end
 
+    def logMessages(room, data)
+      data.split(";").reverse.each do |record|
+        fields = record.split(",")
+        @shell.log("(%d) %s: %s" % [room, fields[1], fields[2]], :chat)
+        @rooms[room][1] = fields[0]
+      end
+    end
+    
     def chat(room)
-      last = String.new
       loop do
-        response = @game.cmdChatDisplay(room, last)
-        if response
-          response.split(";").reverse.each do |record|
-            fields = record.split(",")
-            @shell.log("(%d) %s: %s" % [room, fields[1], fields[2]], :chat)
-            last = fields[0]
+        response = nil
+        @mutex.synchronize do
+          response = @game.cmdChatDisplay(room, @rooms[room][1])
+          if response
+            logMessages(room, response)
+          else
+            @shell.log("Chat display (#{room.to_s})", :error)
           end
-        else
-          @shell.log("Chat display (#{room.to_s})", :error)
         end
 
         sleep(@game.appSettings["chat_refresh_interval"].to_i)
       end
+    rescue
+      @shell.log("Chat room #{room} terminated", :error)
+      @rooms.delete(room)
     end
   end
 
