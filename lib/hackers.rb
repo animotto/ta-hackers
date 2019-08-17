@@ -56,6 +56,19 @@ module Trickster
         return response.body
       end
 
+      def normalizeData(data, dir = true)
+        if dir
+          data.gsub!("\x01", ",")
+          data.gsub!("\x02", ";")
+          data.gsub!("\x03", "@")
+        else
+          data.gsub!(",", "\x01")
+          data.gsub!(";", "\x02")
+          data.gsub!("@", "\x03")
+        end
+        return data
+      end
+      
       def cmdTransLang
         url = "i18n_translations_get_language=1" +
               "&language_code=#{@config["language"]}" +

@@ -663,7 +663,11 @@ module Sandbox
 
         response = nil
         @mutex.synchronize do
-          response = @game.cmdChatSend(room, words[2..-1].join(" "), @rooms[room][1])
+          response = @game.cmdChatSend(
+            room,
+            @game.normalizeData(words[2..-1].join(" "), false),
+            @rooms[room][1],
+          )
           unless response
             @shell.log("Chat send", :error)
             return
@@ -694,7 +698,11 @@ module Sandbox
           break if message == "!"
           response = nil
           @mutex.synchronize do
-            response = @game.cmdChatSend(room, message, @rooms[room][1])
+            response = @game.cmdChatSend(
+              room,
+              @game.normalizeData(message, true),
+              @rooms[room][1],
+            )
             unless response
               @shell.log("Chat send", :error)
               next
@@ -713,7 +721,14 @@ module Sandbox
     def logMessages(room, data)
       data.split(";").reverse.each do |record|
         fields = record.split(",")
-        @shell.log("(%d) %s: %s" % [room, fields[1], fields[2]], :chat)
+        @shell.log(
+          "(%d) %s: %s" % [
+            room,
+            fields[1],
+            @game.normalizeData(fields[2]),
+          ],
+          :chat,
+        )
         @rooms[room][1] = fields[0]
       end
     end
