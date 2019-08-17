@@ -665,7 +665,7 @@ module Sandbox
         @mutex.synchronize do
           response = @game.cmdChatSend(
             room,
-            @game.normalizeData(words[2..-1].join(" "), false),
+            words[2..-1].join(" "),
             @rooms[room][1],
           )
           unless response
@@ -700,7 +700,7 @@ module Sandbox
           @mutex.synchronize do
             response = @game.cmdChatSend(
               room,
-              @game.normalizeData(message, true),
+              message,
               @rooms[room][1],
             )
             unless response
