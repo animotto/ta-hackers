@@ -227,10 +227,23 @@ module Trickster
               "&app_version=#{@config["version"]}"
         response = request(url)
         return false unless response
-        return response
+        data = Array.new
+        response.force_encoding("utf-8")
+        records = response.split(";")
+        records.each do |record|
+          fields = record.split(",")
+          data.append({
+                        "datetime" => fields[0],
+                        "nick" => fields[1],
+                        "message" => normalizeData(fields[2]),
+                        "id" => fields[3].to_i,
+                      })
+        end
+        return data.reverse
       end
 
       def cmdChatSend(room, message, last = "")
+        message = normalizeData(message, true)
         url = "chat_send" +
               "&room=#{room.to_s}" +
               "&last_message=#{last}" +
@@ -239,7 +252,19 @@ module Trickster
               "&app_version=#{@config["version"]}"
         response = request(url)
         return false unless response
-        return response
+        data = Array.new
+        response.force_encoding("utf-8")
+        records = response.split(";")
+        records.each do |record|
+          fields = record.split(",")
+          data.append({
+                        "datetime" => fields[0],
+                        "nick" => fields[1],
+                        "message" => normalizeData(fields[2]),
+                        "id" => fields[3].to_i,
+                      })
+        end
+        return data.reverse
       end
     end
   end

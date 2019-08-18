@@ -5,7 +5,8 @@ class Chatbot < Sandbox::Script
   DATA_DIR ||= "#{Sandbox::ContextScript::SCRIPTS_DIR}/chatbot"
   SLEEP_TIME ||= 10
   FLOOD_TIME ||= 15
-
+  USER_REPEATS ||= 4
+  
   attr_accessor :commands, :game, :shell,
                 :room, :users, :userTimers
   
@@ -30,9 +31,23 @@ class Chatbot < Sandbox::Script
       "привет" => [CmdHello.new(self), true],
       "!путин" => [CmdPutin.new(self), true],
     }
+    @commandsRandom = [
+      "!считалочка",
+      "!рулетка",
+      "!печенька",
+      "!топ",
+      "!лента",
+      "!хабр",
+      "!лор",
+      "!баш",
+      "!фраза",
+      "!анекдот",
+      "!курс",
+    ]
     @room = args[0]
     @users = Hash.new
     @userTimers = Hash.new
+    @userRepeats = Hash.new
     @last = String.new
   end
   
@@ -46,30 +61,38 @@ class Chatbot < Sandbox::Script
     @shell.log("The bot listens room #{@room}", :script)
     loop do
       sleep(SLEEP_TIME)
-      next unless data = @game.cmdChatDisplay(@room, @last)
-      data = @game.normalizeData(data)
-      data.force_encoding("utf-8")
-      records = data.split(";").reverse
-      records.each_index do |i|
-        fields = records[i].split(",")
-        nick = fields[1]
-        cmd = fields[2].downcase
-        id = fields[3]
-        @users[id] = nick unless id.to_i == @game.config["id"]
+      next unless messages = @game.cmdChatDisplay(@room, @last)
+      messages.each do |message|
+        cmd = message["message"].downcase
+        @users[message["id"]] = message["nick"] unless message["id"] == @game.config["id"]
         if @last.empty?
-          if i == records.length - 1
-            @last = fields[0]
+          if message == messages.last
+            @last = message["datetime"]
             break
           end
           next
         end
         
-        @last = fields[0]
-        next if id = @game.config["id"]
-        next if @userTimers.key?(id) && Time.now - @userTimers[id] <= FLOOD_TIME
+        @last = message["datetime"]
+        next if message["id"] = @game.config["id"]
+        next if @userTimers.key?(message["id"]) && Time.now - @userTimers[message["id"]] <= FLOOD_TIME
+
+        unless @commands.key?(cmd)
+          if @userRepeats.key?(message["id"])
+            @userRepeats[message["id"]] += 1          
+          else
+            @userRepeats.clear
+            @userRepeats[message["id"]] = 1
+          end
+          if @userRepeats[message["id"]] >= USER_REPEATS
+            @userRepeats.clear
+            cmd = @commandsRandom.sample
+          end
+        end
+        
         next unless @commands.key?(cmd)
-        @commands[cmd][0].exec(nick, cmd, id)
-        @userTimers[id] = Time.now
+        @commands[cmd][0].exec(message)
+        @userTimers[message["id"]] = Time.now
       end
     end
   end
@@ -80,7 +103,7 @@ class CmdBase
     @script = script
   end
 
-  def exec(nick, cmd, id)
+  def exec(message)
   end
 
   def rss(host, port, url)
@@ -93,7 +116,7 @@ class CmdBase
 end
 
 class CmdHelp < CmdBase
-  def exec(nick, cmd, id)
+  def exec(message)
     msg = "[b][77a9ff]ВОТ ЧТО Я УМЕЮ: "
     @script.commands.each do |k, v|
       msg += "#{k} " unless v[1]
@@ -103,7 +126,7 @@ class CmdHelp < CmdBase
 end
 
 class CmdFormat < CmdBase
-  def exec(nick, cmd, id)
+  def exec(message)
     msg = "[b][ffffff][ b ] - жирный, [ i ] - курсив, [ u ] - подчеркнутый, [ s ] - зачёркнутый, [rrggbb] - цвет в HEX формате"
     @script.game.cmdChatSend(@script.room, msg)
   end
@@ -118,7 +141,7 @@ class CmdCounting < CmdBase
     "КАК НА НАШЕМ СЕНОВАЛЕ, ДВЕ ЛЯГУШКИ НОЧЕВАЛИ. УТРОМ ВСТАЛИ, ЩЕЙ ПОЕЛИ, И ТЕБЕ % ВОДИТЬ ВЕЛЕЛИ!",
     "В ПОЛЕ МЫ НАШЛИ РОМАШКУ, ВАСИЛЕК, ГВОЗДИКУ, КАШКУ, КОЛОКОЛЬЧИК, МАК, ВЬЮНОК... НАЧИНАЙ % ПЛЕСТИ ВЬЮНОК!",
   ]
-  def exec(nick, cmd, id)
+  def exec(message)
     msg = "[b][00ff00]#{COUNTINGS.sample}"
     msg.gsub!("%", "[ffff00]#{@script.users[@script.users.keys.sample]}[00ff00]")
     @script.game.cmdChatSend(@script.room, msg)
@@ -126,22 +149,22 @@ class CmdCounting < CmdBase
 end
 
 class CmdRoulette < CmdBase
-  def exec(nick, cmd, id)
+  def exec(message)
     if rand(1..6) == 3
-      msg = "[b][ffff00]#{nick} [00ff00] ПИФ ПАФ! ТЫ УБИТ!"
+      msg = "[b][ffff00]#{message["nick"]} [00ff00] ПИФ ПАФ! ТЫ УБИТ!"
     else
-      msg = "[b][ffff00]#{nick} [00ff00]В ЭТОТ РАЗ ТЕБЕ ПОВЕЗЛО!"
+      msg = "[b][ffff00]#{message["nick"]} [00ff00]В ЭТОТ РАЗ ТЕБЕ ПОВЕЗЛО!"
     end
     @script.game.cmdChatSend(@script.room, msg)
   end
 end
 
 class CmdCookie < CmdBase
-  def exec(nick, cmd, id)
+  def exec(message)
     if rand(0..1) == 0
-      msg = "[00ff00]ТЫ МОЛОДЕЦ [ffff00]#{nick}[00ff00]! ВОТ ТВОЯ ПЕЧЕНЬКА!"
+      msg = "[00ff00]ТЫ МОЛОДЕЦ [ffff00]#{message["nick"]}[00ff00]! ВОТ ТВОЯ ПЕЧЕНЬКА!"
     else
-      msg = "[00ff00]ФИГУШКИ ТЕБЕ [ffff00]#{nick}[00ff00], А НЕ ПЕЧЕНЬКА!"
+      msg = "[00ff00]ФИГУШКИ ТЕБЕ [ffff00]#{message["nick"]}[00ff00], А НЕ ПЕЧЕНЬКА!"
     end
     @script.game.cmdChatSend(@script.room, msg)
   end
@@ -158,9 +181,9 @@ class CmdHello < CmdBase
     "ВИДИЛИСЬ %!",
   ]
   
-  def exec(nick, cmd, id)
+  def exec(message)
     msg = "[b][6aab7f]#{GREETINGS.sample} ЕСЛИ ТЕБЕ ИНТЕРЕСНО ЧТО Я УМЕЮ, ОТПРАВЬ В ЧАТ [ff35a0]!помощь"
-    msg.gsub!("%", "[ff35a0]#{nick}[6aab7f]")
+    msg.gsub!("%", "[ff35a0]#{message["nick"]}[6aab7f]")
     @script.game.cmdChatSend(@script.room, msg)
   end
 end
@@ -180,14 +203,14 @@ class CmdClick < CmdBase
     File.write(DATA_FILE, JSON.generate([@counter, @users])) unless File.file?(DATA_FILE)
   end
 
-  def exec(nick, cmd, id)
+  def exec(message)
     begin
       @counter, @users = JSON.parse(File.read(DATA_FILE))
     rescue
     end
     @counter += 1
-    @users[id] = [nick, 0] unless @users.key?(id)
-    @users[id] = [nick, @users[id][1] + 1]
+    @users[message["id"]] = [message["nick"], 0] unless @users.key?(message["id"])
+    @users[message["id"]] = [message["nick"], @users[message["id"]][1] + 1]
     msg = "[b][ff3500]#{MESSAGES.sample} ПРИСОЕДИНЯЙСЯ!"
     msg.gsub!("%", "[ff9ea1]#{@counter}[ff3500]")
     @script.game.cmdChatSend(@script.room, msg)
@@ -199,7 +222,7 @@ class CmdClick < CmdBase
 end
 
 class CmdTop < CmdBase
-  def exec(nick, cmd, id)
+  def exec(message)
     counter = 0
     users = Hash.new
     begin
@@ -207,7 +230,7 @@ class CmdTop < CmdBase
     rescue
     end
     if users.nil? || users.empty?
-      msg = "[b][7aff38]В ДАННЫЙ МОМЕНТ ХАКЕРЮГ НЕТ, ТЫ МОЖЕШЬ СТАТЬ ПЕРВЫМ!"
+      msg = "[b][7aff38]ЕЩЕ НИКТО НЕ СБАЦАЛ, ТЫ МОЖЕШЬ СТАТЬ ПЕРВЫМ!"
     else
       c = Array.new
       users.each do |k, v|
@@ -224,7 +247,7 @@ class CmdTop < CmdBase
 end
 
 class CmdLenta < CmdBase
-  def exec(nick, cmd, id)
+  def exec(message)
     if feed = rss("lenta.ru", 443, "/rss/news")
       msg = "[b][39fe12]" + feed.items.sample.title
       @script.game.cmdChatSend(@script.room, msg)
@@ -233,7 +256,7 @@ class CmdLenta < CmdBase
 end
 
 class CmdHabr < CmdBase
-  def exec(nick, cmd, id)
+  def exec(message)
     if feed = rss("habr.com", 443, "/ru/rss/news/")
       msg = "[b][7aff51]" + feed.items.sample.title
       @script.game.cmdChatSend(@script.room, msg)
@@ -242,7 +265,7 @@ class CmdHabr < CmdBase
 end
 
 class CmdLor < CmdBase
-  def exec(nick, cmd, id)
+  def exec(message)
     if feed = rss("www.linux.org.ru", 443, "/section-rss.jsp?section=1")
       msg = "[b][81f5d0]" + feed.items.sample.title
       @script.game.cmdChatSend(@script.room, msg)
@@ -251,7 +274,7 @@ class CmdLor < CmdBase
 end
 
 class CmdBash < CmdBase
-  def exec(nick, cmd, id)
+  def exec(message)
     if feed = rss("bash.im", 443, "/rss/")
       data = feed.items.sample.description
       data.gsub!(/<.*>/, " ")
@@ -262,7 +285,7 @@ class CmdBash < CmdBase
 end
 
 class CmdPhrase < CmdBase
-  def exec(nick, cmd, id)
+  def exec(message)
     if feed = rss("www.aphorism.ru", 443, "/rss/aphorism-new.rss")
       msg = "[b][a09561]" + feed.items.sample.description
       @script.game.cmdChatSend(@script.room, msg)
@@ -271,7 +294,7 @@ class CmdPhrase < CmdBase
 end
 
 class CmdJoke < CmdBase
-  def exec(nick, cmd, id)
+  def exec(message)
     if feed = rss("www.anekdot.ru", 443, "/rss/export_bestday.xml")
       data = feed.items.sample.description
       data.gsub!(/<.*>/, "")
@@ -282,7 +305,7 @@ class CmdJoke < CmdBase
 end
 
 class CmdCurrency < CmdBase
-  def exec(nick, cmd, id)
+  def exec(message)
     if feed = rss("currr.ru", 80, "/rss/")
       data = feed.items[-1].description
       data.gsub!(/<.*>/, "")
@@ -294,7 +317,7 @@ class CmdCurrency < CmdBase
 end
 
 class CmdPutin < CmdBase
-  def exec(nick, cmd, id)
+  def exec(message)
     msg = "[s]Путин думает о нас! Путин заботится о нас! До здравствует Путин!"
     @script.game.cmdChatSend(@script.room, msg)
   end

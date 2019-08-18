@@ -855,18 +855,17 @@ module Sandbox
       super(words)
     end
 
-    def logMessages(room, data)
-      data.split(";").reverse.each do |record|
-        fields = record.split(",")
+    def logMessages(room, messages)
+      messages.each do |message|
         @shell.log(
           "(%d) %s: %s" % [
             room,
-            fields[1],
-            @game.normalizeData(fields[2]),
+            message["nick"],
+            message["message"],
           ],
           :chat,
         )
-        @rooms[room][1] = fields[0]
+        @rooms[room][1] = message["datetime"]
       end
     end
     
@@ -874,9 +873,9 @@ module Sandbox
       loop do
         response = nil
         @mutex.synchronize do
-          response = @game.cmdChatDisplay(room, @rooms[room][1])
-          if response
-            logMessages(room, response)
+          messages = @game.cmdChatDisplay(room, @rooms[room][1])
+          if messages
+            logMessages(room, messages)
           else
             @shell.log("Chat display (#{room.to_s})", :error)
           end
