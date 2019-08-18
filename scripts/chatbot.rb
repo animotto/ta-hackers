@@ -74,7 +74,7 @@ class Chatbot < Sandbox::Script
         end
         
         @last = message["datetime"]
-        next if message["id"] = @game.config["id"]
+        next if message["id"] == @game.config["id"]
         next if @userTimers.key?(message["id"]) && Time.now - @userTimers[message["id"]] <= FLOOD_TIME
 
         unless @commands.key?(cmd)
