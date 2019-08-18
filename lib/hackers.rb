@@ -3,6 +3,30 @@ module Trickster
     require "net/http"
     require "digest"
     require "base64"
+
+    NODES_TYPES = {
+      7 => "Core",
+      8 => "Internet",
+      11 => "Server farm",
+      12 => "Database",
+      13 => "Bitcoin Mine",
+      14 => "Bitcoin Mixer",
+      15 => "Sentry",
+      22 => "Compiler",
+      27 => "AI Hawk",
+    }
+    PROGRAMS_TYPES = {
+      3 => "Beam cannon",
+      4 => "Shuriken",
+      5 => "Worms",
+      6 => "Blaster",
+      8 => "Data leech",
+      9 => "Battering Ram",
+      12 => "Protector",
+      11 => "Ice wall",
+      18 => "Access",
+      22 => "AI Hawk",
+    }
     
     class Game
       attr_accessor :config, :appSettings, :transLang
@@ -148,12 +172,51 @@ module Trickster
         nodes = sections[0].split(";")
         nodes.each do |node|
           fields = node.split(",")
-          data["nodes"][fields[0]] = {
-            "type" => fields[2],
-            "level" => fields[3],
+          data["nodes"][fields[0].to_i] = {
+            "type" => fields[2].to_i,
+            "level" => fields[3].to_i,
           }
         end
 
+        data["profile"] = Hash.new
+        profile = sections[2].split(";").first.split(",")
+        data["profile"] = {
+          "id" => profile[0].to_i,
+          "name" => profile[1],
+          "money" => profile[2].to_i,
+          "bitcoin" => profile[3].to_i,
+          "credit" => profile[4].to_i,
+          "reputation" => profile[9].to_i,
+          "thread" => profile[10].to_i,
+          "country" => profile[13].to_i,
+        }
+
+        data["programs"] = Hash.new
+        programs = sections[3].split(";")
+        programs.each do |program|
+          fields = program.split(",")
+          data["programs"][fields[0].to_i] = {
+            "type" => fields[2].to_i,
+            "level" => fields[3].to_i,
+            "amount" => fields[4].to_i,
+          }
+        end
+
+        data["readme"] = sections[11].split(";").first
+
+        data["logs"] = Hash.new
+        logs = sections[9].split(";")
+        logs.each do |log|
+          fields = log.split(",")
+          data["logs"][fields[0].to_i] = {
+            "date" => fields[1],
+            "id" => fields[2].to_i,
+            "target" => fields[3].to_i,
+            "idName" => fields[9],
+            "targetName" => fields[10],
+          }
+        end
+        
         return data
       end
       

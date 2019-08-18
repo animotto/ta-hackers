@@ -13,6 +13,7 @@ module Sandbox
       @contexts = {
         "/" => ContextRoot.new(@game, self),
         "/query" => ContextQuery.new(@game, self),
+        "/net" => ContextNet.new(@game, self),
         "/script" => ContextScript.new(@game, self),
         "/chat" => ContextChat.new(@game, self),
       }
@@ -141,6 +142,8 @@ module Sandbox
       super(game, shell)
       @commands.merge!({
                          "[query]" => "Analyze queries and data dumps",
+                         "[net]" => "Network",
+                         "[script]" => "Scripts",
                          "[chat]" => "Internal chat",
                          "connect" => "Connect to the server",
                          "trans" => "Language translations",
@@ -152,7 +155,7 @@ module Sandbox
       cmd = words[0].downcase
       case cmd
 
-      when "query", "script", "chat"
+      when "query", "net", "script", "chat"
         @shell.context = "/#{cmd}"
         return
 
@@ -205,28 +208,7 @@ module Sandbox
           return
         end
 
-        @game.config["sid"] = auth["sid"]
-        
-        return
-
-      when "net"
-         if @game.config["sid"].nil?
-          @shell.puts("#{cmd}: No session ID")
-          return
-        end
-        
-        msg = "Get network and programms"
-        if net = @game.cmdNetGetForMaint
-          @shell.log(msg, :success)
-        else
-          @shell.log(msg, :error)
-          return
-        end
-
-        @shell.puts("Network and programms:")
-        net["nodes"].each do |k, v|
-          @shell.puts(" %-10s .. %s %s" % [k, v["type"], v["level"]])
-        end
+        @game.config["sid"] = auth["sid"]        
         return
         
       end
@@ -468,11 +450,164 @@ module Sandbox
     end
   end
 
+  class ContextNet < ContextBase
+    def initialize(game, shell)
+      super(game, shell)
+      @commands.merge!({
+                         "profile" => "Show profile",
+                         "readme" => "Show readme",
+                         "node" => "Show nodes",
+                         "prog" => "Show programs",
+                         "log" => "Show logs",
+                       })
+    end
+
+    def exec(words)
+      cmd = words[0].downcase
+      case cmd
+
+      when "profile", "readme", "node", "prog", "log"
+        if @game.config["sid"].nil?
+          @shell.puts("#{cmd}: No session ID")
+          return
+        end
+
+        msg = "Network maintenance"
+        if net = @game.cmdNetGetForMaint
+          @shell.log(msg, :success)
+        else
+          @shell.log(msg, :error)
+          return
+        end
+
+        case cmd
+
+        when "profile"
+          @shell.puts("\e[1;35m\u2022 Profile\e[0m")
+          net["profile"].each do |k, v|
+            @shell.puts("  %s: %s" % [k.capitalize, v])
+          end
+          return
+
+        when "readme"
+          @shell.puts("\e[1;35m\u2022 Readme\e[0m")
+          @shell.puts("  #{net["readme"]}")
+          return
+
+        when "node"
+          @shell.puts("\e[1;35m\u2022 Nodes\e[0m")
+          @shell.puts(
+            "  \e[35m%-12s %-4s %-5s %-12s\e[0m" % [
+              "ID",
+              "Type",
+              "Level",
+              "Name",
+            ]
+          )
+
+          net["nodes"].each do |k, v|
+            name = Trickster::Hackers::NODES_TYPES[v["type"]]
+            name = "UNKNOWN" if name.nil?
+            @shell.puts(
+              "  %-12s %-4s %-5s %-12s" % [
+                k,
+                v["type"],
+                v["level"],
+                name,
+              ]
+            )
+          end
+          return
+
+        when "prog"
+          @shell.puts("\e[1;35m\u2022 Programs\e[0m")
+          @shell.puts(
+            "  \e[35m%-12s %-4s %-6s %-5s %-12s\e[0m" % [
+              "ID",
+              "Type",
+              "Amount",
+              "Level",
+              "Name",
+            ]
+          )
+          net["programs"].each do |k, v|
+            name = Trickster::Hackers::PROGRAMS_TYPES[v["type"]]
+            name = "UNKNOWN" if name.nil?
+            @shell.puts(
+              "  %-12d %-4d %-6d %-5d %-12s" % [
+                k,
+                v["type"],
+                v["amount"],
+                v["level"],
+                name,
+              ]
+            )
+          end
+          return
+
+        when "log"
+          @shell.puts("\e[1;35m\u2022 Security log\e[0m")
+          @shell.puts(
+            "  \e[35m%-12s %-19s %-12s %s\e[0m" % [
+              "ID",
+              "Date",
+              "Attacker",
+              "Name",
+            ]
+          )
+          logsSecurity = net["logs"].select do |k, v|
+            v["target"] == @game.config["id"]
+          end
+          logsSecurity = logsSecurity.to_a.reverse.to_h
+          logsSecurity.each do |k, v|
+            @shell.puts(
+              "  %-12s %-19s %-12s %s" % [
+                k,
+                v["date"],
+                v["id"],
+                v["idName"],
+              ]
+            )
+          end          
+
+          @shell.puts
+          @shell.puts("\e[1;35m\u2022 Hacks\e[0m")
+          @shell.puts(
+            "  \e[35m%-12s %-19s %-12s %s\e[0m" % [
+              "ID",
+              "Date",
+              "Target",
+              "Name",
+            ]
+          )
+          logsHacks = net["logs"].select do |k, v|
+            v["id"] == @game.config["id"]
+          end
+          logsHacks = logsHacks.to_a.reverse.to_h
+          logsHacks.each do |k, v|
+            @shell.puts(
+              "  %-12s %-19s %-12s %s" % [
+                k,
+                v["date"],
+                v["target"],
+                v["targetName"],
+              ]
+            )
+          end
+          return
+          
+        end
+        return
+
+      end
+      
+      super(words)
+    end
+  end
+  
   class ContextScript < ContextBase
     SCRIPTS_DIR = "scripts"
 
-    attr_reader :SCRIPTS_DIR
-    
     def initialize(game, shell)
       super(game, shell)
       @commands.merge!({

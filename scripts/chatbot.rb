@@ -6,7 +6,6 @@ class Chatbot < Sandbox::Script
   SLEEP_TIME ||= 10
   FLOOD_TIME ||= 15
 
-  attr_reader :DATA_DIR
   attr_accessor :commands, :game, :shell,
                 :room, :users, :userTimers
   
@@ -152,8 +151,6 @@ class CmdClick < CmdBase
     "ХАКЕРЮГИ СБАЦАЛИ",
   ]
 
-  attr_reader :DATA_FILE
-  
   def initialize(script)
     super(script)
     @counter = 0
