@@ -27,7 +27,7 @@ class Chatbot < Sandbox::Script
       "!фраза" => [CmdPhrase.new(self)],
       "!анекдот" => [CmdJoke.new(self)],
       "!курс" => [CmdCurrency.new(self)],
-      "!привет" => [CmdHello.new(self)],
+      "привет" => [CmdHello.new(self), true],
       "!путин" => [CmdPutin.new(self), true],
     }
     @room = args[0]
@@ -109,8 +109,17 @@ class CmdFormat < CmdBase
 end
 
 class CmdCounting < CmdBase
+  COUNTINGS ||= [
+    "ШИШЕЛ-МЫШЕЛ, СЕЛ НА КРЫШУ, ШИШЕЛ-МЫШЕЛ, ВЗЯЛ % И ВЫШЕЛ!",
+    "ПЛЫЛ ПО МОРЮ ЧЕМОДАН, В ЧЕМОДАНЕ БЫЛ ДИВАН, НА ДИВАНЕ ЕХАЛ СЛОН. КТО НЕ ВЕРИТ - % ВЫЙДИ ВОН!",
+    "ЗА СТЕКЛЯННЫМИ ДВЕРЯМИ СИДИТ МИШКА С ПИРОГАМИ. МИШКА, МИШЕНЬКА ДРУЖОК! СКОЛЬКО СТОИТ ПИРОЖОК? ПИРОЖОК-ТО ПО РУБЛЮ, ВЫХОДИ %, Я ТЕБЯ ЛЮБЛЮ!",
+    "ПОД ГОРОЮ У РЕКИ ЖИВУТ ГНОМЫ-СТАРИКИ. У НИХ КОЛОКОЛ ВЕСИТ, ПОЗОЛОЧЕННЫЙ ЗВОНИТ: ДИГИ-ДИГИ-ДИГИ-ДОН - ВЫХОДИ % СКОРЕЕ ВОН!",
+    "КАК НА НАШЕМ СЕНОВАЛЕ, ДВЕ ЛЯГУШКИ НОЧЕВАЛИ. УТРОМ ВСТАЛИ, ЩЕЙ ПОЕЛИ, И ТЕБЕ % ВОДИТЬ ВЕЛЕЛИ!",
+    "В ПОЛЕ МЫ НАШЛИ РОМАШКУ, ВАСИЛЕК, ГВОЗДИКУ, КАШКУ, КОЛОКОЛЬЧИК, МАК, ВЬЮНОК... НАЧИНАЙ % ПЛЕСТИ ВЬЮНОК!",
+  ]
   def exec(nick, cmd, id)
-    msg = "[b][00ff00]ШИШЕЛ-МЫШЕЛ, СЕЛ НА КРЫШКУ, ШИШЕЛ-МЫШЕЛ, ВЗЯЛ И ВЫШЕЛ [ffff00]#{@script.users[@script.users.keys.sample]}!"
+    msg = "[b][00ff00]#{COUNTINGS.sample}"
+    msg.gsub!("%", "[ffff00]#{@script.users[@script.users.keys.sample]}[00ff00]")
     @script.game.cmdChatSend(@script.room, msg)
   end
 end
@@ -138,17 +147,29 @@ class CmdCookie < CmdBase
 end
 
 class CmdHello < CmdBase
+  GREETINGS ||= [
+    "ПРИВЕТ %!",
+    "АЛОХА %!",
+    "ЧО КАК %? КАК САМ?",
+    "КАВАБАНГА %!",
+    "КАК НАМ ТЕБЯ НЕ ХВАТАЛО %!",
+    "ПРИВЕТСТВУЮ %!",
+    "ВИДИЛИСЬ %!",
+  ]
+  
   def exec(nick, cmd, id)
-      msg = "[6aab7f]ПРИВЕТ [ff35a0]#{nick}[6aab7f]!"
+    msg = "[b][6aab7f]#{GREETINGS.sample} ЕСЛИ ТЕБЕ ИНТЕРЕСНО ЧТО Я УМЕЮ, ОТПРАВЬ В ЧАТ [ff35a0]!помощь"
+    msg.gsub!("%", "[ff35a0]#{nick}[6aab7f]")
     @script.game.cmdChatSend(@script.room, msg)
   end
 end
 
 class CmdClick < CmdBase
   DATA_FILE ||= "#{Chatbot::DATA_DIR}/click.json"
-  WHO ||= [
-    "ХАКЕРЬЁ СБАЦАЛО",
-    "ХАКЕРЮГИ СБАЦАЛИ",
+  MESSAGES ||= [
+    "ХАКЕРЮГИ СБАЦАЛИ УЖЕ % РАЗ!",
+    "ХАКЕРЬЁ НЕ СПИТ! НАБАЦАЛИ % РАЗ!",
+    "ЛАМЕРЮГИ НИКОГДА НЕ НАБАЦАЮТ % РАЗ!",
   ]
 
   def initialize(script)
@@ -166,7 +187,8 @@ class CmdClick < CmdBase
     @counter += 1
     @users[id] = [nick, 0] unless @users.key?(id)
     @users[id] = [nick, @users[id][1] + 1]
-    msg = "[b][ff3500]#{WHO.sample} УЖЕ [ff9ea1]#{@counter} [ff3500]РАЗ! ПРИСОЕДИНЯЙСЯ!"
+    msg = "[b][ff3500]#{MESSAGES.sample} ПРИСОЕДИНЯЙСЯ!"
+    msg.gsub!("%", "[ff9ea1]#{@counter}[ff3500]")
     @script.game.cmdChatSend(@script.room, msg)
     File.write(
       DATA_FILE,
