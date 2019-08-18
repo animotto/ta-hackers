@@ -471,6 +471,8 @@ module Sandbox
   class ContextScript < ContextBase
     SCRIPTS_DIR = "scripts"
 
+    attr_reader :SCRIPTS_DIR
+    
     def initialize(game, shell)
       super(game, shell)
       @commands.merge!({
@@ -500,7 +502,7 @@ module Sandbox
           return
         end
 
-        Thread.new {run(script)}
+        Thread.new {run(script, words[2..-1])}
         return
 
       when "list"
@@ -556,7 +558,7 @@ module Sandbox
       super(words)
     end
 
-    def run(script)
+    def run(script, args)
       @jobId = @jobCounter += 1
       @jobs[@jobCounter] = [
                      script,
@@ -566,7 +568,7 @@ module Sandbox
       @shell.log("Run: #{script}", :script)
       begin
         load "#{fname}"
-        eval("#{script.capitalize}.new(@game, @shell).main")
+        eval("#{script.capitalize}.new(@game, @shell, args).main")
         @shell.log("Done: #{script}", :script)
       rescue => e
         @shell.log("Error: #{script} (#{e})", :script)
@@ -754,9 +756,10 @@ module Sandbox
   end
 
   class Script
-    def initialize(game, shell)
+    def initialize(game, shell, args)
       @game = game
       @shell = shell
+      @args = args
     end
 
     def main
