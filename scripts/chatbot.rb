@@ -8,7 +8,8 @@ class Chatbot < Sandbox::Script
   USER_REPEATS ||= 4
   
   attr_accessor :commands, :game, :shell,
-                :room, :users, :userTimers
+                :room, :users, :userTimers,
+                :userRepeat
   
   def initialize(game, shell, args)
     super(game, shell, args)
@@ -30,6 +31,7 @@ class Chatbot < Sandbox::Script
       "!курс" => [CmdCurrency.new(self)],
       "привет" => [CmdHello.new(self), true],
       "!путин" => [CmdPutin.new(self), true],
+      "!город" => [CmdCity.new(self)],
     }
     @commandsRandom = [
       "!считалочка",
@@ -48,6 +50,7 @@ class Chatbot < Sandbox::Script
     @users = Hash.new
     @userTimers = Hash.new
     @userRepeats = Hash.new
+    @userRepeat = true
     @last = String.new
   end
   
@@ -61,6 +64,7 @@ class Chatbot < Sandbox::Script
     @shell.log("The bot listens room #{@room}", :script)
     loop do
       sleep(SLEEP_TIME)
+      @commands.each_value {|v| v[0].poll}
       next unless messages = @game.cmdChatDisplay(@room, @last)
       messages.each do |message|
         cmd = message["message"].downcase
@@ -75,9 +79,10 @@ class Chatbot < Sandbox::Script
         
         @last = message["datetime"]
         next if message["id"] == @game.config["id"]
-        next if @userTimers.key?(message["id"]) && Time.now - @userTimers[message["id"]] <= FLOOD_TIME
+        @commands.each_value {|v| v[0].poll(message)}
+       next if @userTimers.key?(message["id"]) && Time.now - @userTimers[message["id"]] <= FLOOD_TIME
 
-        unless @commands.key?(cmd)
+        if (not @commands.key?(cmd)) && @userRepeat
           if @userRepeats.key?(message["id"])
             @userRepeats[message["id"]] += 1          
           else
@@ -106,6 +111,9 @@ class CmdBase
   def exec(message)
   end
 
+  def poll(message = nil)
+  end
+  
   def rss(host, port, url)
     http = Net::HTTP.new(host, port)
     http.use_ssl = true if port == 443
@@ -320,5 +328,70 @@ class CmdPutin < CmdBase
   def exec(message)
     msg = "[s]Путин думает о нас! Путин заботится о нас! До здравствует Путин!"
     @script.game.cmdChatSend(@script.room, msg)
+  end
+end
+
+class CmdCity < CmdBase
+  CITIES_FILE ||= "#{Chatbot::DATA_DIR}/cities.json"
+  HINT_TIME ||= 60
+  
+  def initialize(script)
+    super(script)
+    unless File.file?(CITIES_FILE)
+      @shell.log("Can't load cities file", :script)
+      return
+    end
+    begin
+      @cities = JSON.parse(File.read(CITIES_FILE))
+    rescue JSON::ParserError => e
+      @shell.log("Invalid format of cities file: #{e}", :script)
+    end
+    @city = String.new
+  end
+  
+  def exec(message)
+    return false if @cities.nil? || (not @city.empty?)
+    @city = @cities.sample.downcase
+    @cityMasked = @city.clone
+    pos = (0..@city.length - 1).to_a.sort {rand() - 0.5}[0..((@city.length - 1) * 0.5).floor]
+    pos.each do |p|
+      @cityMasked[p] = "*"
+    end
+    @lastHint = Time.now
+    @script.userRepeat = false
+    msg = "[b][5fab73]УГАДАЙТЕ КАКОЙ Я ЗАГАДАЛ ГОРОД: [10ff10]#{@cityMasked.upcase}"
+    @script.game.cmdChatSend(@script.room, msg)
+  end
+
+  def poll(message = nil)
+    return false if @city.empty?
+
+    if not message.nil?
+      if message["message"] =~ /#{@city}/i
+        msg = "[b][7affe1]#{message["nick"]}[5fab73]УГАДАЛ ГОРОД [10ff10]#{@city.upcase}[5fab73]!"
+        @script.game.cmdChatSend(@script.room, msg)
+        @city.clear
+        @cityMasked.clear
+        @lastHint = nil
+        @script.userRepeat = true
+        return
+      end
+    else
+      if Time.now - @lastHint >= HINT_TIME
+        msg = String.new
+        if @cityMasked.scan("*").length <= 1
+          msg = "[b][5fab73]ЭХ ВЫ! НИКТО НЕ УГАДАЛ! ЭТО БЫЛ ГОРОД [10ff10]#{@city.upcase}"
+          @city.clear
+          @cityMasked.clear
+          @lastHint = nil
+          @script.userRepeat = true
+        elsif pos = @cityMasked.index("*")
+          @cityMasked[pos] = @city[pos]
+          msg = "[b][5fab73]ПОКА НИКТО НЕ УГАДАЛ, ВОТ ВАМ ПОДСКАЗКА [10ff10]#{@cityMasked.upcase}"
+          @lastHint = Time.now
+        end
+        @script.game.cmdChatSend(@script.room, msg)
+      end
+    end
   end
 end

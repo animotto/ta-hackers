@@ -831,6 +831,7 @@ module Sandbox
           message = Readline.readline("#{room} \e[1;33m\u2765\e[0m ", true)
           break if message.nil?
           message.strip!
+          Readline::HISTORY.pop if message.empty?
           next if message.empty?
           break if message == "!"
           response = nil
