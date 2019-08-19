@@ -194,7 +194,7 @@ class Chatbot < Sandbox::Script
     def exec(message)
       if feed = rss("bash.im", 443, "/rss/")
         data = feed.items.sample.description
-        data.gsub!(/<.*>/, " ")
+        data.gsub!(/<.+?>/, " ")
         msg = "[b][d5e340]" + data
         @script.game.cmdChatSend(@script.room, msg)
       end
@@ -214,7 +214,7 @@ class Chatbot < Sandbox::Script
     def exec(message)
       if feed = rss("www.anekdot.ru", 443, "/rss/export_bestday.xml")
         data = feed.items.sample.description
-        data.gsub!(/<.*>/, "")
+        data.gsub!(/<.+?>/, " ")
         msg = "[b][38bfbe]" + data
         @script.game.cmdChatSend(@script.room, msg)
       end
@@ -225,7 +225,7 @@ class Chatbot < Sandbox::Script
     def exec(message)
       if feed = rss("currr.ru", 80, "/rss/")
         data = feed.items[-1].description
-        data.gsub!(/<.*>/, "")
+        data.gsub!(/<.+?>/, " ")
         data.gsub!(/\s+/, " ")
         msg = "[b][8f4a6d]" + data
         @script.game.cmdChatSend(@script.room, msg)
