@@ -1,4 +1,6 @@
 class Checkcon < Sandbox::Script
+  INTERVAL = 60
+  
   def main
     loop do
       msg = "Check connectivity"
@@ -7,7 +9,7 @@ class Checkcon < Sandbox::Script
       else
         @shell.log(msg, :error)
       end
-      sleep(60)
+      sleep(INTERVAL)
     end
   end
 end

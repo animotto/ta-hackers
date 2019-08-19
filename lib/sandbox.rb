@@ -25,7 +25,6 @@ module Sandbox
     end
 
     def log(data, type = :info)
-      data = data.force_encoding("utf-8")
       case type
       when :error
         data = "\e[1;31m\u2718\e[22;31m #{data}\e[0m"
@@ -709,6 +708,7 @@ module Sandbox
 
         @shell.log("Killed: #{@jobs[job][0]}", :script)
         @jobs[job][1].kill
+        Object.send(:remove_const, @jobs[job][0].capitalize)
         @jobs.delete(job)
         return
         
@@ -732,6 +732,7 @@ module Sandbox
       rescue => e
         @shell.log("Error: #{script} (#{e})", :script)
       end
+      Object.send(:remove_const, script.capitalize)
       @jobs.delete(@jobId)
     end
   end

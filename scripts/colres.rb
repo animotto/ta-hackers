@@ -1,6 +1,6 @@
 class Colres < Sandbox::Script
-  INTERVAL_MIN ||= 300
-  INTERVAL_ADD ||= 120
+  INTERVAL_MIN = 300
+  INTERVAL_ADD = 120
   
   def main
     loop do
