@@ -23,9 +23,13 @@ class Chatbot < Sandbox::Script
     end
     
     def rss(host, port, url)
-      http = Net::HTTP.new(host, port)
-      http.use_ssl = true if port == 443
-      response = http.get(url)
+      begin
+        http = Net::HTTP.new(host, port)
+        http.use_ssl = true if port == 443
+        response = http.get(url)
+      rescue
+        return false
+      end
       return false unless response.code == "200"
       return RSS::Parser.parse(response.body, false)
     end
