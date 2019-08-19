@@ -175,6 +175,7 @@ module Trickster
           data["nodes"][fields[0].to_i] = {
             "type" => fields[2].to_i,
             "level" => fields[3].to_i,
+            "time" => fields[4].to_i,
           }
         end
 
@@ -218,6 +219,15 @@ module Trickster
         end
         
         return data
+      end
+
+      def cmdCollect(id)
+        url = "collect=1" +
+              "&id_node=#{id}" +
+              "&app_version=#{@config["version"]}"
+        response = request(url)
+        return false unless response
+        return true
       end
       
       def cmdChatDisplay(room, last = "")

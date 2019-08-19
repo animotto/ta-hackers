@@ -457,6 +457,7 @@ module Sandbox
                          "profile" => "Show profile",
                          "readme" => "Show readme",
                          "node" => "Show nodes",
+                         "collect <id>" => "Collect node resources",
                          "prog" => "Show programs",
                          "log" => "Show logs",
                        })
@@ -464,6 +465,7 @@ module Sandbox
 
     def exec(words)
       cmd = words[0].downcase
+
       case cmd
 
       when "profile", "readme", "node", "prog", "log"
@@ -497,10 +499,11 @@ module Sandbox
         when "node"
           @shell.puts("\e[1;35m\u2022 Nodes\e[0m")
           @shell.puts(
-            "  \e[35m%-12s %-4s %-5s %-12s\e[0m" % [
+            "  \e[35m%-12s %-4s %-5s %-12s %-12s\e[0m" % [
               "ID",
               "Type",
               "Level",
+              "Time",
               "Name",
             ]
           )
@@ -509,10 +512,11 @@ module Sandbox
             name = Trickster::Hackers::NODES_TYPES[v["type"]]
             name = "UNKNOWN" if name.nil?
             @shell.puts(
-              "  %-12s %-4s %-5s %-12s" % [
+              "  %-12d %-4d %-5d %-12d %-12s" % [
                 k,
                 v["type"],
                 v["level"],
+                v["time"],
                 name,
               ]
             )
@@ -599,6 +603,26 @@ module Sandbox
         end
         return
 
+      when "collect"
+        if words[1].nil?
+          @shell.puts("#{cmd}: Specify node ID")
+          return
+        end
+        id = words[1].to_i
+        
+        if @game.config["sid"].nil?
+          @shell.puts("#{cmd}: No session ID")
+          return
+        end
+
+        msg = "Collect"
+        if @game.cmdCollect(id)
+          @shell.log(msg, :success)
+        else
+          @shell.log(msg, :error)
+        end
+        return
+        
       end
       
       super(words)
