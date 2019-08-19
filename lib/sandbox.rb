@@ -147,6 +147,7 @@ module Sandbox
                          "connect" => "Connect to the server",
                          "trans" => "Language translations",
                          "settings" => "Application settings",
+                         "new" => "Create new account",
                        })
     end
     
@@ -208,6 +209,21 @@ module Sandbox
         end
 
         @game.config["sid"] = auth["sid"]        
+        return
+
+      when "new"
+        msg = "Player create"
+        if player = @game.cmdPlayerCreate
+          @shell.log(msg, :success)
+        else
+          @shell.log(msg, :error)
+          return
+        end
+
+        @shell.puts("\e[1;35m\u2022 New account\e[0m")
+        @shell.puts("  ID: #{player["id"]}")
+        @shell.puts("  Password: #{player["password"]}")
+        @shell.puts("  Session ID: #{player["sid"]}")
         return
         
       end

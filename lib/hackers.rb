@@ -144,6 +144,20 @@ module Trickster
         return true
       end
 
+      def cmdPlayerCreate
+        url = "player_create=1" +
+              "&app_version=#{@config["version"]}"
+        response = request(url, true, false)
+        return false unless response
+        data = Hash.new
+        records = response.split(";")
+        fields = records[0].split(",")
+        data["id"] = fields[0].to_i
+        data["password"] = fields[1]
+        data["sid"] = fields[2]
+        return data
+      end
+      
       def cmdAuthIdPassword
         url = "auth_id_password" +
               "&id_player=#{@config["id"].to_s}" +
