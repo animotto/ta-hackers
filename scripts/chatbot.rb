@@ -125,8 +125,9 @@ class Chatbot < Sandbox::Script
       rescue
       end
       @counter += 1
-      @users[message["id"]] = [message["nick"], 0] unless @users.key?(message["id"])
-      @users[message["id"]] = [message["nick"], @users[message["id"]][1] + 1]
+      id = message["id"].to_s
+      @users[id] = [message["nick"], 0] unless @users.key?(id)
+      @users[id] = [message["nick"], @users[id][1] + 1]
       msg = "[b][ff3500]#{MESSAGES.sample} ПРИСОЕДИНЯЙСЯ!"
       msg.gsub!("%", "[ff9ea1]#{@counter}[ff3500]")
       @script.game.cmdChatSend(@script.room, msg)
