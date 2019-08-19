@@ -359,7 +359,7 @@ class CmdCity < CmdBase
     end
     @lastHint = Time.now
     @script.userRepeat = false
-    msg = "[b][5fab73]УГАДАЙТЕ КАКОЙ Я ЗАГАДАЛ ГОРОД: [10ff10]#{@cityMasked.upcase}"
+    msg = "[b][afab73]УГАДАЙТЕ КАКОЙ Я ЗАГАДАЛ ГОРОД: [10ff10]#{@cityMasked.upcase}"
     @script.game.cmdChatSend(@script.room, msg)
   end
 
@@ -368,7 +368,7 @@ class CmdCity < CmdBase
 
     if not message.nil?
       if message["message"] =~ /#{@city}/i
-        msg = "[b][7affe1]#{message["nick"]}[5fab73]УГАДАЛ ГОРОД [10ff10]#{@city.upcase}[5fab73]!"
+        msg = "[b][7affe1]#{message["nick"]}[afab73] УГАДАЛ ГОРОД [10ff10]#{@city.upcase}[afab73]!"
         @script.game.cmdChatSend(@script.room, msg)
         @city.clear
         @cityMasked.clear
@@ -380,14 +380,14 @@ class CmdCity < CmdBase
       if Time.now - @lastHint >= HINT_TIME
         msg = String.new
         if @cityMasked.scan("*").length <= 1
-          msg = "[b][5fab73]ЭХ ВЫ! НИКТО НЕ УГАДАЛ! ЭТО БЫЛ ГОРОД [10ff10]#{@city.upcase}"
+          msg = "[b][afab73]ЭХ ВЫ! НИКТО НЕ УГАДАЛ! ЭТО БЫЛ ГОРОД [10ff10]#{@city.upcase}"
           @city.clear
           @cityMasked.clear
           @lastHint = nil
           @script.userRepeat = true
         elsif pos = @cityMasked.index("*")
           @cityMasked[pos] = @city[pos]
-          msg = "[b][5fab73]ПОКА НИКТО НЕ УГАДАЛ, ВОТ ВАМ ПОДСКАЗКА [10ff10]#{@cityMasked.upcase}"
+          msg = "[b][afab73]ПОКА НИКТО НЕ УГАДАЛ ГОРОД, ВОТ ВАМ ПОДСКАЗКА [10ff10]#{@cityMasked.upcase}"
           @lastHint = Time.now
         end
         @script.game.cmdChatSend(@script.room, msg)
