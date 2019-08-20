@@ -308,6 +308,13 @@ class Chatbot < Sandbox::Script
       end
     end
   end
+
+  class CmdTelegram < CmdBase
+    def exec(message)
+      msg = "[b][ffff00]Я В ТЕЛЕГРАМЕ [55ffff]@TricksterHackersBot"
+      @script.game.cmdChatSend(@script.room, msg)
+    end
+  end
   
   def initialize(game, shell, args)
     super(game, shell, args)
@@ -330,6 +337,7 @@ class Chatbot < Sandbox::Script
       "привет" => [CmdHello.new(self), true],
       "!путин" => [CmdPutin.new(self), true],
       "!город" => [CmdCity.new(self)],
+      "!телега" => [CmdTelegram.new(self)],
     }
     @commandsRandom = [
       "!считалочка",
@@ -376,7 +384,13 @@ class Chatbot < Sandbox::Script
         end
         
         @last = message["datetime"]
-        next if message["id"] == @game.config["id"]
+        if message["id"] == @game.config["id"]
+          if cmd =~ /^@/
+            cmd.sub!(/^@.+:\s*/, "")
+          else
+            next
+          end
+        end
         @commands.each_value {|v| v[0].poll(message)}
         next if @userTimers.key?(message["id"]) && Time.now - @userTimers[message["id"]] <= FLOOD_TIME
 
