@@ -148,6 +148,7 @@ module Sandbox
                          "trans" => "Language translations",
                          "settings" => "Application settings",
                          "new" => "Create new account",
+                         "rename <name>" => "Set new name",
                        })
     end
     
@@ -224,6 +225,21 @@ module Sandbox
         @shell.puts("  ID: #{player["id"]}")
         @shell.puts("  Password: #{player["password"]}")
         @shell.puts("  Session ID: #{player["sid"]}")
+        return
+
+      when "rename"
+        name = words[1]
+        if name.nil?
+          @shell.puts("#{cmd}: Specify name")
+          return
+        end
+
+        msg = "Player set name"
+        if @game.cmdPlayerSetName(@game.config["id"], name)
+          @shell.log(msg, :success)
+        else
+          @shell.log(msg, :error)
+        end
         return
         
       end

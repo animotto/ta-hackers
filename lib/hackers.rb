@@ -56,7 +56,7 @@ module Trickster
       def makeUrl(url, cmd = true, session = true)
         request = @config["url"] + "?" + url
         request += "&session_id=" + @config["sid"] if session
-        request = URI::encode(request)
+        request = URI.encode(request)
         request += "&cmd_id=" + hashUrl(request) if cmd
         return request
       end
@@ -157,6 +157,16 @@ module Trickster
         data["sid"] = fields[2]
         return data
       end
+
+      def cmdPlayerSetName(id, name)
+        url = "player_set_name" +
+            "&id=#{id}" +
+            "&name=#{name}" +
+            "&app_version=#{@config["version"]}"
+        response = request(url, true, false)
+        return false unless response || response == "ok"
+        return true
+      end
       
       def cmdAuthIdPassword
         url = "auth_id_password" +
@@ -243,7 +253,7 @@ module Trickster
         return false unless response
         return true
       end
-      
+
       def cmdChatDisplay(room, last = "")
         url = "chat_display" +
               "&room=#{room.to_s}" +
