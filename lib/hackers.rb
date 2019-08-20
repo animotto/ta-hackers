@@ -4,37 +4,16 @@ module Trickster
     require "digest"
     require "base64"
 
-    NODES_TYPES = {
-      7 => "Core",
-      8 => "Internet",
-      11 => "Server farm",
-      12 => "Database",
-      13 => "Bitcoin Mine",
-      14 => "Bitcoin Mixer",
-      15 => "Sentry",
-      22 => "Compiler",
-      27 => "AI Hawk",
-    }
-    PROGRAMS_TYPES = {
-      3 => "Beam cannon",
-      4 => "Shuriken",
-      5 => "Worms",
-      6 => "Blaster",
-      8 => "Data leech",
-      9 => "Battering Ram",
-      12 => "Protector",
-      11 => "Ice wall",
-      18 => "Access",
-      22 => "AI Hawk",
-    }
-    
     class Game
-      attr_accessor :config, :appSettings, :transLang
+      attr_accessor :config, :appSettings, :transLang,
+                    :nodeTypes, :programTypes
       
       def initialize(config)
         @config = config
         @appSettings = Hash.new
         @transLang = Hash.new
+        @nodeTypes = Hash.new
+        @programTypes = Hash.new
         @client = Net::HTTP.new(@config["host"], @config["port"].to_s)
         @client.use_ssl = true unless @config["ssl"].nil?
         @mutex = Mutex.new
@@ -136,6 +115,40 @@ module Trickster
         return data
       end
 
+      def cmdGetNodeTypes
+        url = "get_node_types_and_levels=1" +
+              "&app_version=#{@config["version"]}"
+        response = request(url, true, false)
+        return false unless response
+        sections = response.split("@")
+        records = sections[0].split(";")
+        data = Hash.new
+        records.each do |record|
+          fields = record.split(",")
+          data[fields[0].to_i] = {
+            "name" => fields[1],
+          }
+        end
+        return data
+      end
+      
+      def cmdGetProgramTypes
+        url = "get_program_types_and_levels=1" +
+              "&app_version=#{@config["version"]}"
+        response = request(url, true, false)
+        return false unless response
+        sections = response.split("@")
+        records = sections[0].split(";")
+        data = Hash.new
+        records.each do |record|
+          fields = record.split(",")
+          data[fields[0].to_i] = {
+            "name" => fields[2],
+          }
+        end
+        return data
+      end
+      
       def cmdCheckCon
         url = "check_connectivity=1" +
               "&app_version=#{@config["version"]}"

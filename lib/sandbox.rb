@@ -147,6 +147,8 @@ module Sandbox
                          "connect" => "Connect to the server",
                          "trans" => "Language translations",
                          "settings" => "Application settings",
+                         "nodes" => "Node types",
+                         "progs" => "Program types",
                          "new" => "Create new account",
                          "rename <name>" => "Set new name",
                        })
@@ -184,6 +186,30 @@ module Sandbox
         end
         return
 
+      when "nodes"
+        if @game.nodeTypes.empty?
+          @shell.puts "#{cmd}: No node types"
+          return
+        end
+
+        @shell.puts "Node types:"
+        @game.nodeTypes.each do |k, v|
+          @shell.puts " %-2s .. %s" % [k, v["name"]]
+        end
+        return
+
+      when "progs"
+        if @game.programTypes.empty?
+          @shell.puts "#{cmd}: No program types"
+          return
+        end
+
+        @shell.puts "Program types:"
+        @game.programTypes.each do |k, v|
+          @shell.puts " %-2s .. %s" % [k, v["name"]]
+        end
+        return
+        
       when "connect"
         msg = "Language translations"
         if @game.transLang = @game.cmdTransLang
@@ -201,6 +227,22 @@ module Sandbox
           return
         end
 
+        msg = "Node types and levels"
+        if @game.nodeTypes = @game.cmdGetNodeTypes
+          @shell.log(msg, :success)
+        else
+          @shell.log(msg, :error)
+          return
+        end
+
+        msg = "Program types and levels"
+        if @game.programTypes = @game.cmdGetProgramTypes
+          @shell.log(msg, :success)
+        else
+          @shell.log(msg, :error)
+          return
+        end
+        
         msg = "Authenticate"
         if auth = @game.cmdAuthIdPassword
           @shell.log(msg, :success)
@@ -540,15 +582,13 @@ module Sandbox
           )
 
           net["nodes"].each do |k, v|
-            name = Trickster::Hackers::NODES_TYPES[v["type"]]
-            name = "UNKNOWN" if name.nil?
             @shell.puts(
               "  %-12d %-4d %-5d %-12d %-12s" % [
                 k,
                 v["type"],
                 v["level"],
                 v["time"],
-                name,
+                @game.nodeTypes[v["type"]]["name"],
               ]
             )
           end
@@ -566,15 +606,13 @@ module Sandbox
             ]
           )
           net["programs"].each do |k, v|
-            name = Trickster::Hackers::PROGRAMS_TYPES[v["type"]]
-            name = "UNKNOWN" if name.nil?
             @shell.puts(
               "  %-12d %-4d %-6d %-5d %-12s" % [
                 k,
                 v["type"],
                 v["amount"],
                 v["level"],
-                name,
+                @game.programTypes[v["type"]]["name"],
               ]
             )
           end
