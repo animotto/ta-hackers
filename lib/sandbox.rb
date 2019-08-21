@@ -14,6 +14,7 @@ module Sandbox
         "/" => ContextRoot.new(@game, self),
         "/query" => ContextQuery.new(@game, self),
         "/net" => ContextNet.new(@game, self),
+        "/world" => ContextWorld.new(@game, self),
         "/script" => ContextScript.new(@game, self),
         "/chat" => ContextChat.new(@game, self),
       }
@@ -142,6 +143,7 @@ module Sandbox
       @commands.merge!({
                          "[query]" => "Analyze queries and data dumps",
                          "[net]" => "Network",
+                         "[world]" => "World",
                          "[script]" => "Scripts",
                          "[chat]" => "Internal chat",
                          "connect" => "Connect to the server",
@@ -158,7 +160,7 @@ module Sandbox
       cmd = words[0].downcase
       case cmd
 
-      when "query", "net", "script", "chat"
+      when "query", "net", "world", "script", "chat"
         @shell.context = "/#{cmd}"
         return
 
@@ -694,6 +696,174 @@ module Sandbox
         
       end
       
+      super(words)
+    end
+  end
+
+  class ContextWorld < ContextBase
+    def initialize(game, shell)
+      super(game, shell)
+      @commands.merge!({
+                         "target" => "Show targets",
+                         "new" => "Get new targets",
+                         "bonus" => "Show bonuses",
+                         "collect <id>" => "Collect bonus",
+                         "goal" => "Show goals",
+                         "update <id> <record>" => "Update goal",
+                       })
+    end
+
+    def exec(words)
+      cmd = words[0].downcase
+      case cmd
+
+      when "target", "bonus", "goal"
+        if @game.config["sid"].nil?
+          @shell.puts("#{cmd}: No session ID")
+          return
+        end
+
+        msg = "Network maintenance"
+        if net = @game.cmdNetGetForMaint
+          @shell.log(msg, :success)
+        else
+          @shell.log(msg, :error)
+          return
+        end
+        
+        msg = "World"
+        if world = @game.cmdPlayerWorld(net["profile"]["country"])
+          @shell.log(msg, :success)
+        else
+          @shell.log(msg, :error)
+          return
+        end
+
+        case cmd
+
+        when "target"        
+          @shell.puts("\e[1;35m\u2022 Targets\e[0m")
+          @shell.puts(
+            "  \e[35m%-12s %s\e[0m" % [
+              "ID",
+              "Name",
+            ]
+          )
+          world["targets"].each do |k, v|
+            @shell.puts(
+              "  %-12d %s" % [
+                k,
+                v["name"],
+              ]
+            )
+          end
+          return
+
+        when "bonus"        
+          @shell.puts("\e[1;35m\u2022 Bonuses\e[0m")
+          @shell.puts(
+            "  \e[35m%-12s %-2s\e[0m" % [
+              "ID",
+              "Amount",
+            ]
+          )
+          world["bonuses"].each do |k, v|
+            @shell.puts(
+              "  %-12d %-2d" % [
+                k,
+                v["amount"],
+              ]
+            )
+          end
+          return
+
+        when "goal"        
+          @shell.puts("\e[1;35m\u2022 Goals\e[0m")
+          @shell.puts(
+            "  \e[35m%-12s %-8s %s\e[0m" % [
+              "ID",
+              "Finished",
+              "Type",
+            ]
+          )
+          world["goals"].each do |k, v|
+            @shell.puts(
+              "  %-12d %-8s %s" % [
+                k,
+                v["finished"],
+                v["type"],
+              ]
+            )
+          end
+          return
+          
+        end
+
+      when "new"
+        if @game.config["sid"].nil?
+          @shell.puts("#{cmd}: No session ID")
+          return
+        end
+
+        msg = "Get new targets"
+        if @game.cmdGetNewTargets
+          @shell.log(msg, :success)
+        else
+          @shell.log(msg, :error)
+          return
+        end        
+        return
+
+      when "collect"
+        if @game.config["sid"].nil?
+          @shell.puts("#{cmd}: No session ID")
+          return
+        end
+
+        if words[1].nil?
+          @shell.puts("#{cmd}: Specify bonus ID")
+          return
+        end
+        id = words[1].to_i
+        
+        msg = "Bonus collect"
+        if @game.cmdBonusCollect(id)
+          @shell.log(msg, :success)
+        else
+          @shell.log(msg, :error)
+          return
+        end        
+        return        
+
+      when "update"
+        if @game.config["sid"].nil?
+          @shell.puts("#{cmd}: No session ID")
+          return
+        end
+
+        if words[1].nil?
+          @shell.puts("#{cmd}: Specify goal ID")
+          return
+        end
+        id = words[1].to_i
+        
+        if words[2].nil?
+          @shell.puts("#{cmd}: Specify record")
+          return
+        end
+        record = words[2].to_i
+        
+        msg = "Goal update"
+        if @game.cmdGoalUpdate(id, record)
+          @shell.log(msg, :success)
+        else
+          @shell.log(msg, :error)
+          return
+        end
+        return
+        
+      end
+
       super(words)
     end
   end

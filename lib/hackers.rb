@@ -56,7 +56,7 @@ module Trickster
           return false
         end
         return false unless response.code == "200"
-        return response.body
+        return response.body.force_encoding("utf-8")
       end
 
       def normalizeData(data, dir = true)
@@ -267,6 +267,80 @@ module Trickster
         return true
       end
 
+      def cmdPlayerWorld(country)
+        url = "player_get_world=1" +
+              "&id=#{config["id"]}" +
+              "&id_country=#{country}" +
+              "&app_version=#{config["version"]}"
+        response = request(url, true, true)
+        return false unless response
+        data = Hash.new
+        sections = response.split("@")
+
+        data["targets"] = Hash.new
+        targets = sections[0].split(";")
+        targets.each do |target|
+          fields = target.split(",")
+          data["targets"][fields[0].to_i] = {
+            "name" => fields[1],
+          }
+        end
+
+        data["bonuses"] = Hash.new
+        bonuses = sections[1].split(";")
+        bonuses.each do |bonus|
+          fields = bonus.split(",")
+          data["bonuses"][fields[0].to_i] = {
+            "amount" => fields[2].to_i,
+          }
+        end
+
+        data["goals"] = Hash.new
+        goals = sections[4].split(";")
+        goals.each do |goal|
+          fields = goal.split(",")
+          data["goals"][fields[0].to_i] = {
+            "type" => fields[1],
+            "finished" => fields[3].to_i,
+          }
+        end
+        
+        return data
+      end
+
+      def cmdGetNewTargets
+        url = "player_get_new_targets=1" +
+              "&id=#{@config["id"]}" +
+              "&app_version=#{@config["version"]}"
+        response = request(url)
+        return false unless response
+        return true
+      end
+
+      def cmdBonusCollect(id)
+        url = "bonus_collect=1" +
+              "&id=#{id}" +
+              "&app_version=#{@config["version"]}"
+        response = request(url)
+        return false unless response || response == "ok"
+        return true
+      end
+
+      def cmdGoalUpdate(id, record)
+        url = "goal_update" +
+              "&id=#{id}" +
+              "&record=#{record}" +
+              "&app_version=#{@config["version"]}"
+        response = request(url)
+        return false unless response
+        fields = response.split(";")[0].split(",")
+        data = {
+          "status" => fields[0],
+          "credits" => fields[1],
+        }
+        return data
+      end
+      
       def cmdChatDisplay(room, last = "")
         url = "chat_display" +
               "&room=#{room.to_s}" +
@@ -275,7 +349,6 @@ module Trickster
         response = request(url)
         return false unless response
         data = Array.new
-        response.force_encoding("utf-8")
         records = response.split(";")
         records.each do |record|
           fields = record.split(",")
@@ -300,7 +373,6 @@ module Trickster
         response = request(url)
         return false unless response
         data = Array.new
-        response.force_encoding("utf-8")
         records = response.split(";")
         records.each do |record|
           fields = record.split(",")
