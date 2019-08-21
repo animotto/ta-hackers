@@ -85,6 +85,47 @@ module Trickster
         end
         return array
       end
+
+      def parseNetwork(data)
+        net = Array.new
+        records = data[0][1].split("|")
+        coords = records[0].split("_")
+        rels = records[1].split("_")
+        nodes = records[2].split("_")
+        nodes.each_index do |i|
+          coord = coords[i].split("*")
+          net[i] = {
+            "id" => nodes[i].to_i,
+            "x" => coord[0].to_i,
+            "y" => coord[1].to_i,
+            "z" => coord[2].to_i,
+          }
+        end
+        rels.each_index do |i|
+          rel = rels[i].split("*")
+          index = rel[0].to_i
+          net[index]["rels"] = Array.new if net[index]["rels"].nil?
+          net[index]["rels"].append(rel[1].to_i)
+        end
+        return net
+      end
+
+      def generateNetwork(data)
+        nodes = String.new
+        coords = String.new
+        rels = String.new
+        data.each_index do |i|
+          nodes += "#{data[i]["id"]}_"
+          coords += "#{data[i]["x"]}*#{data[i]["y"]}*#{data[i]["z"]}_"
+          unless data[i]["rels"].nil?
+            data[i]["rels"].each do |rel|
+              rels += "#{i}*#{rel}_"
+            end
+          end
+        end
+        net = "#{coords}|#{rels}|#{nodes}"
+        return net
+      end
       
       def cmdTransLang
         url = "i18n_translations_get_language=1" +
@@ -219,6 +260,8 @@ module Trickster
           }
         end
 
+        data["net"] = parseNetwork(fields[1])
+        
         data["profile"] = {
           "id" => fields[2][0][0].to_i,
           "name" => fields[2][0][1],
@@ -255,6 +298,17 @@ module Trickster
         return data
       end
 
+      def cmdUpdateNet(net)
+        data = generateNetwork(net)
+        url = "net_update=1" +
+              "&id_player=#{@config["id"]}" +
+              "&net=#{data}" +
+              "&app_version=#{@config["version"]}"
+        response = request(url)
+        return false unless response || response == "ok"
+        return true
+      end
+      
       def cmdCollect(id)
         url = "collect=1" +
               "&id_node=#{id}" +

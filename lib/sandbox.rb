@@ -535,6 +535,7 @@ module Sandbox
                          "collect <id>" => "Collect node resources",
                          "prog" => "Show programs",
                          "log" => "Show logs",
+                         "net" => "Show network structure",
                        })
     end
 
@@ -543,7 +544,7 @@ module Sandbox
 
       case cmd
 
-      when "profile", "readme", "node", "prog", "log"
+      when "profile", "readme", "node", "prog", "log", "net"
         if @game.config["sid"].nil?
           @shell.puts("#{cmd}: No session ID")
           return
@@ -670,6 +671,32 @@ module Sandbox
             )
           end
           return
+
+        when "net"
+          @shell.puts("\e[1;35m\u2022 Network structure\e[0m")
+          @shell.puts(
+            "  \e[35m%-5s %-12s %-4s %-4s %-4s %s\e[0m" % [
+              "Index",
+              "ID",
+              "X",
+              "Y",
+              "Z",
+              "Relations",
+            ]
+          )
+          net["net"].each_index do |i|
+            @shell.puts(
+              "  %-5d %-12d %-+4d %-+4d %-+4d %s" % [
+                i,
+                net["net"][i]["id"],
+                net["net"][i]["x"],
+                net["net"][i]["y"],
+                net["net"][i]["z"],
+                net["net"][i]["rels"],
+              ]
+            )
+          end
+          return
           
         end
         return
@@ -693,7 +720,7 @@ module Sandbox
           @shell.log(msg, :error)
         end
         return
-        
+
       end
       
       super(words)
