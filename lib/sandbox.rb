@@ -448,7 +448,7 @@ module Sandbox
         
       when "list"
         files = Array.new
-        Dir.each_child("#{DUMPS_DIR}") do |child|
+        Dir.children("#{DUMPS_DIR}").sort.each do |child|
           next unless File.file?("#{DUMPS_DIR}/#{child}") && child =~ /\.dump$/
           child.sub!(".dump", "")
           files.append(child)
@@ -905,7 +905,7 @@ module Sandbox
 
       when "list"
         scripts = Array.new
-        Dir.each_child(SCRIPTS_DIR) do |child|
+        Dir.children(SCRIPTS_DIR).sort.each do |child|
           next unless File.file?("#{SCRIPTS_DIR}/#{child}") && child =~ /\.rb$/
           child.sub!(".rb", "")
           scripts.append(child)
