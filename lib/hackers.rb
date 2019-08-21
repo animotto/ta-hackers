@@ -71,6 +71,20 @@ module Trickster
         end
         return data
       end
+
+      def parseData(data)
+        array = Array.new
+        data.split("@").each.with_index do |section, i|
+          array[i] = Array.new if array[i].nil?
+          section.split(";").each.with_index do |record, j|
+            array[i][j] = Array.new if array[i][j].nil?
+            record.split(",").each.with_index do |field, k|
+              array[i][j][k] = field
+            end
+          end
+        end
+        return array
+      end
       
       def cmdTransLang
         url = "i18n_translations_get_language=1" +
@@ -79,9 +93,9 @@ module Trickster
         response = request(url, true, false)
         return false unless response
         data = Hash.new
-        response.split(";").each do |record|
-          fields = record.split(",")
-          data[fields[0]] = fields[1]
+        fields = parseData(response)
+        fields[0].each_index do |i|
+          data[fields[0][i][0]] = fields[0][i][1]
         end
         return data
       end
@@ -91,25 +105,23 @@ module Trickster
               "&app_version=#{@config["version"]}"
         response = request(url, true, false)
         return false unless response
+        fields = parseData(response)
         data = Hash.new
-        records = response.split(";")
         
         for i in (0..10) do
-          fields = records[i].split(",")
-          data[fields[1]] = fields[2..3]
+          data[fields[0][i][1]] = fields[0][i][2..3]
         end
         
-        data["datetime"] = records[11]
+        data["datetime"] = fields[0][11][0]
 
         data["languages"] = Hash.new
-        records[12].split(",").each do |field|
-          language = field.split(":")
+        fields[0][12].each_index do |i|
+          language = fields[0][12][i].split(":")
           data["languages"][language[0]] = language[1]
         end
 
         for i in (13..17) do
-          fields = records[i].split(",")
-          data[fields[0]] = fields[1]
+          data[fields[0][i][0]] = fields[0][i][1]
         end
         
         return data
@@ -120,13 +132,11 @@ module Trickster
               "&app_version=#{@config["version"]}"
         response = request(url, true, false)
         return false unless response
-        sections = response.split("@")
-        records = sections[0].split(";")
+        fields = parseData(response)
         data = Hash.new
-        records.each do |record|
-          fields = record.split(",")
-          data[fields[0].to_i] = {
-            "name" => fields[1],
+        fields[0].each_index do |i|
+          data[fields[0][i][0].to_i] = {
+            "name" => fields[0][i][1],
           }
         end
         return data
@@ -137,13 +147,11 @@ module Trickster
               "&app_version=#{@config["version"]}"
         response = request(url, true, false)
         return false unless response
-        sections = response.split("@")
-        records = sections[0].split(";")
+        fields = parseData(response)
         data = Hash.new
-        records.each do |record|
-          fields = record.split(",")
-          data[fields[0].to_i] = {
-            "name" => fields[2],
+        fields[0].each_index do |i|
+          data[fields[0][i][0].to_i] = {
+            "name" => fields[0][i][2],
           }
         end
         return data
@@ -162,12 +170,11 @@ module Trickster
               "&app_version=#{@config["version"]}"
         response = request(url, true, false)
         return false unless response
+        fields = parseData(response)
         data = Hash.new
-        records = response.split(";")
-        fields = records[0].split(",")
-        data["id"] = fields[0].to_i
-        data["password"] = fields[1]
-        data["sid"] = fields[2]
+        data["id"] = fields[0][0][0].to_i
+        data["password"] = fields[0][0][1]
+        data["sid"] = fields[0][0][2]
         return data
       end
 
@@ -188,11 +195,9 @@ module Trickster
               "&app_version=#{@config["version"]}"
         response = request(url, true, false)
         return false unless response
+        fields = parseData(response)
         data = Hash.new
-        sections = response.split("@")
-        records = sections[0].split(";")
-        fields = records[0].split(",")
-        data["sid"] = fields[3]
+        data["sid"] = fields[0][0][3]
         return data
       end
 
@@ -202,56 +207,48 @@ module Trickster
               "&app_version=#{@config["version"]}"
         response = request(url)
         return false unless response
+        fields = parseData(response)
         data = Hash.new
-        sections = response.split("@")
 
         data["nodes"] = Hash.new
-        nodes = sections[0].split(";")
-        nodes.each do |node|
-          fields = node.split(",")
-          data["nodes"][fields[0].to_i] = {
-            "type" => fields[2].to_i,
-            "level" => fields[3].to_i,
-            "time" => fields[4].to_i,
+        fields[0].each_index do |i|
+          data["nodes"][fields[0][i][0].to_i] = {
+            "type" => fields[0][i][2].to_i,
+            "level" => fields[0][i][3].to_i,
+            "time" => fields[0][i][4].to_i,
           }
         end
 
-        data["profile"] = Hash.new
-        profile = sections[2].split(";").first.split(",")
         data["profile"] = {
-          "id" => profile[0].to_i,
-          "name" => profile[1],
-          "money" => profile[2].to_i,
-          "bitcoin" => profile[3].to_i,
-          "credit" => profile[4].to_i,
-          "reputation" => profile[9].to_i,
-          "thread" => profile[10].to_i,
-          "country" => profile[13].to_i,
+          "id" => fields[2][0][0].to_i,
+          "name" => fields[2][0][1],
+          "money" => fields[2][0][2].to_i,
+          "bitcoin" => fields[2][0][3].to_i,
+          "credit" => fields[2][0][4].to_i,
+          "reputation" => fields[2][0][9].to_i,
+          "thread" => fields[2][0][10].to_i,
+          "country" => fields[2][0][13].to_i,
         }
 
         data["programs"] = Hash.new
-        programs = sections[3].split(";")
-        programs.each do |program|
-          fields = program.split(",")
-          data["programs"][fields[0].to_i] = {
-            "type" => fields[2].to_i,
-            "level" => fields[3].to_i,
-            "amount" => fields[4].to_i,
+        fields[3].each_index do |i|
+          data["programs"][fields[3][i][0].to_i] = {
+            "type" => fields[3][i][2].to_i,
+            "level" => fields[3][i][3].to_i,
+            "amount" => fields[3][i][4].to_i,
           }
         end
 
-        data["readme"] = sections[11].split(";").first
+        data["readme"] = fields[11][0][0]
 
         data["logs"] = Hash.new
-        logs = sections[9].split(";")
-        logs.each do |log|
-          fields = log.split(",")
-          data["logs"][fields[0].to_i] = {
-            "date" => fields[1],
-            "id" => fields[2].to_i,
-            "target" => fields[3].to_i,
-            "idName" => fields[9],
-            "targetName" => fields[10],
+        fields[9].each_index do |i|
+          data["logs"][fields[9][i][0].to_i] = {
+            "date" => fields[9][i][1],
+            "id" => fields[9][i][2].to_i,
+            "target" => fields[9][i][3].to_i,
+            "idName" => fields[9][i][9],
+            "targetName" => fields[9][i][10],
           }
         end
         
@@ -274,34 +271,28 @@ module Trickster
               "&app_version=#{config["version"]}"
         response = request(url, true, true)
         return false unless response
+        fields = parseData(response)
         data = Hash.new
-        sections = response.split("@")
 
         data["targets"] = Hash.new
-        targets = sections[0].split(";")
-        targets.each do |target|
-          fields = target.split(",")
-          data["targets"][fields[0].to_i] = {
-            "name" => fields[1],
+        fields[0].each_index do |i|
+          data["targets"][fields[0][i][0].to_i] = {
+            "name" => fields[0][i][1],
           }
         end
 
         data["bonuses"] = Hash.new
-        bonuses = sections[1].split(";")
-        bonuses.each do |bonus|
-          fields = bonus.split(",")
-          data["bonuses"][fields[0].to_i] = {
-            "amount" => fields[2].to_i,
+        fields[1].each_index do |i|
+          data["bonuses"][fields[1][i][0].to_i] = {
+            "amount" => fields[1][i][2].to_i,
           }
         end
 
         data["goals"] = Hash.new
-        goals = sections[4].split(";")
-        goals.each do |goal|
-          fields = goal.split(",")
-          data["goals"][fields[0].to_i] = {
-            "type" => fields[1],
-            "finished" => fields[3].to_i,
+        fields[4].each_index do |i|
+          data["goals"][fields[4][i][0].to_i] = {
+            "type" => fields[4][i][1],
+            "finished" => fields[4][i][3].to_i,
           }
         end
         
@@ -333,10 +324,10 @@ module Trickster
               "&app_version=#{@config["version"]}"
         response = request(url)
         return false unless response
-        fields = response.split(";")[0].split(",")
+        fields = parseData(response)
         data = {
-          "status" => fields[0],
-          "credits" => fields[1],
+          "status" => fields[0][0][0],
+          "credits" => fields[0][0][1],
         }
         return data
       end
@@ -348,16 +339,17 @@ module Trickster
               "&app_version=#{@config["version"]}"
         response = request(url)
         return false unless response
+        fields = parseData(response)
         data = Array.new
-        records = response.split(";")
-        records.each do |record|
-          fields = record.split(",")
-          data.append({
-                        "datetime" => fields[0],
-                        "nick" => fields[1],
-                        "message" => normalizeData(fields[2]),
-                        "id" => fields[3].to_i,
-                      })
+        unless fields.empty?
+          fields[0].each_index do |i|
+            data.append({
+                          "datetime" => fields[0][i][0],
+                          "nick" => fields[0][i][1],
+                          "message" => normalizeData(fields[0][i][2]),
+                          "id" => fields[0][i][3].to_i,
+                        })
+          end
         end
         return data.reverse
       end
@@ -372,16 +364,17 @@ module Trickster
               "&app_version=#{@config["version"]}"
         response = request(url)
         return false unless response
+        fields = parseData(response)
         data = Array.new
-        records = response.split(";")
-        records.each do |record|
-          fields = record.split(",")
-          data.append({
-                        "datetime" => fields[0],
-                        "nick" => fields[1],
-                        "message" => normalizeData(fields[2]),
-                        "id" => fields[3].to_i,
-                      })
+        unless fields.empty?
+          fields[0].each_index do |i|
+            data.append({
+                          "datetime" => fields[0][i][0],
+                          "nick" => fields[0][i][1],
+                          "message" => normalizeData(fields[0][i][2]),
+                          "id" => fields[0][i][3].to_i,
+                        })
+          end
         end
         return data.reverse
       end
