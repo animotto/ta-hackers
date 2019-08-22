@@ -55,7 +55,10 @@ module Trickster
         rescue
           return false
         end
-        return false unless response.code == "200"
+        unless response.code == "200" ||
+          (response.code == "500" && (not response.body.empty?))
+          return false
+        end
         return response.body.force_encoding("utf-8")
       end
 
