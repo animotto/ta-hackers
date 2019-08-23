@@ -40,18 +40,28 @@ module Trickster
         return request
       end
       
-      def request(url, cmd = true, session = true)
+      def request(url, cmd = true, session = true, data = "")
         response = nil
+        header = {
+          "Content-Type" => "application/x-www-form-urlencoded",
+          "Accept-Charset" => "utf-8",
+          "Accept-Encoding" => "gzip",
+          "User-Agent" => "UniWeb (http://www.differentmethods.com)",
+        }
+
         @mutex.synchronize do
-          response = @client.get(
-            makeUrl(url, cmd, session),
-            {
-              "Content-Type" => "application/x-www-form-urlencoded",
-              "Accept-Charset" => "utf-8",
-              "Accept-Encoding" => "gzip",
-              "User-Agent" => "UniWeb (http://www.differentmethods.com)",
-            },
-          )
+          if data.empty?
+            response = @client.get(
+              makeUrl(url, cmd, session),
+              header,
+            )
+          else
+            response = @client.post(
+              makeUrl(url, cmd, session),
+              data,
+              header,
+            )
+          end
         rescue
           return false
         end
@@ -434,6 +444,61 @@ module Trickster
           end
         end
         return data.reverse
+      end
+
+      def cmdNetGetForAttack(target)
+        url = "net_get_for_attack=1" +
+              "&id_target=#{target}" +
+              "&id_attacker=#{@config["id"]}" +
+              "&app_version=#{@config["version"]}"
+        response = request(url)
+        return false unless response
+        return response
+      end
+
+      def cmdNetLeave(target)
+        url = "net_leave=1" +
+              "&id_attacker=#{@config["id"]}" +
+              "&id_target=#{target}" +
+              "&app_version=#{@config["version"]}"
+        response = request(url)
+        return false unless response
+        return response
+      end
+
+      def cmdFightUpdate(target, data)
+        url = "fight_update_running=1" +
+              "&attackerID=#{@config["id"]}" +
+              "&targetID=#{target}" +
+              "&goldMainLoot=#{data[:money]}" +
+              "&bcMainLoot=#{data[:bitcoin]}" +
+              "&nodeIDsList=#{data[:nodes]}" +
+              "&nodeLootValues=#{data[:loots]}" +
+              "&attackSuccess=#{data[:success]}" +
+              "&usedProgramsList=#{data[:programs]}" +
+              "&app_version=#{@config["version"]}"
+        response = request(url)
+        return false unless response
+        return response
+      end
+
+      def cmdFight(target, data)
+        url = "fight=1" +
+              "&attackerID=#{@config["id"]}" +
+              "&targetID=#{target}" +
+              "&goldMainLoot=#{data[:money]}" +
+              "&bcMainLoot=#{data[:bitcoin]}" +
+              "&nodeIDsList=#{data[:nodes]}" +
+              "&nodeLootValues=#{data[:loots]}" +
+              "&attackSuccess=#{data[:success]}" +
+              "&usedProgramsList=#{data[:programs]}" +
+              "&summaryString=#{data[:summary]}" +
+              "&replayVersion=#{data[:version]}" +
+              "&app_version=#{@config["version"]}"
+        data = "replayString=#{data["replay"]}"
+        response = request(url, true, true, data)
+        return false unless response
+        return response
       end
     end
   end
