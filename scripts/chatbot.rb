@@ -315,6 +315,31 @@ class Chatbot < Sandbox::Script
       @script.game.cmdChatSend(@script.room, msg)
     end
   end
+
+  class CmdWiki < CmdBase
+    def exec(message)
+      words = message["message"].split(/\s+/)
+      cmd = words[0].downcase
+      message["message"].match(/^.+?\s+(.+)/)
+      search = $1
+      unless search
+        msg = "[b][7ffb1a]ДЛЯ ПОИСКА ИСПОЛЬЗУЙ КОМАНДУ #{cmd} текст"
+        @script.game.cmdChatSend(@script.room, msg)
+        return
+      end
+      http = Net::HTTP.new("ru.wikipedia.org", 443)
+      http.use_ssl = true
+      response = http.get("/w/api.php?format=json&utf8&action=opensearch&search=#{URI.encode(search)}")
+      return false unless response.code == "200"
+      data = JSON.parse(response.body)
+      if data[2].empty? || data[2][0].empty?
+        msg = "[b][7ffb1a]ПО ЗАПРОСУ #{search} НИЧЕГО НЕ НАШЕЛ!"
+      else
+        msg = "[b][7ffb1a]#{data[2][0]}"
+      end
+      @script.game.cmdChatSend(@script.room, msg)
+    end
+  end
   
   def initialize(game, shell, args)
     super(game, shell, args)
@@ -338,6 +363,7 @@ class Chatbot < Sandbox::Script
       "!путин" => [CmdPutin.new(self), true],
       "!город" => [CmdCity.new(self)],
       "!телега" => [CmdTelegram.new(self)],
+      "!вики" => [CmdWiki.new(self)],
     }
     @commandsRandom = [
       "!считалочка",
@@ -373,7 +399,8 @@ class Chatbot < Sandbox::Script
       @commands.each_value {|v| v[0].poll}
       next unless messages = @game.cmdChatDisplay(@room, @last)
       messages.each do |message|
-        cmd = message["message"].downcase
+        words = message["message"].split(/\s+/)
+        cmd = words[0].downcase
         @users[message["id"]] = message["nick"] unless message["id"] == @game.config["id"]
         if @last.empty?
           if message == messages.last
