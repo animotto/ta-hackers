@@ -329,7 +329,7 @@ class Chatbot < Sandbox::Script
       end
       http = Net::HTTP.new("ru.wikipedia.org", 443)
       http.use_ssl = true
-      response = http.get("/w/api.php?format=json&utf8&action=opensearch&search=#{URI.encode(search)}")
+      response = http.get("/w/api.php?format=json&utf8&action=opensearch&redirects=resolve&search=#{URI.encode(search)}")
       return false unless response.code == "200"
       data = JSON.parse(response.body)
       if data[2].empty? || data[2][0].empty?
