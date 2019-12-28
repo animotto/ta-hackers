@@ -22,7 +22,7 @@ module Sandbox
 
     def puts(data = "")
       $stdout.puts("\e[0G\e[J#{data}")
-      Readline.refresh_line
+      Readline.refresh_line if @reading
     end
 
     def log(data, type = :info)
@@ -47,7 +47,9 @@ module Sandbox
     def readline
       loop do
         prompt = "#{@context} \e[1;35m\u25b8\e[0m "
+        @reading = true
         line = Readline.readline(prompt, true)
+        @reading = false
         exit if line.nil?
         line.strip!
         Readline::HISTORY.pop if line.empty?
