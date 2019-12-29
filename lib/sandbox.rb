@@ -5,7 +5,7 @@ module Sandbox
     require "json"
     require "base64"
     
-    attr_accessor :context
+    attr_accessor :context, :reading
 
     def initialize(game)
       @game = game
@@ -1122,7 +1122,9 @@ module Sandbox
 
         @shell.puts("Enter ! to quit")
         loop do
+          @shell.reading = true
           message = Readline.readline("#{room} \e[1;33m\u2765\e[0m ", true)
+          @shell.reading = false
           break if message.nil?
           message.strip!
           Readline::HISTORY.pop if message.empty?
