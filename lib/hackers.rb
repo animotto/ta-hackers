@@ -66,7 +66,7 @@ module Trickster
           return false
         end
         unless response.code == "200" ||
-          (response.code == "500" && (not response.body.empty?))
+               (response.code == "500" && !response.body.empty?)
           return false
         end
         return response.body.force_encoding("utf-8")
@@ -283,7 +283,10 @@ module Trickster
           "credit" => fields[2][0][4].to_i,
           "reputation" => fields[2][0][9].to_i,
           "thread" => fields[2][0][10].to_i,
+          "x" => fields[2][0][11].to_i,
+          "y" => fields[2][0][12].to_i,
           "country" => fields[2][0][13].to_i,
+          "skin" => fields[2][0][14].to_i,
         }
 
         data["programs"] = Hash.new
@@ -497,6 +500,91 @@ module Trickster
               "&app_version=#{@config["version"]}"
         data = "replayString=#{data["replay"]}"
         response = request(url, true, true, data)
+        return false unless response
+        return response
+      end
+
+      def cmdPlayerGetInfo(id)
+        url = "player_get_info" +
+              "&id=#{id}" +
+              "&app_version=#{@config["version"]}"
+        response = request(url)
+        return false unless response
+
+        fields = parseData(response)
+        data = {
+          "id" => fields[0][0][0].to_i,
+          "name" => fields[0][0][1],
+          "money" => fields[0][0][2].to_i,
+          "bitcoin" => fields[0][0][3].to_i,
+          "credit" => fields[0][0][4].to_i,
+          "reputation" => fields[0][0][9].to_i,
+          "thread" => fields[0][0][10].to_i,
+          "x" => fields[0][0][11].to_i,
+          "y" => fields[0][0][12].to_i,
+          "country" => fields[0][0][13].to_i,
+          "skin" => fields[0][0][14].to_i,
+        }
+        return data
+      end
+
+      def cmdPlayerHqMove(x, y, country)
+        url = "player_hq_move=1" +
+              "&id=#{@config["id"]}" +
+              "&hq_location_x=#{x}" +
+              "&hq_location_y=#{y}" +
+              "&country=#{country}" +
+              "&app_version=#{@config["version"]}"
+        response = request(url)
+        return false unless response
+        return response
+      end
+
+      def cmdHqMoveGetPrice
+        url = "hq_move_get_price" +
+              "&app_version=#{@config["version"]}"
+        response = request(url)
+        return false unless response
+        return response
+      end
+
+      def cmdPlayerSetSkin(skin)
+        url = "player_set_skin" +
+              "&id=#{@config["id"]}" +
+              "&skin=#{skin}" +
+              "&app_version=#{@config["version"]}"
+        response = request(url)
+        return false unless response
+        return response
+      end
+
+      def cmdPlayerBuySkin(skin)
+        url = "player_buy_skin" +
+              "&id=#{@config["id"]}" +
+              "&id_skin=#{skin}" +
+              "&app_version=#{@config["version"]}"
+        response = request(url)
+        return false unless response
+        return response
+      end
+
+      def cmdShieldBuy(shield)
+        url = "buy_shiled" +
+              "&id_player=#{@config["id"]}" +
+              "&id_shield_type=#{shield}" +
+              "&app_version=#{@config["version"]}"
+        response = request(url)
+        return false unless response
+        return response
+      end
+
+      def cmdPlayerBuyCurrencyPerc(currency, perc)
+        url = "player_buy_currency_percentage=1" +
+              "&id=#{@config["id"]}" +
+              "&currency=#{currency}" +
+              "&max_storage_percentage=#{perc}" +
+              "&app_version=#{@config["version"]}"
+        response = request(url)
         return false unless response
         return response
       end

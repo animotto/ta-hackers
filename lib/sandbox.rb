@@ -155,6 +155,9 @@ module Sandbox
                          "progs" => "Program types",
                          "new" => "Create new account",
                          "rename <name>" => "Set new name",
+                         "info <id>" => "Get player info",
+                         "hq <x> <y> <country>" => "Set player HQ",
+                         "skin <skin>" => "Set player skin",
                        })
     end
     
@@ -285,6 +288,76 @@ module Sandbox
           @shell.log(msg, :success)
         else
           @shell.log(msg, :error)
+        end
+        return
+
+      when "info"
+        id = words[1]
+        if id.nil?
+          @shell.puts("#{cmd}: Specify ID")
+          return
+        end
+
+        if @game.config["sid"].nil?
+          @shell.puts("#{cmd}: No session ID")
+          return
+        end
+        
+        msg = "Player get info"
+        if info = @game.cmdPlayerGetInfo(id)
+          @shell.log(msg, :success)
+        else
+          @shell.log(msg, :error)
+          return
+        end
+
+        @shell.puts("\e[1;35m\u2022 Player info\e[0m")
+        info.each do |k, v|
+          @shell.puts("  %s: %s" % [k.capitalize, v])
+        end
+        return
+
+      when "hq"
+        x = words[1]
+        y = words[2]
+        country = words[3]
+        if x.nil? || y.nil? || country.nil?
+          @shell.puts("#{cmd}: Specify x, y, country")
+          return
+        end
+
+        if @game.config["sid"].nil?
+          @shell.puts("#{cmd}: No session ID")
+          return
+        end
+        
+        msg = "Player HQ move"
+        if @game.cmdPlayerHqMove(x, y, country)
+          @shell.log(msg, :success)
+        else
+          @shell.log(msg, :error)
+          return
+        end
+        return
+
+      when "skin"
+        skin = words[1]
+        if skin.nil?
+          @shell.puts("#{cmd}: Specify skin")
+          return
+        end
+
+        if @game.config["sid"].nil?
+          @shell.puts("#{cmd}: No session ID")
+          return
+        end
+        
+        msg = "Player set skin"
+        if response = @game.cmdPlayerSetSkin(skin)
+          @shell.log(msg, :success)
+        else
+          @shell.log(msg, :error)
+          return
         end
         return
         
