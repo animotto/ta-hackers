@@ -153,9 +153,12 @@ module Sandbox
                          "settings" => "Application settings",
                          "nodes" => "Node types",
                          "progs" => "Program types",
+                         "missions" => "Missions list",
+                         "skins" => "Skin types",
                          "new" => "Create new account",
                          "rename <name>" => "Set new name",
                          "info <id>" => "Get player info",
+                         "detail <id>" => "Get detail player network",
                          "hq <x> <y> <country>" => "Set player HQ",
                          "skin <skin>" => "Set player skin",
                          "top <country>" => "Show top ranking",
@@ -217,7 +220,41 @@ module Sandbox
           @shell.puts " %-2s .. %s" % [k, v["name"]]
         end
         return
-        
+
+      when "missions"
+        if @game.missionsList.empty?
+          @shell.puts "#{cmd}: No missions list"
+          return
+        end
+
+        @shell.puts "Missions list:"
+        @game.missionsList.each do |k, v|
+          @shell.puts " %-7s .. %s, %s, %s" % [
+                        k,
+                        v["name"],
+                        v["target"],
+                        v["goal"],
+                      ]
+        end
+        return
+
+      when "skins"
+        if @game.skinTypes.empty?
+          @shell.puts "#{cmd}: No skin types"
+          return
+        end
+
+        @shell.puts "Skin types:"
+        @game.skinTypes.each do |k, v|
+          @shell.puts " %-7d .. %s, %d, %d" % [
+                        k,
+                        v["name"],
+                        v["price"],
+                        v["rank"],
+                      ]
+        end
+        return
+
       when "connect"
         msg = "Language translations"
         if @game.transLang = @game.cmdTransLang
@@ -245,6 +282,22 @@ module Sandbox
 
         msg = "Program types and levels"
         if @game.programTypes = @game.cmdGetProgramTypes
+          @shell.log(msg, :success)
+        else
+          @shell.log(msg, :error)
+          return
+        end
+
+        msg = "Missions list"
+        if @game.missionsList = @game.cmdGetMissionsList
+          @shell.log(msg, :success)
+        else
+          @shell.log(msg, :error)
+          return
+        end
+
+        msg = "Skin types"
+        if @game.skinTypes = @game.cmdSkinTypesGetList
           @shell.log(msg, :success)
         else
           @shell.log(msg, :error)
@@ -315,6 +368,36 @@ module Sandbox
         @shell.puts("\e[1;35m\u2022 Player info\e[0m")
         info.each do |k, v|
           @shell.puts("  %s: %s" % [k.capitalize, v])
+        end
+        return
+
+      when "detail"
+        id = words[1]
+        if id.nil?
+          @shell.puts("#{cmd}: Specify ID")
+          return
+        end
+
+        if @game.config["sid"].nil?
+          @shell.puts("#{cmd}: No session ID")
+          return
+        end
+        
+        msg = "Get net details world"
+        if detail = @game.cmdGetNetDetailsWorld(id)
+          @shell.log(msg, :success)
+        else
+          @shell.log(msg, :error)
+          return
+        end
+
+        @shell.puts("\e[1;35m\u2022 Detail player network\e[0m")
+        detail["profile"].each do |k, v|
+          @shell.puts("  %s: %s" % [k.capitalize, v])
+        end
+        @shell.puts
+        detail["log"].each do |k, v|
+          @shell.puts("  %d: %d %d %d" % [k, v["f1"], v["f2"], v["f3"]])
         end
         return
 
@@ -680,6 +763,7 @@ module Sandbox
                          "prog" => "Show programs",
                          "log" => "Show logs",
                          "net" => "Show network structure",
+                         "missions" => "Show missions log",
                        })
     end
 
@@ -726,7 +810,7 @@ module Sandbox
               "Time",
               "Name",
             ]
-         )
+          )
 
           net["nodes"].each do |k, v|
             @shell.puts(
@@ -865,6 +949,40 @@ module Sandbox
         end
         return
 
+      when "missions"
+        if @game.config["sid"].nil?
+          @shell.puts("#{cmd}: No session ID")
+          return
+        end
+
+        msg = "Player missions get log"
+        if missions = @game.cmdPlayerMissionsGetLog
+          @shell.log(msg, :success)
+        else
+          @shell.log(msg, :error)
+        end
+
+        @shell.puts("\e[1;35m\u2022 Missions log\e[0m")
+        @shell.puts(
+          "  \e[35m%-7s %-7s %-7s %-20s\e[0m" % [
+            "ID",
+            "Money",
+            "Bitcoin",
+            "Date",
+          ]
+        )
+        missions.each do |k, v|
+          @shell.puts(
+            "  %-7d %-7d %-7d %-20s" % [
+              k,
+              v["money"],
+              v["bitcoin"],
+              v["date"],
+            ]
+          )
+          end
+        return
+
       end
       
       super(words)
@@ -881,6 +999,7 @@ module Sandbox
                          "collect <id>" => "Collect bonus",
                          "goal" => "Show goals",
                          "update <id> <record>" => "Update goal",
+                         "reject <id>" => "Reject goal",
                        })
     end
 
@@ -1026,6 +1145,27 @@ module Sandbox
         
         msg = "Goal update"
         if @game.cmdGoalUpdate(id, record)
+          @shell.log(msg, :success)
+        else
+          @shell.log(msg, :error)
+          return
+        end
+        return
+
+      when "reject"
+        if @game.config["sid"].nil?
+          @shell.puts("#{cmd}: No session ID")
+          return
+        end
+
+        if words[1].nil?
+          @shell.puts("#{cmd}: Specify goal ID")
+          return
+        end
+        id = words[1].to_i
+        
+        msg = "Goal reject"
+        if @game.cmdGoalReject(id)
           @shell.log(msg, :success)
         else
           @shell.log(msg, :error)

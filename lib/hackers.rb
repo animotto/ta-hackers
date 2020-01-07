@@ -6,7 +6,8 @@ module Trickster
 
     class Game
       attr_accessor :config, :appSettings, :transLang,
-                    :nodeTypes, :programTypes
+                    :nodeTypes, :programTypes, :missionsList,
+                    :skinTypes
       
       def initialize(config)
         @config = config
@@ -14,6 +15,8 @@ module Trickster
         @transLang = Hash.new
         @nodeTypes = Hash.new
         @programTypes = Hash.new
+        @missionsList = Hash.new
+        @skinTypes = Hash.new
         @client = Net::HTTP.new(@config["host"], @config["port"].to_s)
         @client.use_ssl = true unless @config["ssl"].nil?
         @mutex = Mutex.new
@@ -101,7 +104,7 @@ module Trickster
 
       def parseNetwork(data)
         net = Array.new
-        records = data[0][1].split("|")
+        records = data.split("|")
         coords = records[0].split("_")
         rels = records[1].split("_")
         nodes = records[2].split("_")
@@ -138,6 +141,24 @@ module Trickster
         end
         net = "#{coords}|#{rels}|#{nodes}"
         return net
+      end
+
+      def parseProfile(data)
+        profile = {
+          "id" => data[0].to_i,
+          "name" => data[1],
+          "money" => data[2].to_i,
+          "bitcoin" => data[3].to_i,
+          "credit" => data[4].to_i,
+          "experience" => data[5].to_i,
+          "rank" => data[9].to_i,
+          "builder" => data[10].to_i,
+          "x" => data[11].to_i,
+          "y" => data[12].to_i,
+          "country" => data[13].to_i,
+          "skin" => data[14].to_i,
+        }
+        return profile
       end
       
       def cmdTransLang
@@ -210,6 +231,26 @@ module Trickster
         end
         return data
       end
+
+      def cmdGetMissionsList
+        url = "missions_get_list=1" +
+              "&app_version=#{@config["version"]}"
+        response = request(url, true, false)
+        return false unless response
+        fields = parseData(response)
+        data = Hash.new
+        fields[0].each do |field|
+          data[field[0]] = {
+            "name" => field[1],
+            "target" => field[2],
+            "message_begin" => field[3],
+            "goal" => field[4],
+            "message_end" => field[17],
+            "network" => parseNetwork(field[21]),
+          }
+        end
+        return data
+      end
       
       def cmdCheckCon
         url = "check_connectivity=1" +
@@ -273,22 +314,8 @@ module Trickster
           }
         end
 
-        data["net"] = parseNetwork(fields[1])
-        
-        data["profile"] = {
-          "id" => fields[2][0][0].to_i,
-          "name" => fields[2][0][1],
-          "money" => fields[2][0][2].to_i,
-          "bitcoin" => fields[2][0][3].to_i,
-          "credit" => fields[2][0][4].to_i,
-          "experience" => fields[2][0][5].to_i,
-          "rank" => fields[2][0][9].to_i,
-          "builder" => fields[2][0][10].to_i,
-          "x" => fields[2][0][11].to_i,
-          "y" => fields[2][0][12].to_i,
-          "country" => fields[2][0][13].to_i,
-          "skin" => fields[2][0][14].to_i,
-        }
+        data["net"] = parseNetwork(fields[1][0][1])
+        data["profile"] = parseProfile(fields[2][0])
 
         data["programs"] = Hash.new
         fields[3].each_index do |i|
@@ -402,6 +429,15 @@ module Trickster
         }
         return data
       end
+
+      def cmdGoalReject(id)
+        url = "goal_reject" +
+              "&id=#{id}" +
+              "&app_version=#{@config["version"]}"
+        response = request(url)
+        return false unless response
+        return true
+      end
       
       def cmdChatDisplay(room, last = "")
         url = "chat_display" +
@@ -513,23 +549,30 @@ module Trickster
         return false unless response
 
         fields = parseData(response)
-        data = {
-          "id" => fields[0][0][0].to_i,
-          "name" => fields[0][0][1],
-          "money" => fields[0][0][2].to_i,
-          "bitcoin" => fields[0][0][3].to_i,
-          "credit" => fields[0][0][4].to_i,
-          "experience" => fields[0][0][5].to_i,
-          "rank" => fields[0][0][9].to_i,
-          "builder" => fields[0][0][10].to_i,
-          "x" => fields[0][0][11].to_i,
-          "y" => fields[0][0][12].to_i,
-          "country" => fields[0][0][13].to_i,
-          "skin" => fields[0][0][14].to_i,
-        }
-        return data
+        profile = parseProfile(fields[0][0])
+        return profile
       end
 
+      def cmdGetNetDetailsWorld(id)
+        url = "get_net_details_world=1" +
+              "&id_player=#{id}" +
+              "&app_version=#{@config["version"]}"
+        response = request(url)
+        return false unless response
+        fields = parseData(response)
+        data = Hash.new
+        data["profile"] = parseProfile(fields[0][0])
+        data["log"] = Hash.new
+        fields[1].each do |field|
+          data["log"][field[0]] = {
+            "f1" => field[2],
+            "f2" => field[3],
+            "f3" => field[4],
+          }
+        end
+        return data
+      end
+      
       def cmdPlayerHqMove(x, y, country)
         url = "player_hq_move=1" +
               "&id=#{@config["id"]}" +
@@ -569,7 +612,24 @@ module Trickster
         return false unless response
         return response
       end
-
+    
+      def cmdSkinTypesGetList
+        url = "skin_types_get_list" +
+              "&app_version=#{@config["version"]}"
+        response = request(url, true, false)
+        return false unless response
+        fields = parseData(response)
+        data = Hash.new
+        fields[0].each do |field|
+          data[field[0]] = {
+            "name" => field[1],
+            "price" => field[2].to_i,
+            "rank" => field[3].to_i,
+          }
+        end
+        return data
+      end
+      
       def cmdShieldBuy(shield)
         url = "buy_shiled" +
               "&id_player=#{@config["id"]}" +
@@ -635,6 +695,24 @@ module Trickster
             })
           end
                 
+        return data
+      end
+
+      def cmdPlayerMissionsGetLog
+        url = "player_missions_get_log" +
+              "&id=#{@config["id"]}" +
+              "&app_version=#{@config["version"]}"
+        response = request(url)
+        return false unless response
+        fields = parseData(response)
+        data = Hash.new
+        fields[0].each do |field|
+          data[field[1]] = {
+            "money" => field[2].to_i,
+            "bitcoin" => field[3].to_i,
+            "date" => field[5],
+          }
+        end
         return data
       end
     end
