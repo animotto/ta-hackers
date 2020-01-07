@@ -158,6 +158,7 @@ module Sandbox
                          "info <id>" => "Get player info",
                          "hq <x> <y> <country>" => "Set player HQ",
                          "skin <skin>" => "Set player skin",
+                         "top <country>" => "Show top ranking",
                        })
     end
     
@@ -358,6 +359,74 @@ module Sandbox
         else
           @shell.log(msg, :error)
           return
+        end
+        return
+
+      when "top"
+        country = words[1]
+        if country.nil?
+          @shell.puts("#{cmd}: Specify country")
+          return
+        end
+
+        if @game.config["sid"].nil?
+          @shell.puts("#{cmd}: No session ID")
+          return
+        end
+        
+        msg = "Ranking get all"
+        if top = @game.cmdRankingGetAll(country)
+          @shell.log(msg, :success)
+        else
+          @shell.log(msg, :error)
+          return
+        end
+
+        types = {
+          "nearby" => "Players nearby",
+          "country" => "Top country players",
+          "world" => "Top world players",
+        }
+
+        types.each do |type, title|
+          @shell.puts("\e[1;35m\u2022 #{title}\e[0m")
+          @shell.puts(
+            "  \e[35m%-12s %-25s %-12s %-7s %-12s\e[0m" % [
+              "ID",
+              "Name",
+              "Experience",
+              "Country",
+              "Rank",
+            ]
+          )
+          top[type].each do |player|
+            @shell.puts(
+              "  %-12s %-25s %-12s %-7s %-12s" % [
+                player["id"],
+                player["name"],
+                player["experience"],
+                player["country"],
+                player["rank"],
+              ]
+            )
+          end
+          @shell.puts()
+        end
+
+        @shell.puts("\e[1;35m\u2022 Top countries\e[0m")
+        @shell.puts(
+          "  \e[35m%-7s %-12s\e[0m" % [
+            "Country",
+            "Rank",
+          ]
+        )
+        top["countries"].each do |player|
+          @shell.puts(
+            "  %-7s %-12s" % [
+              player["country"],
+              player["rank"],
+            ]
+          )
         end
         return
         
@@ -657,7 +726,7 @@ module Sandbox
               "Time",
               "Name",
             ]
-          )
+         )
 
           net["nodes"].each do |k, v|
             @shell.puts(

@@ -590,6 +590,53 @@ module Trickster
         return false unless response
         return response
       end
+
+      def cmdRankingGetAll(country)
+        url = "ranking_get_all" +
+              "&id_player=#{@config["id"]}" +
+              "&id_country=#{country}" +
+              "&app_version=#{@config["version"]}"
+        response = request(url)
+        return false unless response
+
+        fields = parseData(response)
+        data = {
+          "nearby" => [],
+          "country" => [],
+          "world" => [],
+          "countries" => [],
+        }
+
+        for i in 0..2 do
+          case i
+          when 0
+            type = "nearby"
+          when 1
+            type = "country"
+          when 2
+            type = "world"
+          end
+          
+          fields[i].each do |field|
+            data[type].push({
+              "id" => field[0],
+              "name" => field[1],
+              "experience" => field[2],
+              "country" => field[3],
+              "rank" => field[4],
+            })
+          end
+        end
+
+        fields[3].each do |field|
+            data["countries"].push({
+              "country" => field[0],
+              "rank" => field[1],
+            })
+          end
+                
+        return data
+      end
     end
   end
 end
