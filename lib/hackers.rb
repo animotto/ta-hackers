@@ -38,7 +38,6 @@ module Trickster
       def makeUrl(url, cmd = true, session = true)
         request = @config["url"] + "?" + url
         request += "&session_id=" + @config["sid"] if session
-        request = URI.encode(request)
         request += "&cmd_id=" + hashUrl(request) if cmd
         return request
       end
@@ -162,9 +161,13 @@ module Trickster
       end
       
       def cmdTransLang
-        url = "i18n_translations_get_language=1" +
-              "&language_code=#{@config["language"]}" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "i18n_translations_get_language" => 1,
+            "language_code" => @config["language"],
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url, true, false)
         return false unless response
         data = Hash.new
@@ -176,8 +179,12 @@ module Trickster
       end
       
       def cmdAppSettings
-        url = "app_setting_get_list=1" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "app_setting_get_list" => 1,
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url, true, false)
         return false unless response
         fields = parseData(response)
@@ -203,8 +210,12 @@ module Trickster
       end
 
       def cmdGetNodeTypes
-        url = "get_node_types_and_levels=1" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "get_node_types_and_levels" => 1,
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url, true, false)
         return false unless response
         fields = parseData(response)
@@ -218,8 +229,12 @@ module Trickster
       end
       
       def cmdGetProgramTypes
-        url = "get_program_types_and_levels=1" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "get_program_types_and_levels" => 1,
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url, true, false)
         return false unless response
         fields = parseData(response)
@@ -233,8 +248,12 @@ module Trickster
       end
 
       def cmdGetMissionsList
-        url = "missions_get_list=1" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "missions_get_list" => 1,
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url, true, false)
         return false unless response
         fields = parseData(response)
@@ -253,16 +272,24 @@ module Trickster
       end
       
       def cmdCheckCon
-        url = "check_connectivity=1" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "check_connectivity" => 1,
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url)
         return false if response.nil? || response != "1"
         return true
       end
 
       def cmdPlayerCreate
-        url = "player_create=1" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "player_create" => 1,
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url, true, false)
         return false unless response
         fields = parseData(response)
@@ -274,20 +301,28 @@ module Trickster
       end
 
       def cmdPlayerSetName(id, name)
-        url = "player_set_name" +
-            "&id=#{id}" +
-            "&name=#{name}" +
-            "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "player_set_name" => "",
+            "id" => id,
+            "name" => name,
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url, true, false)
         return false unless response || response == "ok"
         return true
       end
       
       def cmdAuthIdPassword
-        url = "auth_id_password" +
-              "&id_player=#{@config["id"].to_s}" +
-              "&password=#{@config["password"]}" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "auth_id_password" => "",
+            "id_player" => @config["id"],
+            "password" => @config["password"],
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url, true, false)
         return false unless response
         fields = parseData(response)
@@ -297,9 +332,13 @@ module Trickster
       end
 
       def cmdNetGetForMaint
-        url = "net_get_for_maintenance=1" +
-              "&id_player=#{@config["id"]}" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "net_get_for_maintenance" => 1,
+            "id_player" => @config["id"],
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url)
         return false unless response
         fields = parseData(response)
@@ -343,30 +382,41 @@ module Trickster
       end
 
       def cmdUpdateNet(net)
-        data = generateNetwork(net)
-        url = "net_update=1" +
-              "&id_player=#{@config["id"]}" +
-              "&net=#{data}" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "net_update" => 1,
+            "id_player" => @config["id"],
+            "net" => generateNetwork(net),
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url)
         return false unless response || response == "ok"
         return true
       end
       
       def cmdCollect(id)
-        url = "collect=1" +
-              "&id_node=#{id}" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "collect" => 1,
+            "id_node" => id,
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url)
         return false unless response
         return true
       end
 
       def cmdPlayerWorld(country)
-        url = "player_get_world=1" +
-              "&id=#{config["id"]}" +
-              "&id_country=#{country}" +
-              "&app_version=#{config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "player_get_world" => 1,
+            "id" => @config["id"],
+            "id_country" => country,
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url, true, true)
         return false unless response
         fields = parseData(response)
@@ -398,28 +448,40 @@ module Trickster
       end
 
       def cmdGetNewTargets
-        url = "player_get_new_targets=1" +
-              "&id=#{@config["id"]}" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "player_get_new_targets" => 1,
+            "id" => @config["id"],
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url)
         return false unless response
         return true
       end
 
       def cmdBonusCollect(id)
-        url = "bonus_collect=1" +
-              "&id=#{id}" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "bonus_collect" => 1,
+            "id" => id,
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url)
         return false unless response || response == "ok"
         return true
       end
 
       def cmdGoalUpdate(id, record)
-        url = "goal_update" +
-              "&id=#{id}" +
-              "&record=#{record}" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "goal_update" => "",
+            "id" => id,
+            "record" => record,
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url)
         return false unless response
         fields = parseData(response)
@@ -431,19 +493,27 @@ module Trickster
       end
 
       def cmdGoalReject(id)
-        url = "goal_reject" +
-              "&id=#{id}" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "goal_reject" => "",
+            "id" => id,
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url)
         return false unless response
         return true
       end
       
       def cmdChatDisplay(room, last = "")
-        url = "chat_display" +
-              "&room=#{room.to_s}" +
-              "&last_message=#{last}" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "chat_display" => "",
+            "room" => room,
+            "last_message" => last,
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url)
         return false unless response
         fields = parseData(response)
@@ -463,12 +533,16 @@ module Trickster
 
       def cmdChatSend(room, message, last = "")
         message = normalizeData(message, true)
-        url = "chat_send" +
-              "&room=#{room.to_s}" +
-              "&last_message=#{last}" +
-              "&message=#{message}" +
-              "&id_player=#{@config["id"]}" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "chat_send" => "",
+            "room" => room,
+            "last_message" => last,
+            "message" => message,
+            "id_player" => @config["id"],
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url)
         return false unless response
         fields = parseData(response)
@@ -487,10 +561,14 @@ module Trickster
       end
 
       def cmdNetGetForAttack(target)
-        url = "net_get_for_attack=1" +
-              "&id_target=#{target}" +
-              "&id_attacker=#{@config["id"]}" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "net_get_for_attack" => 1,
+            "id_target" => target,
+            "id_attacker" => @config["id"],
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url)
         return false unless response
         fields = parseData(response)
@@ -501,54 +579,74 @@ module Trickster
       end
 
       def cmdNetLeave(target)
-        url = "net_leave=1" +
-              "&id_attacker=#{@config["id"]}" +
-              "&id_target=#{target}" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "net_leave" => 1,
+            "id_attacker" => @config["id"],
+            "id_target" => target,
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url)
         return false unless response
         return response
       end
 
       def cmdFightUpdate(target, data)
-        url = "fight_update_running=1" +
-              "&attackerID=#{@config["id"]}" +
-              "&targetID=#{target}" +
-              "&goldMainLoot=#{data[:money]}" +
-              "&bcMainLoot=#{data[:bitcoin]}" +
-              "&nodeIDsList=#{data[:nodes]}" +
-              "&nodeLootValues=#{data[:loots]}" +
-              "&attackSuccess=#{data[:success]}" +
-              "&usedProgramsList=#{data[:programs]}" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "fight_update_running" => 1,
+            "attackerID" => @config["id"],
+            "targetID" => target,
+            "goldMainLoot" => data[:money],
+            "bcMainLoot" => data[:bitcoin],
+            "nodeIDsList" => data[:nodes],
+            "nodeLootValues" => data[:loots],
+            "attackSuccess" => data[:success],
+            "usedProgramsList" => data[:programs],
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url)
         return false unless response
         return response
       end
 
       def cmdFight(target, data)
-        url = "fight=1" +
-              "&attackerID=#{@config["id"]}" +
-              "&targetID=#{target}" +
-              "&goldMainLoot=#{data[:money]}" +
-              "&bcMainLoot=#{data[:bitcoin]}" +
-              "&nodeIDsList=#{data[:nodes]}" +
-              "&nodeLootValues=#{data[:loots]}" +
-              "&attackSuccess=#{data[:success]}" +
-              "&usedProgramsList=#{data[:programs]}" +
-              "&summaryString=#{data[:summary]}" +
-              "&replayVersion=#{data[:version]}" +
-              "&app_version=#{@config["version"]}"
-        data = "replayString=#{data["replay"]}"
+        url = URI.encode_www_form(
+          {
+            "fight" => 1,
+            "attackerID" => @config["id"],
+            "targetID" => target,
+            "goldMainLoot" => data[:money],
+            "bcMainLoot" => data[:bitcoin],
+            "nodeIDsList" => data[:nodes],
+            "nodeLootValues" => data[:loots],
+            "attackSuccess" => data[:success],
+            "usedProgramsList" => data[:programs],
+            "summaryString" => data[:summary],
+            "replayVersion" => data[:version],
+            "app_version" => @config["version"],
+          }
+        )
+        data = URI.encode_www_form(
+          {
+            "replayString" => data[:replay],
+          }
+        )
         response = request(url, true, true, data)
         return false unless response
         return response
       end
 
       def cmdPlayerGetInfo(id)
-        url = "player_get_info" +
-              "&id=#{id}" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "player_get_info" => "",
+            "id" => id,
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url)
         return false unless response
 
@@ -558,9 +656,13 @@ module Trickster
       end
 
       def cmdGetNetDetailsWorld(id)
-        url = "get_net_details_world=1" +
-              "&id_player=#{id}" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "get_net_details_world" => 1,
+            "id_player" => id,
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url)
         return false unless response
         fields = parseData(response)
@@ -578,48 +680,68 @@ module Trickster
       end
       
       def cmdPlayerHqMove(x, y, country)
-        url = "player_hq_move=1" +
-              "&id=#{@config["id"]}" +
-              "&hq_location_x=#{x}" +
-              "&hq_location_y=#{y}" +
-              "&country=#{country}" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "player_hq_move" => 1,
+            "id" => @config["id"],
+            "hq_location_x" => x,
+            "hq_location_y" => y,
+            "country" => country,
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url)
         return false unless response
         return response
       end
 
       def cmdHqMoveGetPrice
-        url = "hq_move_get_price" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "hq_move_get_price" => "",
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url)
         return false unless response
         return response
       end
 
       def cmdPlayerSetSkin(skin)
-        url = "player_set_skin" +
-              "&id=#{@config["id"]}" +
-              "&skin=#{skin}" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "player_set_skin" => "",
+            "id" => @config["id"],
+            "skin" => skin,
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url)
         return false unless response
         return response
       end
 
       def cmdPlayerBuySkin(skin)
-        url = "player_buy_skin" +
-              "&id=#{@config["id"]}" +
-              "&id_skin=#{skin}" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "player_buy_skin" => "",
+            "id" => @config["id"],
+            "id_skin" => skin,
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url)
         return false unless response
         return response
       end
     
       def cmdSkinTypesGetList
-        url = "skin_types_get_list" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "skin_types_get_list" => "",
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url, true, false)
         return false unless response
         fields = parseData(response)
@@ -635,31 +757,43 @@ module Trickster
       end
       
       def cmdShieldBuy(shield)
-        url = "buy_shiled" +
-              "&id_player=#{@config["id"]}" +
-              "&id_shield_type=#{shield}" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "buy_shield" => "",
+            "id_player" => @config["id"],
+            "id_shield_type" => shield,
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url)
         return false unless response
         return response
       end
 
       def cmdPlayerBuyCurrencyPerc(currency, perc)
-        url = "player_buy_currency_percentage=1" +
-              "&id=#{@config["id"]}" +
-              "&currency=#{currency}" +
-              "&max_storage_percentage=#{perc}" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "player_buy_currency_percentage" => 1,
+            "id" => @config["id"],
+            "currency" => currency,
+            "max_storage_percentage" => perc,
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url)
         return false unless response
         return response
       end
 
       def cmdRankingGetAll(country)
-        url = "ranking_get_all" +
-              "&id_player=#{@config["id"]}" +
-              "&id_country=#{country}" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "ranking_get_all" => "",
+            "id_player" => @config["id"],
+            "id_country" => country,
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url)
         return false unless response
 
@@ -703,9 +837,13 @@ module Trickster
       end
 
       def cmdPlayerMissionsGetLog
-        url = "player_missions_get_log" +
-              "&id=#{@config["id"]}" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "player_missions_get_log" => "",
+            "id" => @config["id"],
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url)
         return false unless response
         fields = parseData(response)
@@ -721,30 +859,42 @@ module Trickster
       end
 
       def cmdPlayerSetReadme(text)
-        url = "player_set_readme" +
-              "&id=#{@config["id"]}" +
-              "&text=#{text}" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "player_set_readme" => "",
+            "id" => @config["id"],
+            "text" => text,
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url)
         return false unless response
         return true
       end
 
       def cmdPlayerSetReadmeFight(target, text)
-        url = "player_set_readme_fight" +
-              "&id_attacker=#{@config["id"]}" +
-              "&id_target=#{target}" +
-              "&text=#{text}" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "player_set_readme_fight" => "",
+            "id_attacker" => @config["id"],
+            "id_target" => target,
+            "text" => text,
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url)
         return false unless response
         return true
       end
 
       def cmdGoalByPlayer
-        url = "goal_by_player" +
-              "&id_player=#{@config["id"]}" +
-              "&app_version=#{@config["version"]}"
+        url = URI.encode_www_form(
+          {
+            "goal_by_player" => "",
+            "id_player" => @config["id"],
+            "app_version" => @config["version"],
+          }
+        )
         response = request(url)
         return false unless response
         return response
