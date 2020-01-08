@@ -899,6 +899,156 @@ module Trickster
         return false unless response
         return response
       end
+
+      def cmdNewsGetList
+        url = URI.encode_www_form(
+          {
+            "news_get_list" => 1,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url, true, false)
+        return false unless response
+        fields = parseData(response)
+        data = Hash.new
+        fields[0].each do |field|
+          data[field[0]] = {
+            "date" => field[1],
+            "title" => normalizeData(field[2]),
+            "body" => normalizeData(field[3]),
+          }
+        end
+        return data
+      end
+
+      def cmdHintsGetList
+        url = URI.encode_www_form(
+          {
+            "hints_get_list" => 1,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url, true, false)
+        return false unless response
+        return response
+      end
+
+      def cmdWorldNewsGetList
+        url = URI.encode_www_form(
+          {
+            "world_news_get_list" => 1,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url, true, false)
+        return false unless response
+        return response
+      end
+
+      def cmdGetExperienceList
+        url = URI.encode_www_form(
+          {
+            "get_experience_list" => 1,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url, true, false)
+        return false unless response
+        fields = parseData(response)
+        data = Hash.new
+        fields[0].each do |field|
+          data[field[0]] = {
+            "level" => field[1],
+            "experience" => field[2],
+          }
+        end
+        return data
+      end
+
+      def cmdBuildersCountGetList
+        url = URI.encode_www_form(
+          {
+            "builders_count_get_list" => 1,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url, true, false)
+        return false unless response
+        fields = parseData(response)
+        data = Array.new
+        fields[0].each do |field|
+          data.push(
+            {
+              "amount" => field[0],
+              "price" => field[1],
+            }
+          )
+        end
+        return data
+      end
+
+      def cmdGoalTypesGetList
+        url = URI.encode_www_form(
+          {
+            "goal_types_get_list" => 1,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url, true, false)
+        return false unless response
+        fields = parseData(response)
+        data = Hash.new
+        fields[0].each do |field|
+          data[field[1]] = {
+            "amount" => field[2],
+            "name" => field[7],
+            "description" => field[8],
+          }
+        end
+        return data
+      end
+
+      def cmdShieldTypesGetList
+        url = URI.encode_www_form(
+          {
+            "shield_types_get_list" => 1,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url, true, false)
+        return false unless response
+        fields = parseData(response)
+        data = Array.new
+        fields[0].each do |field|
+          data.push(
+            {
+              "price" => field[3],
+              "name" => field[4],
+              "description" => field[5],
+            }
+          )
+        end
+        return data
+      end
+
+      def cmdRankGetList
+        url = URI.encode_www_form(
+          {
+            "rank_get_list" => 1,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url, true, false)
+        return false unless response
+        fields = parseData(response)
+        data = Hash.new
+        fields[0].each do |field|
+          data[field[0]] = {
+            "rank" => field[1],
+          }
+        end
+        return data
+      end
     end
   end
 end

@@ -155,6 +155,7 @@ module Sandbox
                          "progs" => "Program types",
                          "missions" => "Missions list",
                          "skins" => "Skin types",
+                         "news" => "News",
                          "new" => "Create new account",
                          "rename <name>" => "Set new name",
                          "info <id>" => "Get player info",
@@ -252,6 +253,27 @@ module Sandbox
                         v["price"],
                         v["rank"],
                       ]
+        end
+        return
+
+      when "news"
+        msg = "News"
+        if news = @game.cmdNewsGetList
+          @shell.log(msg, :success)
+        else
+          @shell.log(msg, :error)
+          return
+        end
+
+        news.each do |k, v|
+          @shell.puts "\e[34m%s \e[33m%s\e[0m" % [
+                        v["date"],
+                        v["title"],
+                      ]
+          @shell.puts "\e[35m%s\e[0m" % [
+                        v["body"],
+                      ]
+          @shell.puts
         end
         return
 
