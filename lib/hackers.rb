@@ -326,7 +326,7 @@ module Trickster
           }
         end
 
-        data["readme"] = fields[11][0][0]
+        data["readme"] = fields.dig(11, 0, 0)
 
         data["logs"] = Hash.new
         fields[9].each_index do |i|
@@ -493,7 +493,11 @@ module Trickster
               "&app_version=#{@config["version"]}"
         response = request(url)
         return false unless response
-        return response
+        fields = parseData(response)
+        data = Hash.new
+        data["profile"] = parseProfile(fields[2][0])
+        data["net"] = parseNetwork(fields[1][0][1])
+        return data
       end
 
       def cmdNetLeave(target)
@@ -714,6 +718,36 @@ module Trickster
           }
         end
         return data
+      end
+
+      def cmdPlayerSetReadme(text)
+        url = "player_set_readme" +
+              "&id=#{@config["id"]}" +
+              "&text=#{text}" +
+              "&app_version=#{@config["version"]}"
+        response = request(url)
+        return false unless response
+        return true
+      end
+
+      def cmdPlayerSetReadmeFight(target, text)
+        url = "player_set_readme_fight" +
+              "&id_attacker=#{@config["id"]}" +
+              "&id_target=#{target}" +
+              "&text=#{text}" +
+              "&app_version=#{@config["version"]}"
+        response = request(url)
+        return false unless response
+        return true
+      end
+
+      def cmdGoalByPlayer
+        url = "goal_by_player" +
+              "&id_player=#{@config["id"]}" +
+              "&app_version=#{@config["version"]}"
+        response = request(url)
+        return false unless response
+        return response
       end
     end
   end
