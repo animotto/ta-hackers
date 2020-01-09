@@ -5,39 +5,32 @@ class Autohack < Sandbox::Script
       return
     end
 
+    unless @game.config["sid"]
+      @shell.log("No session ID", :script)
+      return
+    end
+    
     n = 0
     loop do
       begin
         world = @game.cmdPlayerWorld(0)
+        if world["targets"].empty?
+          @shell.log("Get new targets", :script)
+          @game.cmdGetNewTargets
+          redo
+        end
       rescue Trickster::Hackers::RequestError => e
         @shell.log("#{e.type}: #{e.description}", :script)
         return
       end
-      
-      if world["targets"].empty?
-        @shell.log("Get new targets", :script)
-        begin
-          @game.cmdGetNewTargets
-        rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{e.type}: #{e.description}", :script)
-          return
-        end
         
-        redo
-      end
-    
       world["targets"].each do |k, v|
         @shell.log("Attack #{k} / #{v["name"]}", :script)
 
         begin
           net = @game.cmdNetGetForAttack(k)
-        rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{e.type}: #{e.description}", :script)
-          return
-        end
-        sleep(rand(4..9))
+          sleep(rand(4..9))
 
-        begin
           update = @game.cmdFightUpdate(k, {
                                           money: 0,
                                           bitcoin: 0,
@@ -46,18 +39,13 @@ class Autohack < Sandbox::Script
                                           success: 0,
                                           programs: "",
                                         })
-        rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{e.type}: #{e.description}", :script)
-          return
-        end
-        sleep(rand(35..95))
+          sleep(rand(35..95))
 
-        version = [
-          @game.config["version"],
-          @game.appSettings["node types"],
-          @game.appSettings["program types"],
-        ].join(",")
-        begin
+          version = [
+            @game.config["version"],
+            @game.appSettings["node types"],
+            @game.appSettings["program types"],
+          ].join(",")
           fight = @game.cmdFight(k, {
                                    money: 0,
                                    bitcoin: 0,
@@ -69,14 +57,10 @@ class Autohack < Sandbox::Script
                                    version: version,
                                    replay: "",
                                  })
-        rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{e.type}: #{e.description}", :script)
-          return
-        end
-        sleep(rand(5..12))
+          sleep(rand(5..12))
 
-        begin
           leave = @game.cmdNetLeave(k)
+          @game.cmdNetGetForMaint
         rescue Trickster::Hackers::RequestError => e
           @shell.log("#{e.type}: #{e.description}", :script)
           return
