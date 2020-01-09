@@ -1309,8 +1309,10 @@ module Sandbox
 
         @shell.log("Killed: #{@jobs[job][0]}", :script)
         @jobs[job][1].kill
-        Object.send(:remove_const, @jobs[job][0].capitalize)
+        script = @jobs[job][0]
+        name = script.capitalize
         @jobs.delete(job)
+        Object.send(:remove_const, name) unless @jobs.each_value.detect {|j| j[0] == script}
         return
         
       end
@@ -1319,22 +1321,26 @@ module Sandbox
     end
 
     def run(script, args)
-      @jobId = @jobCounter += 1
-      @jobs[@jobCounter] = [
-                     script,
-                     Thread.current,
-                   ]
+      job = @jobCounter += 1
+      @jobs[job] = [
+        script,
+        Thread.current,
+      ]
       fname = "#{SCRIPTS_DIR}/#{script}.rb"
       @shell.log("Run: #{script}", :script)
+      
       begin
-        load "#{fname}"
-        eval("#{script.capitalize}.new(@game, @shell, args).main")
-        @shell.log("Done: #{script}", :script)
+        name = script.capitalize
+        load "#{fname}" unless Object.const_defined?(name)
+        eval("#{name}.new(@game, @shell, args).main")
       rescue => e
-        @shell.log("Error: #{script} (#{e})", :script)
+        @shell.log("Error: #{script} (#{e.message})", :script)
+      else
+        @shell.log("Done: #{script}", :script)
       end
-      Object.send(:remove_const, script.capitalize)
-      @jobs.delete(@jobId)
+
+      @jobs.delete(job)
+      Object.send(:remove_const, name) unless @jobs.each_value.detect {|j| j[0] == script}
     end
   end
   
