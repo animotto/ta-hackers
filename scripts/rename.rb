@@ -9,15 +9,18 @@ class Rename < Sandbox::Script
     name = @args[1]
     name = "" if name.nil?
 
+    begin
+      @game.cmdPlayerSetName(id, name)
+    rescue Trickster::Hackers::RequestError => e
+      @shell.log("#{e.type}: #{e.description}", :script)
+      return
+    end
+
     msg = String.new
-    if @game.cmdPlayerSetName(id, name)
-      if name.empty?
-        msg = "Name for #{id} cleared"
-      else
-        msg = "Name for #{id} setted to #{name}"
-      end
+    if name.empty?
+      msg = "Name for #{id} cleared"
     else
-      msg = "Error renaming"
+      msg = "Name for #{id} setted to #{name}"
     end
     @shell.log(msg, :script)
   end

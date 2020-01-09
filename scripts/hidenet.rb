@@ -6,8 +6,10 @@ class Hidenet < Sandbox::Script
       return
     end
 
-    unless net = @game.cmdNetGetForMaint
-      @shell.log("Can't get network data", :script)
+    begin
+      net = @game.cmdNetGetForMaint
+    rescue Trickster::Hackers::RequestError => e
+      @shell.log("#{e.type}: #{e.description}", :script)
       return
     end
 
@@ -17,9 +19,11 @@ class Hidenet < Sandbox::Script
       net["net"][i]["y"] = coord
       net["net"][i]["z"] = coord
     end
-    
-    unless @game.cmdUpdateNet(net["net"])
-      @shell.log("Can't update network", :script)
+
+    begin
+      @game.cmdUpdateNet(net["net"])
+    rescue Trickster::Hackers::RequestError => e
+      @shell.log("#{e.type}: #{e.description}", :script)
       return
     end
     

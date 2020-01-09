@@ -258,12 +258,13 @@ module Sandbox
 
       when "news"
         msg = "News"
-        if news = @game.cmdNewsGetList
-          @shell.log(msg, :success)
-        else
-          @shell.log(msg, :error)
+        begin
+          news = @game.cmdNewsGetList
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
           return
         end
+        @shell.log(msg, :success)
 
         news.each do |k, v|
           @shell.puts "\e[34m%s \e[33m%s\e[0m" % [
@@ -279,72 +280,80 @@ module Sandbox
 
       when "connect"
         msg = "Language translations"
-        if @game.transLang = @game.cmdTransLang
-          @shell.log(msg, :success)
-        else
-          @shell.log(msg, :error)
+        begin
+          @game.transLang = @game.cmdTransLang
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
           return
         end
+        @shell.log(msg, :success)
  
         msg = "Application settings"
-        if @game.appSettings = @game.cmdAppSettings
-          @shell.log(msg, :success)
-        else
-          @shell.log(msg, :error)
+        begin
+          @game.appSettings = @game.cmdAppSettings
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
           return
         end
+        @shell.log(msg, :success)
 
         msg = "Node types and levels"
-        if @game.nodeTypes = @game.cmdGetNodeTypes
-          @shell.log(msg, :success)
-        else
-          @shell.log(msg, :error)
+        begin
+          @game.nodeTypes = @game.cmdGetNodeTypes
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
           return
         end
+        @shell.log(msg, :success)
 
         msg = "Program types and levels"
-        if @game.programTypes = @game.cmdGetProgramTypes
-          @shell.log(msg, :success)
-        else
-          @shell.log(msg, :error)
+        begin
+          @game.programTypes = @game.cmdGetProgramTypes
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
           return
         end
+        @shell.log(msg, :success)
 
         msg = "Missions list"
-        if @game.missionsList = @game.cmdGetMissionsList
-          @shell.log(msg, :success)
-        else
-          @shell.log(msg, :error)
+        begin
+          @game.missionsList = @game.cmdGetMissionsList
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
           return
         end
+        @shell.log(msg, :success)
 
         msg = "Skin types"
-        if @game.skinTypes = @game.cmdSkinTypesGetList
-          @shell.log(msg, :success)
-        else
-          @shell.log(msg, :error)
+        begin
+          @game.skinTypes = @game.cmdSkinTypesGetList
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
           return
         end
+        @shell.log(msg, :success)
         
         msg = "Authenticate"
-        if auth = @game.cmdAuthIdPassword
-          @shell.log(msg, :success)
-        else
-          @shell.log(msg, :error)
+        begin
+          auth = @game.cmdAuthIdPassword
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
           return
         end
+        @shell.log(msg, :success)
 
         @game.config["sid"] = auth["sid"]        
         return
 
       when "new"
         msg = "Player create"
-        if player = @game.cmdPlayerCreate
-          @shell.log(msg, :success)
-        else
-          @shell.log(msg, :error)
+        begin
+          player = @game.cmdPlayerCreate
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
           return
         end
+        @shell.log(msg, :success)
 
         @shell.puts("\e[1;35m\u2022 New account\e[0m")
         @shell.puts("  ID: #{player["id"]}")
@@ -360,11 +369,13 @@ module Sandbox
         end
 
         msg = "Player set name"
-        if @game.cmdPlayerSetName(@game.config["id"], name)
-          @shell.log(msg, :success)
-        else
-          @shell.log(msg, :error)
+        begin
+          @game.cmdPlayerSetName(@game.config["id"], name)
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
+          return
         end
+        @shell.log(msg, :success)
         return
 
       when "info"
@@ -380,12 +391,13 @@ module Sandbox
         end
         
         msg = "Player get info"
-        if info = @game.cmdPlayerGetInfo(id)
-          @shell.log(msg, :success)
-        else
-          @shell.log(msg, :error)
+        begin
+          info = @game.cmdPlayerGetInfo(id)
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
           return
         end
+        @shell.log(msg, :success)
 
         @shell.puts("\e[1;35m\u2022 Player info\e[0m")
         info.each do |k, v|
@@ -406,12 +418,13 @@ module Sandbox
         end
         
         msg = "Get net details world"
-        if detail = @game.cmdGetNetDetailsWorld(id)
-          @shell.log(msg, :success)
-        else
-          @shell.log(msg, :error)
+        begin
+          detail = @game.cmdGetNetDetailsWorld(id)
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
           return
         end
+        @shell.log(msg, :success)
 
         @shell.puts("\e[1;35m\u2022 Detail player network\e[0m")
         detail["profile"].each do |k, v|
@@ -438,12 +451,13 @@ module Sandbox
         end
         
         msg = "Player HQ move"
-        if @game.cmdPlayerHqMove(x, y, country)
-          @shell.log(msg, :success)
-        else
-          @shell.log(msg, :error)
+        begin
+          @game.cmdPlayerHqMove(x, y, country)
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
           return
         end
+        @shell.log(msg, :success)
         return
 
       when "skin"
@@ -459,12 +473,13 @@ module Sandbox
         end
         
         msg = "Player set skin"
-        if response = @game.cmdPlayerSetSkin(skin)
-          @shell.log(msg, :success)
-        else
-          @shell.log(msg, :error)
+        begin
+          response = @game.cmdPlayerSetSkin(skin)
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
           return
         end
+        @shell.log(msg, :success)
         return
 
       when "top"
@@ -480,12 +495,13 @@ module Sandbox
         end
         
         msg = "Ranking get all"
-        if top = @game.cmdRankingGetAll(country)
-          @shell.log(msg, :success)
-        else
-          @shell.log(msg, :error)
+        begin
+          top = @game.cmdRankingGetAll(country)
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
           return
         end
+        @shell.log(msg, :success)
 
         types = {
           "nearby" => "Players nearby",
@@ -581,12 +597,13 @@ module Sandbox
           return
         end
 
-        response = @game.request(url, (cmd == "qc" || cmd == "qs"), (cmd == "qs"))
         query = @game.makeUrl(url, (cmd == "qc" || cmd == "qs"), (cmd == "qs"))
         msg = "Query: #{query}"
-        unless response
-          @shell.log(msg, :error)
-          return
+        begin
+          response = @game.request(url, (cmd == "qc" || cmd == "qs"), (cmd == "qs"))
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
+          return          
         end
 
         @shell.log(msg, :success)
@@ -801,12 +818,13 @@ module Sandbox
         end
 
         msg = "Network maintenance"
-        if net = @game.cmdNetGetForMaint
-          @shell.log(msg, :success)
-        else
-          @shell.log(msg, :error)
+        begin
+          net = @game.cmdNetGetForMaint
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
           return
         end
+        @shell.log(msg, :success)
 
         case cmd
 
@@ -964,11 +982,13 @@ module Sandbox
         end
 
         msg = "Collect"
-        if @game.cmdCollect(id)
-          @shell.log(msg, :success)
-        else
-          @shell.log(msg, :error)
+        begin
+          @game.cmdCollect(id)
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
+          return
         end
+        @shell.log(msg, :success)
         return
 
       when "missions"
@@ -978,11 +998,13 @@ module Sandbox
         end
 
         msg = "Player missions get log"
-        if missions = @game.cmdPlayerMissionsGetLog
-          @shell.log(msg, :success)
-        else
-          @shell.log(msg, :error)
+        begin
+          missions = @game.cmdPlayerMissionsGetLog
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
+          return
         end
+        @shell.log(msg, :success)
 
         @shell.puts("\e[1;35m\u2022 Missions log\e[0m")
         @shell.puts(
@@ -1036,20 +1058,22 @@ module Sandbox
         end
 
         msg = "Network maintenance"
-        if net = @game.cmdNetGetForMaint
-          @shell.log(msg, :success)
-        else
-          @shell.log(msg, :error)
+        begin
+          net = @game.cmdNetGetForMaint
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
           return
         end
+        @shell.log(msg, :success)
         
         msg = "World"
-        if world = @game.cmdPlayerWorld(net["profile"]["country"])
-          @shell.log(msg, :success)
-        else
-          @shell.log(msg, :error)
+        begin
+          world = @game.cmdPlayerWorld(net["profile"]["country"])
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
           return
         end
+        @shell.log(msg, :success)
 
         case cmd
 
@@ -1118,12 +1142,13 @@ module Sandbox
         end
 
         msg = "Get new targets"
-        if @game.cmdGetNewTargets
-          @shell.log(msg, :success)
-        else
-          @shell.log(msg, :error)
+        begin
+          @game.cmdGetNewTargets
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
           return
-        end        
+        end
+        @shell.log(msg, :success)
         return
 
       when "collect"
@@ -1139,12 +1164,13 @@ module Sandbox
         id = words[1].to_i
         
         msg = "Bonus collect"
-        if @game.cmdBonusCollect(id)
-          @shell.log(msg, :success)
-        else
-          @shell.log(msg, :error)
+        begin
+          @game.cmdBonusCollect(id)
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
           return
-        end        
+        end
+        @shell.log(msg, :success)
         return        
 
       when "update"
@@ -1166,12 +1192,13 @@ module Sandbox
         record = words[2].to_i
         
         msg = "Goal update"
-        if @game.cmdGoalUpdate(id, record)
-          @shell.log(msg, :success)
-        else
-          @shell.log(msg, :error)
+        begin
+          @game.cmdGoalUpdate(id, record)
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
           return
         end
+        @shell.log(msg, :success)
         return
 
       when "reject"
@@ -1187,12 +1214,13 @@ module Sandbox
         id = words[1].to_i
         
         msg = "Goal reject"
-        if @game.cmdGoalReject(id)
-          @shell.log(msg, :success)
-        else
-          @shell.log(msg, :error)
+        begin
+          @game.cmdGoalReject(id)
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
           return
         end
+        @shell.log(msg, :success)
         return
         
       end
@@ -1398,16 +1426,16 @@ module Sandbox
 
         response = nil
         @mutex.synchronize do
-          response = @game.cmdChatSend(
-            room,
-            words[2..-1].join(" "),
-            @rooms[room][1],
-          )
-          unless response
-            @shell.log("Chat send", :error)
+          begin
+            response = @game.cmdChatSend(
+              room,
+              words[2..-1].join(" "),
+              @rooms[room][1],
+            )
+          rescue Trickster::Hackers::RequestError => e
+            @shell.log("Chat send (#{e.type}: #{e.description})", :error)
             return
           end
-
           logMessages(room, response)
         end
         return
@@ -1436,16 +1464,16 @@ module Sandbox
           break if message == "!"
           response = nil
           @mutex.synchronize do
-            response = @game.cmdChatSend(
-              room,
-              message,
-              @rooms[room][1],
-            )
-            unless response
-              @shell.log("Chat send", :error)
+            begin
+              response = @game.cmdChatSend(
+                room,
+                message,
+                @rooms[room][1],
+              )
+            rescue Trickster::Hackers::RequestError => e
+              @shell.log("Chat send (#{e.type}: #{e.description})", :error)
               next
             end
-
             logMessages(room, response)
           end
         end
@@ -1474,14 +1502,14 @@ module Sandbox
       loop do
         response = nil
         @mutex.synchronize do
-          messages = @game.cmdChatDisplay(room, @rooms[room][1])
-          if messages
-            logMessages(room, messages)
+          begin
+            messages = @game.cmdChatDisplay(room, @rooms[room][1])
+          rescue Trickster::Hackers::RequestError => e
+            @shell.log("Chat display (#{e.type}: #{e.description})", :error)
           else
-            @shell.log("Chat display (#{room.to_s})", :error)
+            logMessages(room, messages)
           end
         end
-
         sleep(@game.appSettings["chat_refresh_interval"].to_i)
       end
     rescue

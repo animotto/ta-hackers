@@ -5,17 +5,24 @@ class Colres < Sandbox::Script
   def main
     loop do
       sleep(INTERVAL_MIN + rand(INTERVAL_ADD))
-      unless net = @game.cmdNetGetForMaint
-        @shell.log("Can't get network data", :script)
-        next
+
+      begin
+        net = @game.cmdNetGetForMaint
+      rescue Trickster::Hackers::RequestError => e
+        @shell.log("#{e.type}: #{e.description}", :script)
+        return
       end
+
       net["nodes"].each do |k, v|
         next unless v["type"] == 11 || v["type"] == 13
-        unless @game.cmdCollect(k)
-          @shell.log("Can't collect node {k}")
-        else
-          @shell.log("Node #{k} resources collected", :script)
+        begin
+          @game.cmdCollect(k)
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{e.type}: #{e.description}", :script)
+          return
         end
+        
+        @shell.log("Node #{k} resources collected", :script)
       end
     end
   end

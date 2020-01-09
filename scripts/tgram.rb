@@ -36,8 +36,14 @@ class Tgram < Sandbox::Script
     last = String.new
     loop do
       sleep(INTERVAL)
-      
-      next unless messages = @game.cmdChatDisplay(room, last)
+
+      begin
+        messages = @game.cmdChatDisplay(room, last)
+      rescue Trickster::Hackers::RequestError => e
+        @shell.log("#{e.type}: #{e.description}", :script)
+        next
+      end
+
       messages.each do |message|
         if last.empty?
           if message == messages.last
@@ -69,7 +75,12 @@ class Tgram < Sandbox::Script
 
         else
           if chats.include?(message["chat"]["id"])
-            @game.cmdChatSend(room, "@#{message["chat"]["first_name"]}: #{message["text"]}", last)
+            begin
+              @game.cmdChatSend(room, "@#{message["chat"]["first_name"]}: #{message["text"]}", last)
+            rescue Trickster::Hackers::RequestError => e
+              @shell.log("#{e.type}: #{e.description}", :script)
+              next
+            end
           end
           
         end

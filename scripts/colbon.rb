@@ -5,21 +5,30 @@ class Colbon < Sandbox::Script
   def main
     loop do
       sleep(INTERVAL_MIN + rand(INTERVAL_ADD))
-      unless net = @game.cmdNetGetForMaint
-        @shell.log("Can't get network data", :script)
-        next
+
+      begin
+        net = @game.cmdNetGetForMaint
+      rescue Trickster::Hackers::RequestError => e
+        @shell.log("#{e.type}: #{e.description}", :script)
+        return
       end
-      unless world = @game.cmdPlayerWorld(net["profile"]["country"])
-        @shell.log("Can't get world data", :script)
-        next
+
+      begin
+        world = @game.cmdPlayerWorld(net["profile"]["country"])
+      rescue Trickster::Hackers::RequestError => e
+        @shell.log("#{e.type}: #{e.description}", :script)
+        return
       end
 
       world["bonuses"].each do |k, v|
-        unless @game.cmdBonusCollect(k)
-          @shell.log("Can't collect bonus #{k}", :script)
-        else
-          @shell.log("Bonus #{k} collected with #{v["amount"]} credits", :script)
+        begin
+          @game.cmdBonusCollect(k)
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{e.type}: #{e.description}", :script)
+          return
         end
+
+        @shell.log("Bonus #{k} collected with #{v["amount"]} credits", :script)
       end
     end
   end

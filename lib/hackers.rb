@@ -4,6 +4,15 @@ module Trickster
     require "digest"
     require "base64"
 
+    class RequestError < StandardError
+      attr_reader :type, :description
+      
+      def initialize(type = nil, description = nil)
+        @type = type.nil? ? "Unknown" : type
+        @description = description.nil? ? "None" : description
+      end
+    end
+    
     class Game
       attr_accessor :config, :appSettings, :transLang,
                     :nodeTypes, :programTypes, :missionsList,
@@ -43,7 +52,6 @@ module Trickster
       end
       
       def request(url, cmd = true, session = true, data = "")
-        response = nil
         header = {
           "Content-Type" => "application/x-www-form-urlencoded",
           "Accept-Charset" => "utf-8",
@@ -51,6 +59,7 @@ module Trickster
           "User-Agent" => "UniWeb (http://www.differentmethods.com)",
         }
 
+        response = nil
         @mutex.synchronize do
           if data.empty?
             response = @client.get(
@@ -64,12 +73,13 @@ module Trickster
               header,
             )
           end
-        rescue
-          return false
+        rescue => e
+          raise RequestError.new(e.message), e.message
         end
-        unless response.code == "200" ||
-               (response.code == "500" && !response.body.empty?)
-          return false
+
+        if response.code != "200"
+          fields = parseData(response.body.force_encoding("utf-8"))
+          raise RequestError.new(fields.dig(0, 0, 0), fields.dig(0, 0, 1)), fields.dig(0, 0, 0)
         end
         return response.body.force_encoding("utf-8")
       end
@@ -169,7 +179,6 @@ module Trickster
           }
         )
         response = request(url, true, false)
-        return false unless response
         data = Hash.new
         fields = parseData(response)
         fields[0].each_index do |i|
@@ -186,7 +195,6 @@ module Trickster
           }
         )
         response = request(url, true, false)
-        return false unless response
         fields = parseData(response)
         data = Hash.new
         
@@ -217,7 +225,6 @@ module Trickster
           }
         )
         response = request(url, true, false)
-        return false unless response
         fields = parseData(response)
         data = Hash.new
         fields[0].each_index do |i|
@@ -236,7 +243,6 @@ module Trickster
           }
         )
         response = request(url, true, false)
-        return false unless response
         fields = parseData(response)
         data = Hash.new
         fields[0].each_index do |i|
@@ -255,7 +261,6 @@ module Trickster
           }
         )
         response = request(url, true, false)
-        return false unless response
         fields = parseData(response)
         data = Hash.new
         fields[0].each do |field|
@@ -279,7 +284,6 @@ module Trickster
           }
         )
         response = request(url)
-        return false if response.nil? || response != "1"
         return true
       end
 
@@ -291,7 +295,6 @@ module Trickster
           }
         )
         response = request(url, true, false)
-        return false unless response
         fields = parseData(response)
         data = Hash.new
         data["id"] = fields[0][0][0].to_i
@@ -310,7 +313,6 @@ module Trickster
           }
         )
         response = request(url, true, false)
-        return false unless response || response == "ok"
         return true
       end
       
@@ -324,7 +326,6 @@ module Trickster
           }
         )
         response = request(url, true, false)
-        return false unless response
         fields = parseData(response)
         data = Hash.new
         data["sid"] = fields[0][0][3]
@@ -340,7 +341,6 @@ module Trickster
           }
         )
         response = request(url)
-        return false unless response
         fields = parseData(response)
         data = Hash.new
 
@@ -391,7 +391,6 @@ module Trickster
           }
         )
         response = request(url)
-        return false unless response || response == "ok"
         return true
       end
       
@@ -404,7 +403,6 @@ module Trickster
           }
         )
         response = request(url)
-        return false unless response
         return true
       end
 
@@ -418,7 +416,6 @@ module Trickster
           }
         )
         response = request(url, true, true)
-        return false unless response
         fields = parseData(response)
         data = Hash.new
 
@@ -456,7 +453,6 @@ module Trickster
           }
         )
         response = request(url)
-        return false unless response
         return true
       end
 
@@ -469,7 +465,6 @@ module Trickster
           }
         )
         response = request(url)
-        return false unless response || response == "ok"
         return true
       end
 
@@ -483,7 +478,6 @@ module Trickster
           }
         )
         response = request(url)
-        return false unless response
         fields = parseData(response)
         data = {
           "status" => fields[0][0][0],
@@ -501,7 +495,6 @@ module Trickster
           }
         )
         response = request(url)
-        return false unless response
         return true
       end
       
@@ -515,7 +508,6 @@ module Trickster
           }
         )
         response = request(url)
-        return false unless response
         fields = parseData(response)
         data = Array.new
         unless fields.empty?
@@ -544,7 +536,6 @@ module Trickster
           }
         )
         response = request(url)
-        return false unless response
         fields = parseData(response)
         data = Array.new
         unless fields.empty?
@@ -570,7 +561,6 @@ module Trickster
           }
         )
         response = request(url)
-        return false unless response
         fields = parseData(response)
         data = Hash.new
         data["profile"] = parseProfile(fields[2][0])
@@ -588,7 +578,6 @@ module Trickster
           }
         )
         response = request(url)
-        return false unless response
         return response
       end
 
@@ -608,7 +597,6 @@ module Trickster
           }
         )
         response = request(url)
-        return false unless response
         return response
       end
 
@@ -635,7 +623,6 @@ module Trickster
           }
         )
         response = request(url, true, true, data)
-        return false unless response
         return response
       end
 
@@ -648,7 +635,6 @@ module Trickster
           }
         )
         response = request(url)
-        return false unless response
 
         fields = parseData(response)
         profile = parseProfile(fields[0][0])
@@ -664,7 +650,6 @@ module Trickster
           }
         )
         response = request(url)
-        return false unless response
         fields = parseData(response)
         data = Hash.new
         data["profile"] = parseProfile(fields[0][0])
@@ -691,7 +676,6 @@ module Trickster
           }
         )
         response = request(url)
-        return false unless response
         return response
       end
 
@@ -703,7 +687,6 @@ module Trickster
           }
         )
         response = request(url)
-        return false unless response
         return response
       end
 
@@ -717,7 +700,6 @@ module Trickster
           }
         )
         response = request(url)
-        return false unless response
         return response
       end
 
@@ -731,7 +713,6 @@ module Trickster
           }
         )
         response = request(url)
-        return false unless response
         return response
       end
     
@@ -743,7 +724,6 @@ module Trickster
           }
         )
         response = request(url, true, false)
-        return false unless response
         fields = parseData(response)
         data = Hash.new
         fields[0].each do |field|
@@ -766,7 +746,6 @@ module Trickster
           }
         )
         response = request(url)
-        return false unless response
         return response
       end
 
@@ -781,7 +760,6 @@ module Trickster
           }
         )
         response = request(url)
-        return false unless response
         return response
       end
 
@@ -795,8 +773,6 @@ module Trickster
           }
         )
         response = request(url)
-        return false unless response
-
         fields = parseData(response)
         data = {
           "nearby" => [],
@@ -845,7 +821,6 @@ module Trickster
           }
         )
         response = request(url)
-        return false unless response
         fields = parseData(response)
         data = Hash.new
         fields[0].each do |field|
@@ -868,7 +843,6 @@ module Trickster
           }
         )
         response = request(url)
-        return false unless response
         return true
       end
 
@@ -883,7 +857,6 @@ module Trickster
           }
         )
         response = request(url)
-        return false unless response
         return true
       end
 
@@ -896,7 +869,6 @@ module Trickster
           }
         )
         response = request(url)
-        return false unless response
         return response
       end
 
@@ -908,7 +880,6 @@ module Trickster
           }
         )
         response = request(url, true, false)
-        return false unless response
         fields = parseData(response)
         data = Hash.new
         fields[0].each do |field|
@@ -929,7 +900,6 @@ module Trickster
           }
         )
         response = request(url, true, false)
-        return false unless response
         return response
       end
 
@@ -941,7 +911,6 @@ module Trickster
           }
         )
         response = request(url, true, false)
-        return false unless response
         return response
       end
 
@@ -953,7 +922,6 @@ module Trickster
           }
         )
         response = request(url, true, false)
-        return false unless response
         fields = parseData(response)
         data = Hash.new
         fields[0].each do |field|
@@ -973,7 +941,6 @@ module Trickster
           }
         )
         response = request(url, true, false)
-        return false unless response
         fields = parseData(response)
         data = Array.new
         fields[0].each do |field|
@@ -995,7 +962,6 @@ module Trickster
           }
         )
         response = request(url, true, false)
-        return false unless response
         fields = parseData(response)
         data = Hash.new
         fields[0].each do |field|
@@ -1016,7 +982,6 @@ module Trickster
           }
         )
         response = request(url, true, false)
-        return false unless response
         fields = parseData(response)
         data = Array.new
         fields[0].each do |field|
@@ -1039,7 +1004,6 @@ module Trickster
           }
         )
         response = request(url, true, false)
-        return false unless response
         fields = parseData(response)
         data = Hash.new
         fields[0].each do |field|

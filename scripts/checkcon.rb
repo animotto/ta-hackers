@@ -3,13 +3,16 @@ class Checkcon < Sandbox::Script
   
   def main
     loop do
-      msg = "Check connectivity"
-      if @game.cmdCheckCon
-        @shell.log(msg, :success)
-      else
-        @shell.log(msg, :error)
-      end
       sleep(INTERVAL)
+
+      msg = "Check connectivity"
+      begin
+        @game.cmdCheckCon
+      rescue Trickster::Hackers::RequestError => e
+        @shell.log("#{e.type}: #{e.description}", :script)
+        return
+      end
+      @shell.log(msg, :success)
     end
   end
 end
