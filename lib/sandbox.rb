@@ -798,6 +798,9 @@ module Sandbox
                          "profile" => "Show profile",
                          "readme" => "Show readme",
                          "node" => "Show nodes",
+                         "upgrade <id>" => "Upgrade node",
+                         "finish <id>" => "Finish node",
+                         "builders <id> <builders>" => "Set node builders",
                          "collect <id>" => "Collect node resources",
                          "prog" => "Show programs",
                          "log" => "Show logs",
@@ -969,6 +972,78 @@ module Sandbox
         end
         return
 
+      when "upgrade"
+        if words[1].nil?
+          @shell.puts("#{cmd}: Specify node ID")
+          return
+        end
+        id = words[1].to_i
+        
+        if @game.config["sid"].nil?
+          @shell.puts("#{cmd}: No session ID")
+          return
+        end
+
+        msg = "Upgrade node"
+        begin
+          @game.cmdUpgradeNode(id)
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
+          return
+        end
+        @shell.log(msg, :success)
+        return
+
+      when "finish"
+        if words[1].nil?
+          @shell.puts("#{cmd}: Specify node ID")
+          return
+        end
+        id = words[1].to_i
+        
+        if @game.config["sid"].nil?
+          @shell.puts("#{cmd}: No session ID")
+          return
+        end
+
+        msg = "Finish node"
+        begin
+          @game.cmdFinishNode(id)
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
+          return
+        end
+        @shell.log(msg, :success)
+        return
+
+      when "builders"
+        if words[1].nil?
+          @shell.puts("#{cmd}: Specify node ID")
+          return
+        end
+        id = words[1].to_i
+
+        if words[2].nil?
+          @shell.puts("#{cmd}: Specify number of builders")
+          return
+        end
+        builders = words[2].to_i
+        
+        if @game.config["sid"].nil?
+          @shell.puts("#{cmd}: No session ID")
+          return
+        end
+
+        msg = "Node set builders"
+        begin
+          @game.cmdNodeSetBuilders(id, builders)
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
+          return
+        end
+        @shell.log(msg, :success)
+        return
+
       when "collect"
         if words[1].nil?
           @shell.puts("#{cmd}: Specify node ID")
@@ -981,9 +1056,9 @@ module Sandbox
           return
         end
 
-        msg = "Collect"
+        msg = "Collect node"
         begin
-          @game.cmdCollect(id)
+          @game.cmdCollectNode(id)
         rescue Trickster::Hackers::RequestError => e
           @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
           return

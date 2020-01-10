@@ -393,8 +393,60 @@ module Trickster
         response = request(url)
         return true
       end
+
+      def cmdCreateNodeUpdateNet(type, net)
+        url = URI.encode_www_form(
+          {
+            "create_node_and_update_net" => 1,
+            "id_player" => @config["id"],
+            "id_node" => type,
+            "net" => generateNetwork(net),
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdDeleteNodeUpdateNet(id, net)
+        url = URI.encode_www_form(
+          {
+            "node_delete_update_net" => 1,
+            "id_player" => @config["id"],
+            "id" => id,
+            "net" => generateNetwork(net),
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdUpgradeNode(id)
+        url = URI.encode_www_form(
+          {
+            "upgrade_node" => 1,
+            "id" => id,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdFinishNode(id)
+        url = URI.encode_www_form(
+          {
+            "finish_node" => 1,
+            "id" => id,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
       
-      def cmdCollect(id)
+      def cmdCollectNode(id)
         url = URI.encode_www_form(
           {
             "collect" => 1,
@@ -404,6 +456,19 @@ module Trickster
         )
         response = request(url)
         return true
+      end
+
+      def cmdNodeSetBuilders(id, builders)
+        url = URI.encode_www_form(
+          {
+            "node_set_builders" => 1,
+            "id_node" => id,
+            "builders" => builders,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
       end
 
       def cmdPlayerWorld(country)

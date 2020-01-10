@@ -16,7 +16,7 @@ class Colres < Sandbox::Script
       net["nodes"].each do |k, v|
         next unless v["type"] == 11 || v["type"] == 13
         begin
-          @game.cmdCollect(k)
+          @game.cmdCollectNode(k)
         rescue Trickster::Hackers::RequestError => e
           @shell.log("#{e.type}: #{e.description}", :script)
           return
