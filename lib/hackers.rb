@@ -1,3 +1,4 @@
+# coding: utf-8
 module Trickster
   module Hackers
     require "net/http"
@@ -518,7 +519,14 @@ module Trickster
           }
         )
         response = request(url)
-        return true
+        fields = parseData(response)
+        data = Hash.new
+        fields[0].each do |field|
+          data[field[0].to_i] = {
+            "name" => field[1],
+          }
+        end
+        return data
       end
 
       def cmdBonusCollect(id)

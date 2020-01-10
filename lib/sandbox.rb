@@ -1218,12 +1218,27 @@ module Sandbox
 
         msg = "Get new targets"
         begin
-          @game.cmdGetNewTargets
+          targets = @game.cmdGetNewTargets
         rescue Trickster::Hackers::RequestError => e
           @shell.log("#{msg} (#{e.type}: #{e.description})", :error)
           return
         end
         @shell.log(msg, :success)
+        @shell.puts("\e[1;35m\u2022 Targets\e[0m")
+        @shell.puts(
+          "  \e[35m%-12s %s\e[0m" % [
+            "ID",
+            "Name",
+          ]
+        )
+        targets.each do |k, v|
+          @shell.puts(
+            "  %-12d %s" % [
+              k,
+              v["name"],
+            ]
+          )
+        end
         return
 
       when "collect"
