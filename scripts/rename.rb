@@ -12,7 +12,7 @@ class Rename < Sandbox::Script
     begin
       @game.cmdPlayerSetName(id, name)
     rescue Trickster::Hackers::RequestError => e
-      @shell.log("#{e.type}: #{e.description}", :script)
+      @shell.log("#{e}", :script)
       return
     end
 

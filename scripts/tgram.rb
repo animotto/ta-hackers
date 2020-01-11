@@ -40,7 +40,7 @@ class Tgram < Sandbox::Script
       begin
         messages = @game.cmdChatDisplay(room, last)
       rescue Trickster::Hackers::RequestError => e
-        @shell.log("#{e.type}: #{e.description}", :script)
+        @shell.log("#{e}", :script)
         next
       end
 
@@ -78,7 +78,7 @@ class Tgram < Sandbox::Script
             begin
               @game.cmdChatSend(room, "@#{message["chat"]["first_name"]}: #{message["text"]}", last)
             rescue Trickster::Hackers::RequestError => e
-              @shell.log("#{e.type}: #{e.description}", :script)
+              @shell.log("#{e}", :script)
               next
             end
           end

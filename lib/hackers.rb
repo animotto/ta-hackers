@@ -9,8 +9,14 @@ module Trickster
       attr_reader :type, :description
       
       def initialize(type = nil, description = nil)
-        @type = type.nil? ? "Unknown" : type
-        @description = description.nil? ? "None" : description
+        @type = type&.strip
+        @description = description&.strip
+      end
+
+      def to_s
+        msg = @type.nil? ? "Unknown" : @type
+        msg += ": #{@description}" unless @description.nil?
+        return msg
       end
     end
     

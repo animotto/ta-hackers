@@ -20,7 +20,7 @@ class Autohack < Sandbox::Script
           redo
         end
       rescue Trickster::Hackers::RequestError => e
-        @shell.log("#{e.type}: #{e.description}", :script)
+        @shell.log("#{e}", :script)
         return
       end
         
@@ -62,7 +62,7 @@ class Autohack < Sandbox::Script
           leave = @game.cmdNetLeave(k)
           @game.cmdNetGetForMaint
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{e.type}: #{e.description}", :script)
+          @shell.log("#{e}", :script)
           return
         end
 

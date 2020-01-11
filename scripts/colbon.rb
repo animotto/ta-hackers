@@ -9,14 +9,14 @@ class Colbon < Sandbox::Script
       begin
         net = @game.cmdNetGetForMaint
       rescue Trickster::Hackers::RequestError => e
-        @shell.log("#{e.type}: #{e.description}", :script)
+        @shell.log("#{e}", :script)
         return
       end
 
       begin
         world = @game.cmdPlayerWorld(net["profile"]["country"])
       rescue Trickster::Hackers::RequestError => e
-        @shell.log("#{e.type}: #{e.description}", :script)
+        @shell.log("#{e}", :script)
         return
       end
 
@@ -24,7 +24,7 @@ class Colbon < Sandbox::Script
         begin
           @game.cmdBonusCollect(k)
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{e.type}: #{e.description}", :script)
+          @shell.log("#{e}", :script)
           return
         end
 
