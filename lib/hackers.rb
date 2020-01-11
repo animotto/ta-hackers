@@ -366,7 +366,7 @@ module Trickster
           }
         end
 
-        data["readme"] = fields.dig(11, 0, 0)
+        data["readme"] = fields.dig(11, 0, 0)&.split("\x04") || []
 
         data["logs"] = Hash.new
         fields[9].each_index do |i|

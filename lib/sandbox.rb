@@ -840,7 +840,9 @@ module Sandbox
 
         when "readme"
           @shell.puts("\e[1;35m\u2022 Readme\e[0m")
-          @shell.puts("  #{net["readme"]}")
+          net["readme"].each do |item|
+            @shell.puts("  #{item}")
+          end
           return
 
         when "node"
