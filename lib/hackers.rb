@@ -472,6 +472,49 @@ module Trickster
         return response
       end
 
+      def cmdCreateProgram(type)
+        url = URI.encode_www_form(
+          {
+            "create_program" => 1,
+            "id_player" => @config["id"],
+            "id_program" => type,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdFinishProgram(id)
+        url = URI.encode_www_form(
+          {
+            "finish_program" => 1,
+            "id" => id,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdQueueSync(programs, seq)
+        data = String.new
+        programs.each do |program|
+          data += program.join(",") + ";"
+        end
+        url = URI.encode_www_form(
+          {
+            "queue_sync_new" => 1,
+            "id_player" => @config["id"],
+            "data" => data,
+            "seq" => seq,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+      
       def cmdPlayerWorld(country)
         url = URI.encode_www_form(
           {
@@ -687,6 +730,7 @@ module Trickster
             "usedProgramsList" => data[:programs],
             "summaryString" => data[:summary],
             "replayVersion" => data[:version],
+            "keepLock" => 1,
             "app_version" => @config["version"],
           }
         )
