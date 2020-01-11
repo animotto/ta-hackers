@@ -743,6 +743,18 @@ module Trickster
         return response
       end
 
+      def cmdFightGetReplay(id)
+        url = URI.encode_www_form(
+          {
+            "fight_get_replay" => 1,
+            "id" => id,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
       def cmdPlayerGetInfo(id)
         url = URI.encode_www_form(
           {
