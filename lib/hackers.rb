@@ -491,6 +491,18 @@ module Trickster
         return response
       end
 
+      def cmdUpgradeProgram(id)
+        url = URI.encode_www_form(
+          {
+            "upgrade_program" => 1,
+            "id" => id,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
       def cmdFinishProgram(id)
         url = URI.encode_www_form(
           {
