@@ -555,6 +555,23 @@ module Trickster
         return response
       end
 
+      def cmdDeleteProgram(id, programs)
+        data = String.new
+        programs.each do |program|
+          data += program.join(",") + ";"
+        end
+        url = URI.encode_www_form(
+          {
+            "program_delete" => "",
+            "id_player" => id,
+            "data" => data,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
       def cmdQueueSync(programs, seq)
         data = String.new
         programs.each do |program|
@@ -566,6 +583,23 @@ module Trickster
             "id_player" => @config["id"],
             "data" => data,
             "seq" => seq,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdQueueSyncFinish(programs)
+        data = String.new
+        programs.each do |program|
+          data += program.join(",") + ";"
+        end
+        url = URI.encode_www_form(
+          {
+            "queue_sync_and_finish_new" => 1,
+            "id_player" => @config["id"],
+            "data" => data,
             "app_version" => @config["version"],
           }
         )
@@ -801,11 +835,43 @@ module Trickster
         return response
       end
 
+      def cmdTutorialPlayerMissionUpdate(mission, data)
+        url = URI.encode_www_form(
+          {
+            "tutorial_player_mission_update" => 1,
+            "id_player" => @config["id"],
+            "id_mission" => mission,
+            "money_looted" => data[:money],
+            "bcoins_looted" => data[:bitcoin],
+            "finished" => data[:finished],
+            "nodes_currencies" => data[:finished],
+            "programs_data" => data[:programs],
+            "tutorial" => data[:tutorial],
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
       def cmdFightGetReplay(id)
         url = URI.encode_www_form(
           {
             "fight_get_replay" => 1,
             "id" => id,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdGetMissionFight(id, mission)
+        url = URI.encode_www_form(
+          {
+            "get_mission_fight" => 1,
+            "id_mission" => mission,
+            "id_attacker" => id,
             "app_version" => @config["version"],
           }
         )
