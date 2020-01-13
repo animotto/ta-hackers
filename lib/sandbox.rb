@@ -450,9 +450,9 @@ module Sandbox
           return
         end
         
-        msg = "Player HQ move"
+        msg = "Set player HQ"
         begin
-          @game.cmdPlayerHqMove(x, y, country)
+          @game.cmdSetPlayerHqCountry(@game.config["id"], x, y, country)
         rescue Trickster::Hackers::RequestError => e
           @shell.log("#{msg} (#{e})", :error)
           return

@@ -322,6 +322,32 @@ module Trickster
         response = request(url, true, false)
         return true
       end
+
+      def cmdTutorialPlayerSetName(id, name, tutorial)
+        url = URI.encode_www_form(
+          {
+            "tutorial_player_set_name" => "",
+            "id_player" => id,
+            "name" => name,
+            "tutorial" => tutorial,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdAuthGoogle(code)
+        url = URI.encode_www_form(
+          {
+            "auth_google_new" => "",
+            "authCode" => code,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url, true, false)
+        return response
+      end
       
       def cmdAuthIdPassword
         url = URI.encode_www_form(
@@ -434,6 +460,20 @@ module Trickster
           {
             "upgrade_node" => 1,
             "id" => id,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdTutorialUpgradeNode(id, node, tutorial)
+        url = URI.encode_www_form(
+          {
+            "tutorial_upgrade_node" => 1,
+            "id_player" => id,
+            "id_node" => node,
+            "tutorial" => tutorial,
             "app_version" => @config["version"],
           }
         )
@@ -810,6 +850,21 @@ module Trickster
         end
         return data
       end
+
+      def cmdSetPlayerHqCountry(id, x, y, country)
+        url = URI.encode_www_form(
+          {
+            "set_player_hq_and_country" => 1,
+            "id_player" => id,
+            "hq_location_x" => x,
+            "hq_location_y" => y,
+            "id_country" => country,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
       
       def cmdPlayerHqMove(x, y, country)
         url = URI.encode_www_form(
@@ -1159,6 +1214,82 @@ module Trickster
           }
         end
         return data
+      end
+
+      def cmdFightGetMap
+        url = URI.encode_www_form(
+          {
+            "fight_get_map" => "",
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdCreateException(name, exception, version)
+        url = URI.encode_www_form(
+          {
+            "exception_create" => 1,
+            "player_name" => name,
+            "app_version_number" => version,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdCreateReport(repoter, reported, message)
+        url = URI.encode_www_form(
+          {
+            "report_create" => "",
+            "id_reporter" => reporter,
+            "id_reported" => reported,
+            "message" => message,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdPlayerSetTutorial(id, tutorial)
+        url = URI.encode_www_form(
+          {
+            "player_set_tutorial" => "",
+            "id" => id,
+            "tutorial" => tutorial,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdPlayerBuyBuilder(id)
+        url = URI.encode_www_form(
+          {
+            "player_buy_builder" => "",
+            "id" => id,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdTutorialPlayerBuyBuilder(id, tutorial)
+        url = URI.encode_www_form(
+          {
+            "tutorial_player_buy_builder" => "",
+            "id_player" => id,
+            "tutorial" => tutorial,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
       end
     end
   end
