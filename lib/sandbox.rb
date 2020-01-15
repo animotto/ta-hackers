@@ -54,7 +54,10 @@ module Sandbox
         line.strip!
         Readline::HISTORY.pop if line.empty?
         next if line.empty?
-        words = line.split(/\s+/)
+        words = line.scan(/['"][^'"]*['"]|[^\s'"]+/)
+        words.map! do |word|
+          word.sub(/^['"]/, "").sub(/['"]$/, "")
+        end
         exec(words)
       end
     end
