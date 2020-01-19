@@ -1357,6 +1357,38 @@ module Trickster
         response = request(url)
         return response
       end
+
+      def cmdCpUseCode(id, code, platform)
+        url = URI.encode_www_form(
+          {
+            "cp_use_code" => "",
+            "id_player" => id,
+            "code" => code,
+            "platform" => platform,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        data = parseData(response)
+        return {
+          "id" => data[0][0][0],
+          "password" => data[0][0][1],
+        }
+      end
+
+      def cmdCpGenerateCode(id, platform)
+        url = URI.encode_www_form(
+          {
+            "cp_generate_code" => "",
+            "id_player" => id,
+            "platform" => platform,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        data = parseData(response)
+        return data[0][0][0]
+      end
     end
   end
 end

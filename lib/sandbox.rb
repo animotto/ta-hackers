@@ -166,6 +166,8 @@ module Sandbox
                          "hq <x> <y> <country>" => "Set player HQ",
                          "skin <skin>" => "Set player skin",
                          "top <country>" => "Show top ranking",
+                         "cpgen" => "Cp generate code",
+                         "cpuse <code>" => "Cp use code",
                        })
     end
     
@@ -552,6 +554,51 @@ module Sandbox
             ]
           )
         end
+        return
+
+      when "cpgen"
+        if @game.config["sid"].nil?
+          @shell.puts("#{cmd}: No session ID")
+          return
+        end
+        
+        msg = "Cp generate code"
+        begin
+          code = @game.cmdCpGenerateCode(@game.config["id"], @game.config["platform"])
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e})", :error)
+          return
+        end
+        @shell.log(msg, :success)
+
+        @shell.puts("\e[1;35m\u2022 Generated code\e[0m")
+        @shell.puts("  Code: #{code}")
+        return
+
+      when "cpuse"
+        code = words[1]
+        if code.nil?
+          @shell.puts("#{cmd}: Specify code")
+          return
+        end
+
+        if @game.config["sid"].nil?
+          @shell.puts("#{cmd}: No session ID")
+          return
+        end
+        
+        msg = "Cp use code"
+        begin
+          data = @game.cmdCpUseCode(@game.config["id"], code, @game.config["platform"])
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e})", :error)
+          return
+        end
+        @shell.log(msg, :success)
+
+        @shell.puts("\e[1;35m\u2022 Account credentials\e[0m")
+        @shell.puts("  ID: #{data["id"]}")
+        @shell.puts("  Password: #{data["password"]}")
         return
         
       end
