@@ -1495,7 +1495,8 @@ module Sandbox
                          "close <room>" => "Close room",
                          "list" => "List opened rooms",
                          "say <room> <text>" => "Say to the room",
-                         "talk <room>" => "Talk in the room"
+                         "talk <room>" => "Talk in the room",
+                         "users <room>" => "Show users list in the room",
                        })
       @mutex = Mutex.new
     end
@@ -1627,6 +1628,37 @@ module Sandbox
         end
         return
         
+    when "users"
+      if @game.config["sid"].nil? || @game.appSettings.empty?
+        @shell.puts "#{cmd}: Not connected"
+        return
+      end
+
+      if words[1].nil?
+        @shell.puts("#{cmd}: Specify room ID")
+        return
+      end
+
+      messages = nil
+      @mutex.synchronize do
+        messages = @game.cmdChatDisplay(words[1])
+      rescue Trickster::Hackers::RequestError => e
+        @shell.log("Chat display (#{e})", :error)
+        return
+      end
+
+      if messages.empty?
+        @shell.puts "No users in room #{words[1]}"
+        return
+      end
+
+      messages.uniq! {|m| m["id"]}
+      @shell.puts "Users:"
+      messages.each do |message|
+        @shell.puts " %-30s .. %d" % [message["nick"], message["id"]]
+      end
+      return
+
       end
 
       super(words)
@@ -1648,7 +1680,6 @@ module Sandbox
     
     def chat(room)
       loop do
-        response = nil
         @mutex.synchronize do
           messages = @game.cmdChatDisplay(room, @rooms[room][1])
         rescue Trickster::Hackers::RequestError => e
