@@ -27,4 +27,9 @@ end
 
 game = Trickster::Hackers::Game.new(config)
 shell = Sandbox::Shell.new(game)
+unless config["autocmd"].nil?
+  config["autocmd"].each do |cmd|
+    shell.exec(cmd)
+  end
+end
 shell.readline

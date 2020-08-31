@@ -58,15 +58,15 @@ module Sandbox
         line.strip!
         Readline::HISTORY.pop if line.empty?
         next if line.empty?
-        words = line.scan(/['"][^'"]*['"]|[^\s'"]+/)
-        words.map! do |word|
-          word.sub(/^['"]/, "").sub(/['"]$/, "")
-        end
-        exec(words)
+        exec(line)
       end
     end
     
-    def exec(words)
+    def exec(line)
+      words = line.scan(/['"][^'"]*['"]|[^\s'"]+/)
+      words.map! do |word|
+        word.sub(/^['"]/, "").sub(/['"]$/, "")
+      end
       @contexts[@context].exec(words)
     end
   end
