@@ -18,6 +18,10 @@ module Sandbox
         "/script" => ContextScript.new(@game, self),
         "/chat" => ContextChat.new(@game, self),
       }
+
+      Readline.completion_proc = Proc.new do |text|
+        @contexts[@context].commands.keys.grep(/^#{Regexp.escape(text)}/)
+      end
     end
 
     def puts(data = "")
@@ -68,22 +72,24 @@ module Sandbox
   end
 
   class ContextBase
+    attr_reader :commands
+
     def initialize(game, shell)
       @game = game
       @shell = shell
       @commands = {
-        ".." => "Return to previous context",
-        "path" => "Current context path",
-        "set [var] [val]" => "Set configuration variables",
-        "unset <var>" => "Unset configuration variables",
-        "quit" => "Quit",
+        ".." => ["..", "Return to previous context"],
+        "path" => ["path", "Current context path"],
+        "set" => ["set [var] [val]", "Set configuration variables"],
+        "unset" => ["unset <var>", "Unset configuration variables"],
+        "quit" => ["quit", "Quit"],
       }
     end
 
     def help(commands)
       @shell.puts "Available commands:"
       commands.each do |k, v|
-        @shell.puts " %-24s%s" % [k, v]
+        @shell.puts " %-24s%s" % [v[0], v[1]]
       end
     end
     
@@ -146,28 +152,28 @@ module Sandbox
     def initialize(game, shell)
       super(game, shell)
       @commands.merge!({
-                         "[query]" => "Analyze queries and data dumps",
-                         "[net]" => "Network",
-                         "[world]" => "World",
-                         "[script]" => "Scripts",
-                         "[chat]" => "Internal chat",
-                         "connect" => "Connect to the server",
-                         "trans" => "Language translations",
-                         "settings" => "Application settings",
-                         "nodes" => "Node types",
-                         "progs" => "Program types",
-                         "missions" => "Missions list",
-                         "skins" => "Skin types",
-                         "news" => "News",
-                         "new" => "Create new account",
-                         "rename <name>" => "Set new name",
-                         "info <id>" => "Get player info",
-                         "detail <id>" => "Get detail player network",
-                         "hq <x> <y> <country>" => "Set player HQ",
-                         "skin <skin>" => "Set player skin",
-                         "top <country>" => "Show top ranking",
-                         "cpgen" => "Cp generate code",
-                         "cpuse <code>" => "Cp use code",
+                         "query" => ["[query]", "Analyze queries and data dumps"],
+                         "net" => ["[net]", "Network"],
+                         "world" => ["[world]", "World"],
+                         "script" => ["[script]", "Scripts"],
+                         "chat" => ["[chat]", "Internal chat"],
+                         "connect" => ["connect", "Connect to the server"],
+                         "trans" => ["trans", "Language translations"],
+                         "settings" => ["settings", "Application settings"],
+                         "nodes" => ["nodes", "Node types"],
+                         "progs" => ["progs", "Program types"],
+                         "missions" => ["missions", "Missions list"],
+                         "skins" => ["skins", "Skin types"],
+                         "news" => ["news", "News"],
+                         "new" => ["new", "Create new account"],
+                         "rename" => ["rename <name>", "Set new name"],
+                         "info" => ["info <id>", "Get player info"],
+                         "detail" => ["detail <id>", "Get detail player network"],
+                         "hq" => ["hq <x> <y> <country>", "Set player HQ"],
+                         "skin" => ["skin <skin>", "Set player skin"],
+                         "top" => ["top <country>", "Show top ranking"],
+                         "cpgen" => ["cpgen", "Cp generate code"],
+                         "cpuse" => ["cpuse <code>", "Cp use code"],
                        })
     end
     
@@ -613,18 +619,18 @@ module Sandbox
     def initialize(game, shell)
       super(game, shell)
       @commands.merge!({
-                         "qr <arg1> .. <argN>" => "Raw query",
-                         "qc <arg1> .. <argN>" => "Hashed query",
-                         "qs <arg1> .. <argN>" => "Session query",
-                         "dumps" => "List dumps",
-                         "show <id>" => "Show dump",
-                         "del <id>" => "Delete dump",
-                         "rename <id> <name>" => "Rename dump",
-                         "note <id> <name>" => "Set a note for the dump",
-                         "list" => "List dump files",
-                         "export <file>" => "Export dumps to the file",
-                         "import <file>" => "Import dumps from the file",
-                         "rm <file>" => "Delete dump file",
+                         "qr" => ["qr <arg1> .. <argN>", "Raw query"],
+                         "qc" => ["qc <arg1> .. <argN>", "Hashed query"],
+                         "qs" => ["qs <arg1> .. <argN>", "Session query"],
+                         "dumps" => ["dumps", "List dumps"],
+                         "show" => ["show <id>", "Show dump"],
+                         "del" => ["del <id>", "Delete dump"],
+                         "rename" => ["rename <id> <name>", "Rename dump"],
+                         "note" => ["note <id> <name>", "Set a note for the dump"],
+                         "list" => ["list", "List dump files"],
+                         "export" => ["export <file>", "Export dumps to the file"],
+                         "import" => ["import <file>", "Import dumps from the file"],
+                         "rm" => ["rm <file>", "Delete dump file"],
                        })
       @dumps = Array.new
     end
@@ -845,17 +851,17 @@ module Sandbox
     def initialize(game, shell)
       super(game, shell)
       @commands.merge!({
-                         "profile" => "Show profile",
-                         "readme" => "Show readme",
-                         "node" => "Show nodes",
-                         "upgrade <id>" => "Upgrade node",
-                         "finish <id>" => "Finish node",
-                         "builders <id> <builders>" => "Set node builders",
-                         "collect <id>" => "Collect node resources",
-                         "prog" => "Show programs",
-                         "log" => "Show logs",
-                         "net" => "Show network structure",
-                         "missions" => "Show missions log",
+                         "profile" => ["profile", "Show profile"],
+                         "readme" => ["readme", "Show readme"],
+                         "node" => ["node", "Show nodes"],
+                         "upgrade" => ["upgrade <id>", "Upgrade node"],
+                         "finish" => ["finish <id>", "Finish node"],
+                         "builders" => ["builders <id> <builders>", "Set node builders"],
+                         "collect" => ["collect <id>", "Collect node resources"],
+                         "prog" => ["prog", "Show programs"],
+                         "log" => ["log", "Show logs"],
+                         "net" => ["net", "Show network structure"],
+                         "missions" => ["missions", "Show missions log"],
                        })
     end
 
@@ -1164,13 +1170,13 @@ module Sandbox
     def initialize(game, shell)
       super(game, shell)
       @commands.merge!({
-                         "target" => "Show targets",
-                         "new" => "Get new targets",
-                         "bonus" => "Show bonuses",
-                         "collect <id>" => "Collect bonus",
-                         "goal" => "Show goals",
-                         "update <id> <record>" => "Update goal",
-                         "reject <id>" => "Reject goal",
+                         "target" => ["target", "Show targets"],
+                         "new" => ["new", "Get new targets"],
+                         "bonus" => ["bonus", "Show bonuses"],
+                         "collect" => ["collect <id>", "Collect bonus"],
+                         "goal" => ["goal", "Show goals"],
+                         "update" => ["update <id> <record>", "Update goal"],
+                         "reject" => ["reject <id>", "Reject goal"],
                        })
     end
 
@@ -1377,10 +1383,10 @@ module Sandbox
     def initialize(game, shell)
       super(game, shell)
       @commands.merge!({
-                         "run <name>" => "Run the script",
-                         "list" => "List scripts",
-                         "jobs" => "List active scripts",
-                         "kill <id>" => "Kill the script",
+                         "run" => ["run <name>", "Run the script"],
+                         "list" => ["list", "List scripts"],
+                         "jobs" => ["jobs", "List active scripts"],
+                         "kill" => ["kill <id>", "Kill the script"],
                        })
       @jobs = Hash.new
       @jobCounter = 0;
@@ -1491,12 +1497,12 @@ module Sandbox
       @rooms = Hash.new
       super(game, shell)
       @commands.merge!({
-                         "open <room>" => "Open room",
-                         "close <room>" => "Close room",
-                         "list" => "List opened rooms",
-                         "say <room> <text>" => "Say to the room",
-                         "talk <room>" => "Talk in the room",
-                         "users <room>" => "Show users list in the room",
+                         "open" => ["open <room>", "Open room"],
+                         "close" => ["close <room>", "Close room"],
+                         "list" => ["list", "List opened rooms"],
+                         "say" => ["say <room> <text>", "Say to the room"],
+                         "talk" => ["talk <room>", "Talk in the room"],
+                         "users" => ["users <room>", "Show users list in the room"],
                        })
       @mutex = Mutex.new
     end
