@@ -165,6 +165,12 @@ module Sandbox
                          "missions" => ["missions", "Missions list"],
                          "skins" => ["skins", "Skin types"],
                          "news" => ["news", "News"],
+                         "hints" => ["hints", "Hints list"],
+                         "experience" => ["experience", "Experience list"],
+                         "builders" => ["builders", "Builders list"],
+                         "goals" => ["goals", "Goals types"],
+                         "shields" => ["shields", "Shield types"],
+                         "ranks" => ["ranks", "Rank list"],
                          "new" => ["new", "Create new account"],
                          "rename" => ["rename <name>", "Set new name"],
                          "info" => ["info <id>", "Get player info"],
@@ -289,6 +295,94 @@ module Sandbox
         end
         return
 
+      when "hints"
+        if @game.hintsList.empty?
+          @shell.puts "#{cmd}: No hints list"
+          return
+        end
+
+        @game.hintsList.each do |k, v|
+          @shell.puts " %-7d .. %s" % [
+                        k,
+                        v["description"],
+                      ]
+        end
+        return
+
+      when "experience"
+        if @game.experienceList.empty?
+          @shell.puts "#{cmd}: No experience list"
+          return
+        end
+
+        @game.experienceList.each do |k, v|
+          @shell.puts " %-7d .. %s" % [
+                        k,
+                        v["experience"],
+                      ]
+        end
+        return
+
+      when "builders"
+        if @game.buildersList.empty?
+          @shell.puts "#{cmd}: No builders list"
+          return
+        end
+
+        @game.buildersList.each do |k, v|
+          @shell.puts " %-7d .. %s" % [
+                        k,
+                        v["price"],
+                      ]
+        end
+        return
+
+      when "goals"
+        if @game.goalsTypes.empty?
+          @shell.puts "#{cmd}: No goals types"
+          return
+        end
+
+        @game.goalsTypes.each do |k, v|
+          @shell.puts " %-20s .. %d, %s, %s" % [
+                        k,
+                        v["amount"],
+                        v["name"],
+                        v["description"],
+                      ]
+        end
+        return
+
+      when "shields"
+        if @game.shieldTypes.empty?
+          @shell.puts "#{cmd}: No shield types"
+          return
+        end
+
+        @game.shieldTypes.each do |k, v|
+          @shell.puts " %-7d .. %d, %s, %s" % [
+                        k,
+                        v["price"],
+                        v["name"],
+                        v["description"],
+                      ]
+        end
+        return
+
+      when "ranks"
+        if @game.rankList.empty?
+          @shell.puts "#{cmd}: No rank list"
+          return
+        end
+
+        @game.rankList.each do |k, v|
+          @shell.puts " %-7d .. %d" % [
+                        k,
+                        v["rank"],
+                      ]
+        end
+        return
+
       when "connect"
         msg = "Language translations"
         begin
@@ -344,6 +438,60 @@ module Sandbox
         end
         @shell.log(msg, :success)
         
+        msg = "Hints list"
+        begin
+          @game.hintsList = @game.cmdHintsGetList
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e})", :error)
+          return
+        end
+        @shell.log(msg, :success)
+
+        msg = "Experience list"
+        begin
+          @game.experienceList = @game.cmdGetExperienceList
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e})", :error)
+          return
+        end
+        @shell.log(msg, :success)
+
+        msg = "Builders list"
+        begin
+          @game.buildersList = @game.cmdBuildersCountGetList
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e})", :error)
+          return
+        end
+        @shell.log(msg, :success)
+
+        msg = "Goals types"
+        begin
+          @game.goalsTypes = @game.cmdGoalTypesGetList
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e})", :error)
+          return
+        end
+        @shell.log(msg, :success)
+
+        msg = "Shield types"
+        begin
+          @game.shieldTypes = @game.cmdShieldTypesGetList
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e})", :error)
+          return
+        end
+        @shell.log(msg, :success)
+        
+        msg = "Rank list"
+        begin
+          @game.rankList = @game.cmdRankGetList
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e})", :error)
+          return
+        end
+        @shell.log(msg, :success)
+
         msg = "Authenticate"
         begin
           auth = @game.cmdAuthIdPassword
@@ -404,6 +552,7 @@ module Sandbox
         msg = "Player get info"
         begin
           info = @game.cmdPlayerGetInfo(id)
+          info["level"] = @game.getLevelByExp(info["experience"])
         rescue Trickster::Hackers::RequestError => e
           @shell.log("#{msg} (#{e})", :error)
           return
@@ -431,6 +580,7 @@ module Sandbox
         msg = "Get net details world"
         begin
           detail = @game.cmdGetNetDetailsWorld(id)
+          detail["profile"]["level"] = @game.getLevelByExp(detail["profile"]["experience"])
         rescue Trickster::Hackers::RequestError => e
           @shell.log("#{msg} (#{e})", :error)
           return
@@ -896,6 +1046,7 @@ module Sandbox
         msg = "Network maintenance"
         begin
           net = @game.cmdNetGetForMaint
+          net["profile"]["level"] = @game.getLevelByExp(net["profile"]["experience"])
         rescue Trickster::Hackers::RequestError => e
           @shell.log("#{msg} (#{e})", :error)
           return

@@ -23,7 +23,9 @@ module Trickster
     class Game
       attr_accessor :config, :appSettings, :transLang,
                     :nodeTypes, :programTypes, :missionsList,
-                    :skinTypes
+                    :skinTypes, :hintsList, :experienceList,
+                    :buildersList, :goalsTypes, :shieldTypes,
+                    :rankList
       
       def initialize(config)
         @config = config
@@ -33,6 +35,12 @@ module Trickster
         @programTypes = Hash.new
         @missionsList = Hash.new
         @skinTypes = Hash.new
+        @hintsList = Hash.new
+        @experienceList = Hash.new
+        @buildersList = Hash.new
+        @goalsTypes = Hash.new
+        @shieldTypes = Hash.new
+        @rankList = Hash.new
         @client = Net::HTTP.new(@config["host"], @config["port"].to_s)
         @client.use_ssl = true unless @config["ssl"].nil?
         @mutex = Mutex.new
@@ -164,11 +172,11 @@ module Trickster
           "id" => data[0].to_i,
           "name" => data[1],
           "money" => data[2].to_i,
-          "bitcoin" => data[3].to_i,
-          "credit" => data[4].to_i,
+          "bitcoins" => data[3].to_i,
+          "credits" => data[4].to_i,
           "experience" => data[5].to_i,
           "rank" => data[9].to_i,
-          "builder" => data[10].to_i,
+          "builders" => data[10].to_i,
           "x" => data[11].to_i,
           "y" => data[12].to_i,
           "country" => data[13].to_i,
@@ -187,6 +195,14 @@ module Trickster
           }
         end
         return nodes
+      end
+
+      def getLevelByExp(experience)
+        level = 0
+        @experienceList.each do |k, v|
+          level = v["level"] if experience >= v["experience"]
+        end
+        return level
       end
 
       def cmdTransLang
@@ -1165,7 +1181,14 @@ module Trickster
           }
         )
         response = request(url, true, false)
-        return response
+        fields = parseData(response)
+        data = Hash.new
+        fields[0].each do |field|
+          data[field[0].to_i] = {
+              "description" => field[1],
+            }
+        end
+        return data
       end
 
       def cmdWorldNewsGetList
@@ -1190,9 +1213,9 @@ module Trickster
         fields = parseData(response)
         data = Hash.new
         fields[0].each do |field|
-          data[field[0]] = {
-            "level" => field[1],
-            "experience" => field[2],
+          data[field[0].to_i] = {
+            "level" => field[1].to_i,
+            "experience" => field[2].to_i,
           }
         end
         return data
@@ -1207,14 +1230,12 @@ module Trickster
         )
         response = request(url, true, false)
         fields = parseData(response)
-        data = Array.new
+        data = Hash.new
         fields[0].each do |field|
-          data.push(
-            {
-              "amount" => field[0],
-              "price" => field[1],
+          data[field[0].to_i] = {
+              "amount" => field[0].to_i,
+              "price" => field[1].to_i,
             }
-          )
         end
         return data
       end
@@ -1231,7 +1252,7 @@ module Trickster
         data = Hash.new
         fields[0].each do |field|
           data[field[1]] = {
-            "amount" => field[2],
+            "amount" => field[2].to_i,
             "name" => field[7],
             "description" => field[8],
           }
@@ -1248,15 +1269,13 @@ module Trickster
         )
         response = request(url, true, false)
         fields = parseData(response)
-        data = Array.new
+        data = Hash.new
         fields[0].each do |field|
-          data.push(
-            {
-              "price" => field[3],
+          data[field[0].to_i] = {
+              "price" => field[3].to_i,
               "name" => field[4],
               "description" => field[5],
             }
-          )
         end
         return data
       end
@@ -1272,8 +1291,8 @@ module Trickster
         fields = parseData(response)
         data = Hash.new
         fields[0].each do |field|
-          data[field[0]] = {
-            "rank" => field[1],
+          data[field[0].to_i] = {
+            "rank" => field[1].to_i,
           }
         end
         return data
