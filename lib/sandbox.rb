@@ -442,8 +442,25 @@ module Sandbox
           @shell.puts("  %s: %s" % [k.capitalize, v])
         end
         @shell.puts
-        detail["log"].each do |k, v|
-          @shell.puts("  %d: %d %d %d" % [k, v["f1"], v["f2"], v["f3"]])
+        @shell.puts(
+          "  \e[35m%-12s %-4s %-5s %-12s %-12s\e[0m" % [
+            "ID",
+            "Type",
+            "Level",
+            "Time",
+            "Name",
+          ]
+        )
+        detail["nodes"].each do |k, v|
+          @shell.puts(
+            "  %-12d %-4d %-5d %-12d %-12s" % [
+              k,
+              v["type"],
+              v["level"],
+              v["time"],
+              @game.nodeTypes[v["type"]]["name"],
+            ]
+          )
         end
         return
 

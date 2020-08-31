@@ -177,6 +177,18 @@ module Trickster
         return profile
       end
       
+      def parseNodes(data)
+        nodes = Hash.new
+        data.each do |node|
+          nodes[node[0].to_i] = {
+            "type" => node[2].to_i,
+            "level" => node[3].to_i,
+            "time" => node[4].to_i,
+          }
+        end
+        return nodes
+      end
+
       def cmdTransLang
         url = URI.encode_www_form(
           {
@@ -377,15 +389,7 @@ module Trickster
         fields = parseData(response)
         data = Hash.new
 
-        data["nodes"] = Hash.new
-        fields[0].each_index do |i|
-          data["nodes"][fields[0][i][0].to_i] = {
-            "type" => fields[0][i][2].to_i,
-            "level" => fields[0][i][3].to_i,
-            "time" => fields[0][i][4].to_i,
-          }
-        end
-
+        data["nodes"] = parseNodes(fields[0])
         data["net"] = parseNetwork(fields[1][0][1])
         data["profile"] = parseProfile(fields[2][0])
 
@@ -906,14 +910,7 @@ module Trickster
         fields = parseData(response)
         data = Hash.new
         data["profile"] = parseProfile(fields[0][0])
-        data["log"] = Hash.new
-        fields[1].each do |field|
-          data["log"][field[0]] = {
-            "f1" => field[2],
-            "f2" => field[3],
-            "f3" => field[4],
-          }
-        end
+        data["nodes"] = parseNodes(fields[1])
         return data
       end
 
