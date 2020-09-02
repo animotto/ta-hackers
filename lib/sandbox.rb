@@ -1021,6 +1021,8 @@ module Sandbox
                          "profile" => ["profile", "Show profile"],
                          "readme" => ["readme", "Show readme"],
                          "node" => ["node", "Show nodes"],
+                         "create" => ["create <type>", "Create node"],
+                         "delete" => ["delete <id>", "Delete node"],
                          "upgrade" => ["upgrade <id>", "Upgrade node"],
                          "finish" => ["finish <id>", "Finish node"],
                          "builders" => ["builders <id> <builders>", "Set node builders"],
@@ -1196,6 +1198,52 @@ module Sandbox
           return
           
         end
+        return
+
+      when "create"
+        if words[1].nil?
+          @shell.puts("#{cmd}: Specify node type")
+          return
+        end
+        type = words[1].to_i
+        
+        if @game.config["sid"].nil?
+          @shell.puts("#{cmd}: No session ID")
+          return
+        end
+
+        msg = "Create node"
+        begin
+          net = @game.cmdNetGetForMaint
+          @game.cmdCreateNodeUpdateNet(type, net["net"])
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e})", :error)
+          return
+        end
+        @shell.log(msg, :success)
+        return
+
+      when "delete"
+        if words[1].nil?
+          @shell.puts("#{cmd}: Specify node ID")
+          return
+        end
+        id = words[1].to_i
+        
+        if @game.config["sid"].nil?
+          @shell.puts("#{cmd}: No session ID")
+          return
+        end
+
+        msg = "Delete node"
+        begin
+          net = @game.cmdNetGetForMaint
+          @game.cmdDeleteNodeUpdateNet(id, net["net"])
+        rescue Trickster::Hackers::RequestError => e
+          @shell.log("#{msg} (#{e})", :error)
+          return
+        end
+        @shell.log(msg, :success)
         return
 
       when "upgrade"

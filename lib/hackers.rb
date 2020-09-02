@@ -473,7 +473,7 @@ module Trickster
       def cmdDeleteNodeUpdateNet(id, net)
         url = URI.encode_www_form(
           {
-            "node_delete_update_net" => 1,
+            "node_delete_net_update" => 1,
             "id_player" => @config["id"],
             "id" => id,
             "net" => generateNetwork(net),
