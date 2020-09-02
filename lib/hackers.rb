@@ -128,10 +128,14 @@ module Trickster
 
       def parseNetwork(data)
         net = Array.new
-        records = data.split("|")
-        coords = records[0].split("_")
-        rels = records[1].split("_")
-        nodes = records[2].split("_")
+        begin
+          records = data.split("|")
+          coords = records[0].split("_")
+          rels = records[1].split("_")
+          nodes = records[2].split("_")
+        rescue
+          return net
+        end
         nodes.each_index do |i|
           coord = coords[i].split("*")
           net[i] = {
@@ -187,6 +191,7 @@ module Trickster
       
       def parseNodes(data)
         nodes = Hash.new
+        return nodes if data.nil?
         data.each do |node|
           nodes[node[0].to_i] = {
             "type" => node[2].to_i,
