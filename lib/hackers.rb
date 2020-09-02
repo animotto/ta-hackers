@@ -114,14 +114,18 @@ module Trickster
 
       def parseData(data)
         array = Array.new
-        data.split("@").each.with_index do |section, i|
-          array[i] = Array.new if array[i].nil?
-          section.split(";").each.with_index do |record, j|
-            array[i][j] = Array.new if array[i][j].nil?
-            record.split(",").each.with_index do |field, k|
-              array[i][j][k] = field
+        begin
+          data.split("@").each.with_index do |section, i|
+            array[i] = Array.new if array[i].nil?
+            section.split(";").each.with_index do |record, j|
+              array[i][j] = Array.new if array[i][j].nil?
+              record.split(",").each.with_index do |field, k|
+                array[i][j][k] = field
+              end
             end
           end
+        rescue
+          return array
         end
         return array
       end
@@ -1109,6 +1113,7 @@ module Trickster
         response = request(url)
         fields = parseData(response)
         data = Hash.new
+        return data if fields.empty?
         fields[0].each do |field|
           data[field[1]] = {
             "money" => field[2].to_i,
