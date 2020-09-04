@@ -1029,7 +1029,7 @@ module Trickster
       def cmdShieldBuy(shield)
         url = URI.encode_www_form(
           {
-            "buy_shield" => "",
+            "shield_buy" => "",
             "id_player" => @config["id"],
             "id_shield_type" => shield,
             "app_version" => @config["version"],
@@ -1414,6 +1414,19 @@ module Trickster
         response = request(url)
         data = parseData(response)
         return data[0][0][0]
+      end
+
+      def cmdRedeemPromoCode(id, code)
+        url = URI.encode_www_form(
+          {
+            "redeem_promo_code" => "",
+            "id_player" => id,
+            "code" => code,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
       end
     end
   end
