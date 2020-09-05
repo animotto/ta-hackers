@@ -128,7 +128,7 @@ module Sandbox
           return
         end
 
-        @game.config[words[1].downcase] = words[2]
+        @game.config[words[1]] = words[2]
         return
 
       when "unset"
@@ -807,14 +807,16 @@ module Sandbox
       case cmd
           
       when "qr", "qc", "qs"
-        data = words[1..-1]
-        data.each_index do |i|
+        data = Hash.new
+        words[1..-1].each do |word|
           @game.config.each do |k, v|
-            data[i].gsub!("%#{k}%".upcase, v.to_s)
+            word.gsub!("%#{k}%", v.to_s)
           end
+          param = word.split("=", 2)
+          data[param[0]] = param.length > 1 ? param[1] : ""
         end
         
-        url = @game.encodeUrl(data.join("&"))
+        url = @game.encodeUrl(data)
         if cmd == "qs" && @game.config["sid"].nil?
           @shell.puts "#{cmd}: No session ID"
           return

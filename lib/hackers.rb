@@ -46,6 +46,19 @@ module Trickster
         @mutex = Mutex.new
       end
 
+      def encodeUrl(data)
+        params = Array.new
+        data.each do |k, v|
+          params.push(
+            [
+              k,
+              URI.encode_www_form_component(v).gsub("+", "%20"),
+            ].join("=")
+          )
+        end
+        return params.join("&")
+      end
+
       def hashUrl(url)
         data = url.clone
         offset = data.length < 10 ? data.length : 10
@@ -64,10 +77,6 @@ module Trickster
         request += "&session_id=" + @config["sid"] if session
         request += "&cmd_id=" + hashUrl(request) if cmd
         return request
-      end
-      
-      def encodeUrl(url)
-        URI.encode_www_form_component(url).gsub("+", "%20")
       end
 
       def request(url, cmd = true, session = true, data = "")
