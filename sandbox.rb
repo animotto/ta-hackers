@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env -S ruby -W0
 
 $:.unshift("#{__dir__}/lib")
 
