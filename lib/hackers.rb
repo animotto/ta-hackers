@@ -66,6 +66,10 @@ module Trickster
         return request
       end
       
+      def encodeUrl(url)
+        URI.encode_www_form_component(url).gsub("+", "%20")
+      end
+
       def request(url, cmd = true, session = true, data = "")
         header = {
           "Content-Type" => "application/x-www-form-urlencoded",

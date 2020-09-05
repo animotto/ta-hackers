@@ -103,7 +103,7 @@ class Tgram < Sandbox::Script
   end
 
   def sendMessage(id, text)
-    data = URI.encode(text)
+    data = @game.encodeUrl(text)
     response = request("sendMessage?chat_id=#{id}&text=#{data}")
     return false unless response
     return JSON.parse(response)
