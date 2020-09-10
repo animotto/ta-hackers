@@ -1700,7 +1700,7 @@ module Sandbox
         load "#{fname}" unless Object.const_defined?(name)
         eval("#{name}.new(@game, @shell, args).main")
       rescue => e
-        @shell.log("Error: #{script} (#{e.message})", :script)
+        @shell.log("Error: #{script} (#{e.message})\n#{e.backtrace.join("\n")}", :script)
       else
         @shell.log("Done: #{script}", :script)
       end
