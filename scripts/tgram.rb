@@ -16,19 +16,19 @@ class Tgram < Sandbox::Script
       begin
         chats = JSON.parse(File.read(chatsFile))
       rescue => e
-        @shell.log("Invalid file format of chats: #{e}")
+        @logger.error("Invalid file format of chats: #{e}")
         return
       end
     end
 
     if @game.config["tgramToken"].nil?
-      @shell.log("No Telegram token", :script)
+      @logger.log("No Telegram token")
       return
     end
 
     room = @args[0]
     if room.nil?
-      @shell.log("Specify room ID", :script)
+      @logger.log("Specify room ID")
       return
     end
     
@@ -40,7 +40,7 @@ class Tgram < Sandbox::Script
       begin
         messages = @game.cmdChatDisplay(room, last)
       rescue Trickster::Hackers::RequestError => e
-        @shell.log("#{e}", :script)
+        @logger.error("#{e}")
         next
       end
 
@@ -78,7 +78,7 @@ class Tgram < Sandbox::Script
             begin
               @game.cmdChatSend(room, "@#{message["chat"]["first_name"]}: #{message["text"]}", last)
             rescue Trickster::Hackers::RequestError => e
-              @shell.log("#{e}", :script)
+              @logger.error("#{e}")
               next
             end
           end

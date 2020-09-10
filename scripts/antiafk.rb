@@ -19,7 +19,7 @@ class Antiafk < Sandbox::Script
         checkConLast = Time.now
       end
     rescue Trickster::Hackers::RequestError => e
-      @shell.log("#{e}", :script)
+      @logger.error("#{e}")
       sleep(10)
     ensure
       sleep(0.1)

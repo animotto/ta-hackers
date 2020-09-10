@@ -1,7 +1,7 @@
 class Rename < Sandbox::Script
   def main
     if @args[0].nil?
-      @shell.log("Specify ID", :script)
+      @logger.log("Specify ID")
       return
     end
 
@@ -12,7 +12,7 @@ class Rename < Sandbox::Script
     begin
       @game.cmdPlayerSetName(id, name)
     rescue Trickster::Hackers::RequestError => e
-      @shell.log("#{e}", :script)
+      @logger.error("#{e}")
       return
     end
 
@@ -22,6 +22,6 @@ class Rename < Sandbox::Script
     else
       msg = "Name for #{id} setted to #{name}"
     end
-    @shell.log(msg, :script)
+    @logger.log(msg)
   end
 end

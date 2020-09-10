@@ -38,7 +38,7 @@ class Chatbot < Sandbox::Script
       begin
         @config = JSON.parse(File.read(file))
       rescue JSON::ParserError => e
-        @script.shell.log("Config file #{file} has invalid format (#{e})", :script)
+        @logger.error("Config file #{file} has invalid format (#{e})")
       end
     end
 
@@ -67,7 +67,7 @@ class Chatbot < Sandbox::Script
       return false if response.code != "200"
       return response.body
     rescue => e
-      @script.shell.log("HTTP request error (#{e})", :script)
+      @logger.error("HTTP request error (#{e})")
       return false
     end
 
@@ -75,7 +75,7 @@ class Chatbot < Sandbox::Script
       return false unless response = http(host, port, url, params)
       return RSS::Parser.parse(response, false)
     rescue => e
-      @script.shell.log("RSS parse error (#{e})", :script)
+      @logger.error("RSS parse error (#{e})")
       return false
     end
   end
@@ -540,7 +540,7 @@ class Chatbot < Sandbox::Script
       begin
         info = @script.game.cmdPlayerGetInfo(user)
       rescue Trickster::Hackers::RequestError => e
-        @script.shell.log("Get player info error (#{e})", :script)
+        @logger.error("Get player info error (#{e})")
         return
       end
       msg = "[b][ffa62b]ЗАПУСКАЕМ ГУСЯ! ГУСЬ ДЕЛАЕТ КУСЬ [568eff]#{info["name"]}[ffa62b]! В ЕГО КАРМАНАХ НАШЛОСЬ [ff2a16]#{info["money"]} денег[ffa62b], [ff2a16]#{info["bitcoins"]} биткойнов[ffa62b], [ff2a16]#{info["credits"]} кредитов"
@@ -633,7 +633,7 @@ class Chatbot < Sandbox::Script
           geo = Hash.new
         end
       rescue JSON::ParserError => e
-        @script.shell.log("ISS JSON parser error (#{e})", :script)
+        @logger.error("ISS JSON parser error (#{e})")
         return
       end
       astron = astros["people"].select {|a| a["craft"] == "ISS"}
@@ -654,7 +654,7 @@ class Chatbot < Sandbox::Script
         return unless data = http("api.spacexdata.com", 443, "/v3/launches/next")
         nextLaunch = JSON.parse(data)
       rescue JSON::ParserError => e
-        @script.shell.log("SpaceX JSON parser error (#{e})", :script)
+        @logger.error("SpaceX JSON parser error (#{e})")
         return
       end
 
@@ -677,7 +677,7 @@ class Chatbot < Sandbox::Script
         return unless data = http("api.covid19api.com", 443, "/summary")
         covid19 = JSON.parse(data)
       rescue JSON::ParserError => e
-        @script.shell.log("COVID19 JSON parser error (#{e})", :script)
+        @logger.error("COVID19 JSON parser error (#{e})")
         return
       end
 
@@ -739,7 +739,7 @@ class Chatbot < Sandbox::Script
       msg = "[b][7ffb1a]#{result}"
       @script.say(msg)
     rescue JSON::ParserError => e
-      @script.shell.log("Wiki JSON parser error (#{e})", :script)
+      @logger.error("Wiki JSON parser error (#{e})")
       return
     end
   end
@@ -878,7 +878,7 @@ class Chatbot < Sandbox::Script
           "checkTime" => Time.now,
         }
       rescue Trickster::Hackers::RequestError => e
-        @script.shell.log("Tazik auth error for #{id} (#{e})", :script)
+        @logger.error("Tazik auth error for #{id} (#{e})")
         msg = "[b][bcd6ff]#{message["nick"]} [fff544]НЕ УДАЕТСЯ СПРЯТАТЬСЯ ПОД ТАЗИК!"
         @script.say(msg)
         return
@@ -923,7 +923,7 @@ class Chatbot < Sandbox::Script
           @config["active"].delete(id)
           save
         else
-          @script.shell.log("Tazik poll error for #{id} (#{e})", :script)
+          @logger.error("Tazik poll error for #{id} (#{e})")
         end
       end
     end
@@ -1000,7 +1000,7 @@ class Chatbot < Sandbox::Script
       begin
         @top = @script.game.cmdRankingGetAll(@script.room)
       rescue Trickster::Hackers::RequestError => e
-        @script.shell.log("Get ranking error (#{e})", :script)
+        @logger.error("Get ranking error (#{e})")
         return
       end
       @lastTimeCheck = Time.now
@@ -1036,8 +1036,8 @@ class Chatbot < Sandbox::Script
     end
   end
   
-  def initialize(game, shell, args)
-    super(game, shell, args)
+  def initialize(game, shell, logger, args)
+    super(game, shell, logger, args)
     Dir.mkdir(DATA_DIR) unless Dir.exist?(DATA_DIR)
 
     @room = args[0].to_i
@@ -1061,7 +1061,7 @@ class Chatbot < Sandbox::Script
     begin
       @config = JSON.parse(File.read(file))
     rescue JSON::ParserError => e
-      @shell.log("Main config file has invalid format (#{e})", :script)
+      @logger.error("Main config file has invalid format (#{e})")
       return false
     end
     return true
@@ -1075,12 +1075,12 @@ class Chatbot < Sandbox::Script
   def say(message)
     @game.cmdChatSend(@room, message)
   rescue Trickster::Hackers::RequestError => e
-    @shell.log("Say error (#{e})", :script)
+    @logger.error("Say error (#{e})")
   end
 
   def main
-    if @room.nil?
-      @shell.log("Specify room ID", :script)
+    if @room.zero?
+      @logger.log("Specify room ID")
       return
     end
 
@@ -1140,7 +1140,7 @@ class Chatbot < Sandbox::Script
       @commands[name].enabled = true
     end
 
-    @shell.log("The bot listens room #{@room}", :script)
+    @logger.log("The bot listens room #{@room}")
 
     roomLastUser = Hash.new
     roomLastTime = String.new
@@ -1149,7 +1149,7 @@ class Chatbot < Sandbox::Script
       messages = @game.cmdChatDisplay(@room, roomLastTime)
       net = @game.cmdNetGetForMaint
     rescue Trickster::Hackers::RequestError => e
-      @shell.log("Initial commands error (#{e})", :script)
+      @logger.error("Initial commands error (#{e})")
       return
     end
     roomLastTime = messages.last["datetime"] unless messages.empty?
@@ -1161,7 +1161,7 @@ class Chatbot < Sandbox::Script
       begin
         messages = @game.cmdChatDisplay(@room, roomLastTime)
       rescue Trickster::Hackers::RequestError => e
-        @shell.log("Chat display error (#{e})", :script)
+        @logger.error("Chat display error (#{e})")
         next
       end
       next if messages.empty?

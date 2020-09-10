@@ -2,14 +2,14 @@ class Hidenet < Sandbox::Script
   def main
     hide = @args[0]
     if hide.nil? || hide !~ /^(on|off)$/
-      @shell.log("Specify on|off argument", :script)
+      @logger.log("Specify on|off argument")
       return
     end
 
     begin
       net = @game.cmdNetGetForMaint
     rescue Trickster::Hackers::RequestError => e
-      @shell.log("#{e}", :script)
+      @logger.error("#{e}")
       return
     end
 
@@ -23,10 +23,10 @@ class Hidenet < Sandbox::Script
     begin
       @game.cmdUpdateNet(net["net"])
     rescue Trickster::Hackers::RequestError => e
-      @shell.log("#{e}", :script)
+      @logger.error("#{e}")
       return
     end
     
-    @shell.log("Nodes coordinates updated to #{coord}", :script)
+    @logger.log("Nodes coordinates updated to #{coord}")
   end
 end

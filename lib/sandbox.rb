@@ -5,6 +5,7 @@ module Sandbox
     require "json"
     require "base64"
     
+    attr_reader :logger
     attr_accessor :context, :reading
 
     def initialize(game)
@@ -19,6 +20,14 @@ module Sandbox
         "/chat" => ContextChat.new(@game, self),
       }
 
+      @logger = Logger.new(self)
+      @logger.logPrefix = "\e[1;32m\u2714\e[22;32m "
+      @logger.logSuffix = "\e[0m"
+      @logger.errorPrefix = "\e[1;31m\u2718\e[22;31m "
+      @logger.errorSuffix = "\e[0m"
+      @logger.infoPrefix = "\e[1;37m\u2759\e[22;37m "
+      @logger.infoSuffix = "\e[0m"
+
       Readline.completion_proc = Proc.new do |text|
         @contexts[@context].commands.keys.grep(/^#{Regexp.escape(text)}/)
       end
@@ -29,25 +38,6 @@ module Sandbox
       Readline.refresh_line if @reading
     end
 
-    def log(data, type = :info)
-      case type
-      when :error
-        data = "\e[1;31m\u2718\e[22;31m #{data}\e[0m"
-      when :success
-        data = "\e[1;32m\u2714\e[22;32m #{data}\e[0m"
-      when :data
-        data = "\e[1;35m\u2731\e[22;35m #{data}\e[0m"
-      when :script
-        data = "\e[1;36m\u273f\e[22;36m #{data}\e[0m"
-      when :chat
-        data = "\e[1;33m\u2764\e[22;33m #{data}\e[0m"
-      else
-        data = "\e[1;37m\u2759\e[22;37m #{data}\e[0m"
-      end
-
-      puts data
-    end
-    
     def readline
       loop do
         prompt = "#{@context} \e[1;35m\u25b8\e[0m "
@@ -278,10 +268,10 @@ module Sandbox
         begin
           news = @game.cmdNewsGetList
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
 
         news.each do |k, v|
           @shell.puts "\e[34m%s \e[33m%s\e[0m" % [
@@ -388,118 +378,118 @@ module Sandbox
         begin
           @game.transLang = @game.cmdTransLang
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
  
         msg = "Application settings"
         begin
           @game.appSettings = @game.cmdAppSettings
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
 
         msg = "Node types and levels"
         begin
           @game.nodeTypes = @game.cmdGetNodeTypes
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
 
         msg = "Program types and levels"
         begin
           @game.programTypes = @game.cmdGetProgramTypes
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
 
         msg = "Missions list"
         begin
           @game.missionsList = @game.cmdGetMissionsList
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
 
         msg = "Skin types"
         begin
           @game.skinTypes = @game.cmdSkinTypesGetList
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
         
         msg = "Hints list"
         begin
           @game.hintsList = @game.cmdHintsGetList
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
 
         msg = "Experience list"
         begin
           @game.experienceList = @game.cmdGetExperienceList
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
 
         msg = "Builders list"
         begin
           @game.buildersList = @game.cmdBuildersCountGetList
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
 
         msg = "Goals types"
         begin
           @game.goalsTypes = @game.cmdGoalTypesGetList
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
 
         msg = "Shield types"
         begin
           @game.shieldTypes = @game.cmdShieldTypesGetList
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
         
         msg = "Rank list"
         begin
           @game.rankList = @game.cmdRankGetList
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
 
         msg = "Authenticate"
         begin
           auth = @game.cmdAuthIdPassword
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
 
         @game.config["sid"] = auth["sid"]        
         return
@@ -509,10 +499,10 @@ module Sandbox
         begin
           player = @game.cmdPlayerCreate
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
 
         @shell.puts("\e[1;35m\u2022 New account\e[0m")
         @shell.puts("  ID: #{player["id"]}")
@@ -531,10 +521,10 @@ module Sandbox
         begin
           @game.cmdPlayerSetName(@game.config["id"], name)
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
         return
 
       when "info"
@@ -554,10 +544,10 @@ module Sandbox
           info = @game.cmdPlayerGetInfo(id)
           info["level"] = @game.getLevelByExp(info["experience"])
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
 
         @shell.puts("\e[1;35m\u2022 Player info\e[0m")
         info.each do |k, v|
@@ -582,10 +572,10 @@ module Sandbox
           detail = @game.cmdGetNetDetailsWorld(id)
           detail["profile"]["level"] = @game.getLevelByExp(detail["profile"]["experience"])
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
 
         @shell.puts("\e[1;35m\u2022 Detail player network\e[0m")
         detail["profile"].each do |k, v|
@@ -632,10 +622,10 @@ module Sandbox
         begin
           @game.cmdSetPlayerHqCountry(@game.config["id"], x, y, country)
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
         return
 
       when "skin"
@@ -654,10 +644,10 @@ module Sandbox
         begin
           response = @game.cmdPlayerSetSkin(skin)
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
         return
 
       when "top"
@@ -676,10 +666,10 @@ module Sandbox
         begin
           top = @game.cmdRankingGetAll(country)
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
 
         types = {
           "nearby" => "Players nearby",
@@ -739,10 +729,10 @@ module Sandbox
         begin
           code = @game.cmdCpGenerateCode(@game.config["id"], @game.config["platform"])
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
 
         @shell.puts("\e[1;35m\u2022 Generated code\e[0m")
         @shell.puts("  Code: #{code}")
@@ -764,10 +754,10 @@ module Sandbox
         begin
           data = @game.cmdCpUseCode(@game.config["id"], code, @game.config["platform"])
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
 
         @shell.puts("\e[1;35m\u2022 Account credentials\e[0m")
         @shell.puts("  ID: #{data["id"]}")
@@ -827,12 +817,12 @@ module Sandbox
         begin
           response = @game.request(url, (cmd == "qc" || cmd == "qs"), (cmd == "qs"))
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return          
         end
 
-        @shell.log(msg, :success)
-        @shell.log(response, :data)
+        @shell.logger.log(msg)
+        @shell.puts("\e[22;35m#{response}\e[0m")
         @dumps.append({
                         "name" => "Dump#{@dumps.length}",
                         "note" => "",
@@ -1052,10 +1042,10 @@ module Sandbox
           net = @game.cmdNetGetForMaint
           net["profile"]["level"] = @game.getLevelByExp(net["profile"]["experience"])
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
 
         case cmd
 
@@ -1219,10 +1209,10 @@ module Sandbox
           net = @game.cmdNetGetForMaint
           @game.cmdCreateNodeUpdateNet(type, net["net"])
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
         return
 
       when "delete"
@@ -1242,10 +1232,10 @@ module Sandbox
           net = @game.cmdNetGetForMaint
           @game.cmdDeleteNodeUpdateNet(id, net["net"])
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
         return
 
       when "upgrade"
@@ -1264,10 +1254,10 @@ module Sandbox
         begin
           @game.cmdUpgradeNode(id)
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
         return
 
       when "finish"
@@ -1286,10 +1276,10 @@ module Sandbox
         begin
           @game.cmdFinishNode(id)
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
         return
 
       when "builders"
@@ -1314,10 +1304,10 @@ module Sandbox
         begin
           @game.cmdNodeSetBuilders(id, builders)
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
         return
 
       when "collect"
@@ -1336,10 +1326,10 @@ module Sandbox
         begin
           @game.cmdCollectNode(id)
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
         return
 
       when "missions"
@@ -1352,10 +1342,10 @@ module Sandbox
         begin
           missions = @game.cmdPlayerMissionsGetLog
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
 
         @shell.puts("\e[1;35m\u2022 Missions log\e[0m")
         @shell.puts(
@@ -1412,19 +1402,19 @@ module Sandbox
         begin
           net = @game.cmdNetGetForMaint
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
         
         msg = "World"
         begin
           world = @game.cmdPlayerWorld(net["profile"]["country"])
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
 
         case cmd
 
@@ -1496,10 +1486,10 @@ module Sandbox
         begin
           targets = @game.cmdGetNewTargets
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
         @shell.puts("\e[1;35m\u2022 Targets\e[0m")
         @shell.puts(
           "  \e[35m%-12s %s\e[0m" % [
@@ -1533,10 +1523,10 @@ module Sandbox
         begin
           @game.cmdBonusCollect(id)
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
         return        
 
       when "update"
@@ -1561,10 +1551,10 @@ module Sandbox
         begin
           @game.cmdGoalUpdate(id, record)
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
         return
 
       when "reject"
@@ -1583,10 +1573,10 @@ module Sandbox
         begin
           @game.cmdGoalReject(id)
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{msg} (#{e})", :error)
+          @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.log(msg, :success)
+        @shell.logger.log(msg)
         return
         
       end
@@ -1608,6 +1598,9 @@ module Sandbox
                        })
       @jobs = Hash.new
       @jobCounter = 0;
+      @logger = Logger.new(@shell)
+      @logger.logPrefix = "\e[1;34m\u273f\e[22;34m "
+      @logger.logSuffix = "\e[0m"
     end
 
     def exec(words)
@@ -1673,7 +1666,7 @@ module Sandbox
           return
         end
 
-        @shell.log("Killed: #{@jobs[job][0]}", :script)
+        @logger.log("Killed: #{@jobs[job][0]}")
         @jobs[job][1].kill
         script = @jobs[job][0]
         name = script.capitalize
@@ -1693,16 +1686,24 @@ module Sandbox
         Thread.current,
       ]
       fname = "#{SCRIPTS_DIR}/#{script}.rb"
-      @shell.log("Run: #{script}", :script)
+      @logger.log("Run: #{script}")
       
+      logger = Logger.new(@shell)
+      logger.logPrefix = "\e[1;36m\u276f [#{script}]\e[22;36m "
+      logger.logSuffix = "\e[0m"
+      logger.errorPrefix = "\e[1;31m\u276f [#{script}]\e[22;31m "
+      logger.errorSuffix = "\e[0m"
+      logger.infoPrefix = "\e[1;37m\u276f [#{script}]\e[22;37m "
+      logger.errorSuffix = "\e[0m"
+
       begin
         name = script.capitalize
         load "#{fname}" unless Object.const_defined?(name)
-        eval("#{name}.new(@game, @shell, args).main")
+        eval("#{name}.new(@game, @shell, logger, args).main")
       rescue => e
-        @shell.log("Error: #{script} (#{e.message})\n#{e.backtrace.join("\n")}", :script)
+        @logger.log("Error: #{script} (#{e.message})\n#{e.backtrace.join("\n")}")
       else
-        @shell.log("Done: #{script}", :script)
+        @logger.log("Done: #{script}")
       end
 
       @jobs.delete(job)
@@ -1723,6 +1724,9 @@ module Sandbox
                          "users" => ["users <room>", "Show users list in the room"],
                        })
       @mutex = Mutex.new
+      @logger = Logger.new(@shell)
+      @logger.logPrefix = "\e[1;33m\u2764\e[22;33m "
+      @logger.logSuffix = "\e[0m"
     end
 
     def exec(words)
@@ -1806,7 +1810,7 @@ module Sandbox
               @rooms[room][1],
             )
           rescue Trickster::Hackers::RequestError => e
-            @shell.log("Chat send (#{e})", :error)
+            @shell.logger.error("Chat send (#{e})")
             return
           end
           logMessages(room, response)
@@ -1844,7 +1848,7 @@ module Sandbox
                 @rooms[room][1],
               )
             rescue Trickster::Hackers::RequestError => e
-              @shell.log("Chat send (#{e})", :error)
+              @shell.logger.error("Chat send (#{e})")
               next
             end
             logMessages(room, response)
@@ -1867,7 +1871,7 @@ module Sandbox
       @mutex.synchronize do
         messages = @game.cmdChatDisplay(words[1])
       rescue Trickster::Hackers::RequestError => e
-        @shell.log("Chat display (#{e})", :error)
+        @shell.logger.error("Chat display (#{e})")
         return
       end
 
@@ -1890,13 +1894,12 @@ module Sandbox
 
     def logMessages(room, messages)
       messages.each do |message|
-        @shell.log(
+        @logger.log(
           "(%d) %s: %s" % [
             room,
             message["nick"],
             message["message"],
           ],
-          :chat,
         )
         @rooms[room][1] = message["datetime"]
       end
@@ -1907,7 +1910,7 @@ module Sandbox
         @mutex.synchronize do
           messages = @game.cmdChatDisplay(room, @rooms[room][1])
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("Chat display (#{e})", :error)
+          @shell.logger.error("Chat display (#{e})")
         else
           logMessages(room, messages)
         end
@@ -1917,10 +1920,38 @@ module Sandbox
     end
   end
 
+  class Logger
+    attr_accessor :logPrefix, :errorPrefix, :infoPrefix,
+                  :logSuffix, :errorSuffix, :infoSuffix
+
+    def initialize(shell)
+      @shell = shell
+      @logPrefix = String.new
+      @logSuffix = String.new
+      @errorPrefix = String.new
+      @errorSuffix = String.new
+      @infoPrefix = String.new
+      @infoSuffix = String.new
+    end
+
+    def log(message)
+      @shell.puts(@logPrefix + message + @logSuffix)
+    end
+
+    def error(message)
+      @shell.puts(@errorPrefix + message + @errorSuffix)
+    end
+
+    def info(message)
+      @shell.puts(@infoPrefix + message + @infoSuffix)
+    end
+  end
+
   class Script
-    def initialize(game, shell, args)
+    def initialize(game, shell, logger, args)
       @game = game
       @shell = shell
+      @logger = logger
       @args = args
     end
 

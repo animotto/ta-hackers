@@ -9,7 +9,7 @@ class Colres < Sandbox::Script
       begin
         net = @game.cmdNetGetForMaint
       rescue Trickster::Hackers::RequestError => e
-        @shell.log("#{e}", :script)
+        @logger.error("#{e}")
         return
       end
 
@@ -18,11 +18,11 @@ class Colres < Sandbox::Script
         begin
           @game.cmdCollectNode(k)
         rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{e}", :script)
+          @logger.error("#{e}")
           return
         end
         
-        @shell.log("Node #{k} resources collected", :script)
+        @logger.log("Node #{k} resources collected")
       end
     end
   end
