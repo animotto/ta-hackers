@@ -5,7 +5,9 @@ class Chatbot < Sandbox::Script
   DATA_DIR = "#{Sandbox::ContextScript::SCRIPTS_DIR}/chatbot"
   SLEEP_TIME = 10
 
-  attr_reader :game, :shell, :room, :config, :commands, :users
+  attr_reader :game, :shell, :logger,
+              :room, :config, :commands,
+              :users
 
   class CmdBase
     NAME = String.new
