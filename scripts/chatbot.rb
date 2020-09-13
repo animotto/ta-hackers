@@ -181,6 +181,12 @@ class Chatbot < Sandbox::Script
         next if command.class == self.class
         list.concat(command.class::PATTERNS) if command.enabled && command.visible
       end
+      hex = (0..15).to_a
+      list.map! do |command|
+        color = String.new
+        6.times {color += hex.sample.to_s(16)}
+        "[#{color}]#{command}"
+      end
       msg = "[b][77a9ff]ВОТ ЧТО Я УМЕЮ: " + list.join(" ")
       @script.say(msg)
     end
