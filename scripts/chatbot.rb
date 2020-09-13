@@ -780,10 +780,10 @@ class Chatbot < Sandbox::Script
     def exec(message)
       return if @config["cities"].empty?
       if @city.empty?
-        @city = @config["cities"].sample.downcase
+        @city = @config["cities"].sample.strip.downcase
         @cityMasked = @city.clone
         return if @city.empty?
-        positions = (1..(@city.length)).to_a.shuffle[0..(@city.length / 2 - 1)]
+        positions = (0..(@city.length - 1)).to_a.shuffle[0..((@city.length - 1) / 2)]
         positions.each {|p| @cityMasked[p] = "*"}
         @lastTimeHint = Time.now
         msg = "[b][afab73]УГАДАЙТЕ КАКОЙ Я ЗАГАДАЛ ГОРОД: [10ff10]#{@cityMasked.upcase}"
@@ -791,7 +791,7 @@ class Chatbot < Sandbox::Script
         return
       end
 
-      pattern = Regexp.new(Regexp.escape(@city), Regexp::IGNORECASE)
+      pattern = /\b#{Regexp.escape(@city)}\b/i
       if pattern.match(message["message"])
         msg = "[b][7affe1]#{message["nick"]}[afab73] УГАДАЛ ГОРОД [10ff10]#{@city.upcase}[afab73]!"
         @script.say(msg)
