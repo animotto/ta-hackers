@@ -2,6 +2,9 @@
 
 $:.unshift("#{__dir__}/lib")
 
+require "optparse"
+require "json"
+
 require "hackers"
 require "sandbox"
 
@@ -9,10 +12,27 @@ Dir.chdir(__dir__)
 CONFIGS_DIR = "configs"
 DEFAULT_CONFIG = "default"
 
-configFile = "#{DEFAULT_CONFIG}.conf"
-configFile = "#{ARGV[1]}.conf" if ARGV[0] == "-c"
+options = {
+  "config" => DEFAULT_CONFIG,
+}
+begin
+  OptionParser.new do |opts|
+    opts.banner = "TricksterArts Hackers sandbox"
+    opts.on("-c config", "", "Configuration name") do |v|
+      options["config"] = v
+    end
+  end.parse!
+rescue OptionParser::InvalidOption => e
+  puts "#{$0}: #{e.message}"
+  exit
+rescue OptionParser::MissingArgument => e
+  puts "#{$0}: #{e.message}"
+  exit
+end
+
+configFile = "#{options["config"]}.conf"
 unless File.file?("#{CONFIGS_DIR}/#{configFile}")
-  puts "#{$0}: Can't load config #{ARGV[1]}"
+  puts "#{$0}: Can't load config #{options["config"]}"
   exit
 end
 config = File.read("#{CONFIGS_DIR}/#{configFile}")
@@ -33,3 +53,4 @@ unless config["autocmd"].nil?
   end
 end
 shell.readline
+
