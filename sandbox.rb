@@ -22,10 +22,7 @@ begin
       options["config"] = v
     end
   end.parse!
-rescue OptionParser::InvalidOption => e
-  puts "#{$0}: #{e.message}"
-  exit
-rescue OptionParser::MissingArgument => e
+rescue OptionParser::InvalidOption, OptionParser::MissingArgument => e
   puts "#{$0}: #{e.message}"
   exit
 end
