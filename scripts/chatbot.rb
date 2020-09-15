@@ -1047,6 +1047,68 @@ class Chatbot < Sandbox::Script
     end
   end
   
+  class CmdWall < CmdBase
+    NAME = "wall"
+    PATTERNS = %w[!стена !запись]
+
+    def load
+      super
+      @config = {
+        "recordtime" => 60 * 60 * 24,
+        "records" => {},
+      } if @config.empty?
+
+      @config["records"].keys.each do |id|
+        @config["records"][id]["time"] = Time.parse(@config["records"][id]["time"])
+      end
+    end
+
+    def exec(message)
+      words = message["message"].split(/\s+/)
+      id = message["id"].to_s
+      msg = "[b][ff5e3a]"
+      if words[0] == self.class::PATTERNS[1]
+        if !@config["records"][id].nil? && Time.now - @config["records"][id]["time"] <= @config["recordtime"]
+          msg += "[7aff9f]#{message["nick"]} [ff5e3a]ТЫ УЖЕ ОСТАВИЛ ЗАПИСЬ! ОСТАВИТЬ НОВУЮ ЗАПИСЬ МОЖНО БУДЕТ В [7aff9f]#{(@config["records"][id]["time"] + @config["recordtime"]).strftime("%d.%m.%y %H:%M")}"
+        else
+          record = words[1..-1].join(" ")
+          if record.empty?
+            msg += "ДЛЯ ТОГО ЧТОБЫ ОСТАВИТЬ ЗАПИСЬ НА СТЕНЕ, ИСПОЛЬЗУЙ КОМАНДУ #{self.class::PATTERNS[1]} текст"
+            @script.say(msg)
+            return
+          end
+          msg += "[7aff9f]#{message["nick"]} [ff5e3a]ОСТАВИЛ НА СТЕНЕ ЗАПИСЬ!"
+          @config["records"][id] = {
+            "name" => message["nick"],
+            "message" => record,
+            "time" => Time.now,
+          }
+          save
+        end
+        @script.say(msg)
+        return
+      end
+
+      if @config["records"].empty?
+        msg += "НА СТЕНЕ ПУСТО! ПОПРОБУЙ ЧТО-НИБУДЬ НАПИСАТЬ КОМАНДОЙ #{self.class::PATTERNS[1]}"
+      else
+        record = @config["records"][@config["records"].keys.sample]
+        msg += "[7aff9f]#{record["name"]} [ff5e3a]НАПИСАЛ В [7aff9f]#{record["time"].strftime("%d.%m.%y %H:%M")}[ff5e3a]: [93e9ff]#{record["message"]}"
+      end
+      @script.say(msg)
+    end
+
+    def stat
+      "[ffadad]ОСТАВЛЕНО #{@config["records"].length} ЗАПИСЕЙ"
+    end
+
+    def watch
+      {
+        "recordtime" => @config["recordtime"],
+      }
+    end
+  end
+
   def initialize(game, shell, logger, args)
     super(game, shell, logger, args)
     Dir.mkdir(DATA_DIR) unless Dir.exist?(DATA_DIR)
@@ -1126,6 +1188,7 @@ class Chatbot < Sandbox::Script
     @commands[CmdTazik::NAME] = CmdTazik.new(self)
     @commands[CmdPerson::NAME] = CmdPerson.new(self)
     @commands[CmdRanking::NAME] = CmdRanking.new(self)
+    @commands[CmdWall::NAME] = CmdWall.new(self)
 
     @randomCommands = [
       CmdStat::NAME,
@@ -1144,6 +1207,7 @@ class Chatbot < Sandbox::Script
       CmdISS::NAME,
       CmdSpaceX::NAME,
       CmdCOVID19::NAME,
+      CmdWall::NAME,
     ]
 
     @config["enabled"].each do |name|
