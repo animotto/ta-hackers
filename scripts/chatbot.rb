@@ -773,13 +773,16 @@ class Chatbot < Sandbox::Script
     end
 
     def matched?(message)
-      return true unless @city.empty?
+      unless @city.empty?
+        pattern = /\b#{Regexp.escape(@city)}\b/i
+        return true if pattern.match(message["message"])
+      end
       super(message)
     end
 
     def exec(message)
-      return if @config["cities"].empty?
       if @city.empty?
+        return if @config["cities"].empty?
         @city = @config["cities"].sample.strip.downcase
         @cityMasked = @city.clone
         return if @city.empty?
