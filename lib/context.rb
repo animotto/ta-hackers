@@ -10,6 +10,7 @@ module Sandbox
         "path" => ["path", "Current context path"],
         "set" => ["set [var] [val]", "Set configuration variables"],
         "unset" => ["unset <var>", "Unset configuration variables"],
+        "save" => ["save", "Save configuration"],
         "quit" => ["quit", "Quit"],
       }
     end
@@ -67,6 +68,13 @@ module Sandbox
 
         @game.config.delete(words[1])
         return
+
+      when "save"
+        begin
+          @game.config.save
+        rescue => e
+          @shell.puts "#{cmd}: Can't save configuration (#{e})"
+        end
         
       else
         @shell.puts "Unrecognized command #{cmd}"

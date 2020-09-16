@@ -69,6 +69,24 @@ module Sandbox
     end
   end
 
+  class Config < Hash
+    attr_reader :file
+
+    def initialize(file)
+      @file = file
+    end
+
+    def load
+      data = JSON.parse(File.read(@file))
+      return unless data.class == Hash
+      self.merge!(data)
+    end
+
+    def save
+      File.write(@file, JSON.pretty_generate(self))
+    end
+  end
+
   class Logger
     attr_accessor :logPrefix, :errorPrefix, :infoPrefix,
                   :logSuffix, :errorSuffix, :infoSuffix

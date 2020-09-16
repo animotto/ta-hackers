@@ -32,9 +32,9 @@ unless File.file?("#{CONFIGS_DIR}/#{configFile}")
   puts "#{$0}: Can't load config #{options["config"]}"
   exit
 end
-config = File.read("#{CONFIGS_DIR}/#{configFile}")
+config = Sandbox::Config.new("#{CONFIGS_DIR}/#{configFile}")
 begin
-  config = JSON.parse(config)
+  config.load
 rescue JSON::ParserError => e
   puts "#{$0}: Invalid config format"
   puts

@@ -17,9 +17,9 @@ class Chatbot < Sandbox::Script
 
     def initialize(script)
       @script = script
-      @config = Hash.new
       @enabled = false
       @visible = true
+      @config = Sandbox::Config.new("#{Chatbot::DATA_DIR}/cmd-#{self.class::NAME}.conf")
       load
     end
 
@@ -35,18 +35,20 @@ class Chatbot < Sandbox::Script
     end
 
     def load
-      file = "#{Chatbot::DATA_DIR}/cmd-#{self.class::NAME}.conf"
-      return false if self.class::NAME.empty? || !File.file?(file)
+      return false if self.class::NAME.empty? || !File.file?(@config.file)
       begin
-        @config = JSON.parse(File.read(file))
+        @config.load
       rescue JSON::ParserError => e
-        @script.logger.error("Config file #{file} has invalid format (#{e})")
+        @script.logger.error("Config file #{@config.file} has invalid format (#{e})")
       end
     end
 
     def save
-      file = "#{Chatbot::DATA_DIR}/cmd-#{self.class::NAME}.conf"
-      File.write(file, JSON.pretty_generate(@config))
+      begin
+        @config.save
+      rescue => e
+        @script.logger.error("Can't save config #{@config.file} (#{e})")
+      end
     end
     
     def exec(message)
@@ -315,11 +317,11 @@ class Chatbot < Sandbox::Script
 
     def load
       super
-      @config = {
+      @config.merge!({
         "counter" => 0,
         "bullets" => 6,
         "mutetime" => 60 * 60,
-      } if @config.empty?
+      }) if @config.empty?
     end
 
     def exec(message)
@@ -355,10 +357,10 @@ class Chatbot < Sandbox::Script
 
     def load
       super
-      @config = {
+      @config.merge!({
         "counter" => 0,
         "fortune" => [],
-      } if @config.empty?
+      }) if @config.empty?
     end
 
     def exec(message)
@@ -395,10 +397,10 @@ class Chatbot < Sandbox::Script
 
     def load
       super
-      @config = {
+      @config.merge!({
         "counter" => 0,
         "users" => {},
-      } if @config.empty?
+      }) if @config.empty?
     end
 
     def exec(message)
@@ -550,9 +552,9 @@ class Chatbot < Sandbox::Script
 
     def load
       super
-      @config = {
+      @config.merge!({
         "counter" => 0,
-      } if @config.empty?
+      }) if @config.empty?
     end
 
     def exec(message)
@@ -629,9 +631,9 @@ class Chatbot < Sandbox::Script
 
     def load
       super
-      @config = {
+      @config.merge!({
         "countries" => {},
-      } if @config.empty?
+      }) if @config.empty?
     end
 
     def exec(message)
@@ -778,10 +780,10 @@ class Chatbot < Sandbox::Script
     
     def load
       super
-      @config = {
+      @config.merge!({
         "counter" => 0,
         "cities" => [],
-      } if @config.empty?
+      }) if @config.empty?
     end
 
     def matched?(message)
@@ -852,13 +854,13 @@ class Chatbot < Sandbox::Script
 
     def load
       super
-      @config = {
+      @config.merge!({
         "authtime" => 5 * 60,
         "authtimerand" => 2 * 60,
         "checktime" => 60,
         "users" => {},
         "active" => {},
-      } if @config.empty?
+      }) if @config.empty?
 
       @config["active"].keys.each do |id|
         @config["active"][id]["startTime"] = Time.parse(@config["active"][id]["startTime"])
@@ -1006,10 +1008,10 @@ class Chatbot < Sandbox::Script
 
     def load
       super
-      @config = {
+      @config.merge!({
         "checktime" => 15 * 60,
         "topnum" => 20,
-      } if @config.empty?
+      }) if @config.empty?
     end
 
     def initialize(script)
@@ -1065,10 +1067,10 @@ class Chatbot < Sandbox::Script
 
     def load
       super
-      @config = {
+      @config.merge!({
         "recordtime" => 60 * 60 * 24,
         "records" => {},
-      } if @config.empty?
+      }) if @config.empty?
 
       @config["records"].keys.each do |id|
         @config["records"][id]["time"] = Time.parse(@config["records"][id]["time"])
@@ -1132,8 +1134,14 @@ class Chatbot < Sandbox::Script
 
   def load
     file = "#{DATA_DIR}/main.conf"
-    unless File.file?(file)
-      @config = {
+    @config = Sandbox::Config.new(file)
+    begin
+      @config.load
+    rescue JSON::ParserError => e
+      @logger.error("Main config file has invalid format (#{e})")
+      return false
+    rescue => e
+      @config.merge!({
         "config" => {
           "flood" => "15",
           "repeats" => "4",
@@ -1141,21 +1149,17 @@ class Chatbot < Sandbox::Script
           },
         "admins" => [],
         "enabled" => [],
-      }
-      return true
-    end
-    begin
-      @config = JSON.parse(File.read(file))
-    rescue JSON::ParserError => e
-      @logger.error("Main config file has invalid format (#{e})")
-      return false
+      })
     end
     return true
   end
 
   def save
-    file = "#{DATA_DIR}/main.conf"
-    File.write(file, JSON.pretty_generate(@config))
+    begin
+      @config.save
+    rescue => e
+      @logger.error("Can't save main config (#{e})")
+    end
   end
 
   def say(message)
