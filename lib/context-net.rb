@@ -25,7 +25,7 @@ module Sandbox
       case cmd
 
       when "profile", "readme", "node", "prog", "log", "net"
-        if @game.config["sid"].nil?
+        if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
         end
@@ -192,7 +192,7 @@ module Sandbox
         end
         type = words[1].to_i
         
-        if @game.config["sid"].nil?
+        if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
         end
@@ -215,7 +215,7 @@ module Sandbox
         end
         id = words[1].to_i
         
-        if @game.config["sid"].nil?
+        if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
         end
@@ -238,7 +238,7 @@ module Sandbox
         end
         id = words[1].to_i
         
-        if @game.config["sid"].nil?
+        if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
         end
@@ -260,7 +260,7 @@ module Sandbox
         end
         id = words[1].to_i
         
-        if @game.config["sid"].nil?
+        if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
         end
@@ -288,7 +288,7 @@ module Sandbox
         end
         builders = words[2].to_i
         
-        if @game.config["sid"].nil?
+        if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
         end
@@ -310,7 +310,7 @@ module Sandbox
         end
         id = words[1].to_i
         
-        if @game.config["sid"].nil?
+        if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
         end
@@ -326,7 +326,7 @@ module Sandbox
         return
 
       when "missions"
-        if @game.config["sid"].nil?
+        if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
         end

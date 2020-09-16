@@ -36,7 +36,7 @@ module Sandbox
         end
         
         url = @game.encodeUrl(data)
-        if cmd == "qs" && @game.config["sid"].nil?
+        if cmd == "qs" && @game.sid.empty?
           @shell.puts "#{cmd}: No session ID"
           return
         end

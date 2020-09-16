@@ -22,7 +22,7 @@ module Sandbox
       case cmd
 
       when "open"
-        if @game.config["sid"].nil? || @game.appSettings.empty?
+        if @game.sid.empty? || @game.appSettings.empty?
           @shell.puts "#{cmd}: Not connected"
           return
         end
@@ -145,7 +145,7 @@ module Sandbox
         return
         
     when "users"
-      if @game.config["sid"].nil? || @game.appSettings.empty?
+      if @game.sid.empty? || @game.appSettings.empty?
         @shell.puts "#{cmd}: Not connected"
         return
       end

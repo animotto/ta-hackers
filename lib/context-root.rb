@@ -352,7 +352,7 @@ module Sandbox
         end
         @shell.logger.log(msg)
 
-        @game.config["sid"] = auth["sid"]        
+        @game.sid = auth["sid"]        
         return
 
       when "new"
@@ -395,7 +395,7 @@ module Sandbox
           return
         end
 
-        if @game.config["sid"].nil?
+        if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
         end
@@ -423,7 +423,7 @@ module Sandbox
           return
         end
 
-        if @game.config["sid"].nil?
+        if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
         end
@@ -474,7 +474,7 @@ module Sandbox
           return
         end
 
-        if @game.config["sid"].nil?
+        if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
         end
@@ -496,7 +496,7 @@ module Sandbox
           return
         end
 
-        if @game.config["sid"].nil?
+        if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
         end
@@ -518,7 +518,7 @@ module Sandbox
           return
         end
 
-        if @game.config["sid"].nil?
+        if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
         end
@@ -581,7 +581,7 @@ module Sandbox
         return
 
       when "cpgen"
-        if @game.config["sid"].nil?
+        if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
         end
@@ -606,7 +606,7 @@ module Sandbox
           return
         end
 
-        if @game.config["sid"].nil?
+        if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
         end

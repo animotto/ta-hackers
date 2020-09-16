@@ -867,8 +867,8 @@ class Chatbot < Sandbox::Script
         config = @script.game.config.clone
         config["id"] = id.to_i
         config["password"] = @config["users"][id]["password"]
-        config["sid"] = @config["active"][id]["sid"]
         @config["active"][id]["game"] = Trickster::Hackers::Game.new(config)
+        @config["active"][id]["game"].sid = @config["active"][id]["sid"]
       end
     end
 
@@ -892,7 +892,7 @@ class Chatbot < Sandbox::Script
       game = Trickster::Hackers::Game.new(config)
       begin
         auth = game.cmdAuthIdPassword
-        game.config["sid"] = auth["sid"]
+        game.sid = auth["sid"]
         game.cmdNetGetForMaint
         @config["active"][id] = {
           "sid" => auth["sid"],
@@ -919,7 +919,7 @@ class Chatbot < Sandbox::Script
         if @config["active"][id]["authTime"] + @config["authtime"] + rand(@config["authtimerand"]) <= Time.now
           auth = @config["active"][id]["game"].cmdAuthIdPassword
           @config["active"][id]["sid"] = auth["sid"]
-          @config["active"][id]["game"].config["sid"] = auth["sid"]
+          @config["active"][id]["game"].sid = auth["sid"]
           @config["active"][id]["game"].cmdNetGetForMaint
           @config["active"][id]["authTime"] = Time.now
           @config["active"][id]["checkTime"] = Time.now

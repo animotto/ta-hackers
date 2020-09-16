@@ -25,10 +25,11 @@ module Trickster
                     :nodeTypes, :programTypes, :missionsList,
                     :skinTypes, :hintsList, :experienceList,
                     :buildersList, :goalsTypes, :shieldTypes,
-                    :rankList
+                    :rankList, :sid
       
       def initialize(config)
         @config = config
+        @sid = String.new
         @appSettings = Hash.new
         @transLang = Hash.new
         @nodeTypes = Hash.new
@@ -74,7 +75,7 @@ module Trickster
 
       def makeUrl(url, cmd = true, session = true)
         request = @config["url"] + "?" + url
-        request += "&session_id=" + @config["sid"] if session
+        request += "&session_id=" + @sid if session
         request += "&cmd_id=" + hashUrl(request) if cmd
         return request
       end

@@ -18,7 +18,7 @@ module Sandbox
       case cmd
 
       when "target", "bonus", "goal"
-        if @game.config["sid"].nil?
+        if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
         end
@@ -102,7 +102,7 @@ module Sandbox
         end
 
       when "new"
-        if @game.config["sid"].nil?
+        if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
         end
@@ -133,7 +133,7 @@ module Sandbox
         return
 
       when "collect"
-        if @game.config["sid"].nil?
+        if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
         end
@@ -155,7 +155,7 @@ module Sandbox
         return        
 
       when "update"
-        if @game.config["sid"].nil?
+        if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
         end
@@ -183,7 +183,7 @@ module Sandbox
         return
 
       when "reject"
-        if @game.config["sid"].nil?
+        if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
         end

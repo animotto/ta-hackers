@@ -8,7 +8,7 @@ class Antiafk < Sandbox::Script
     loop do
       if (Time.now - authLast).to_i >= authInterval
         auth = @game.cmdAuthIdPassword
-        @game.config["sid"] = auth["sid"]
+        @game.sid = auth["sid"]
         @game.cmdNetGetForMaint
         authLast = Time.now
         authInterval = AUTH_INTERVAL_MIN + rand(AUTH_INTERVAL_ADD)
