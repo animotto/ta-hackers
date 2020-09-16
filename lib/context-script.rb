@@ -15,6 +15,8 @@ module Sandbox
       @logger = Logger.new(@shell)
       @logger.logPrefix = "\e[1;34m\u273f\e[22;34m "
       @logger.logSuffix = "\e[0m"
+      @logger.errorPrefix = "\e[1;31m\u273f\e[22;31m "
+      @logger.errorSuffix = "\e[0m"
     end
 
     def exec(words)
@@ -115,13 +117,17 @@ module Sandbox
         load "#{fname}" unless Object.const_defined?(name)
         eval("#{name}.new(@game, @shell, logger, args).main")
       rescue => e
-        @logger.log("Error: #{script} (#{e.message})\n#{e.backtrace.join("\n")}")
+        msg = String.new
+        (e.backtrace.length - 1).downto(0) do |i|
+          msg += "#{i + 1}. #{e.backtrace[i]}\n"
+        end
+        @logger.error("Error: #{script}\n\n#{msg}\n=> #{e.message}")
       else
         @logger.log("Done: #{script}")
       end
 
       @jobs.delete(job)
-      Object.send(:remove_const, name) unless @jobs.each_value.detect {|j| j[0] == script}
+      Object.send(:remove_const, name) if !@jobs.each_value.detect {|j| j[0] == script} && Object.const_defined?(name)
     end
   end
 end
