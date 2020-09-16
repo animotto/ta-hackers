@@ -1105,6 +1105,7 @@ class Chatbot < Sandbox::Script
     def watch
       {
         "recordtime" => @config["recordtime"],
+        "records" => @config["records"].length,
       }
     end
   end
