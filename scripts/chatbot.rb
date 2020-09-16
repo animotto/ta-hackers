@@ -403,29 +403,41 @@ class Chatbot < Sandbox::Script
 
     def exec(message)
       words = message["message"].split(/\s+/)
-      msg = String.new
-      case words[0]
-        when self.class::PATTERNS[0]
-          @config["counter"] += 1
-          id = message["id"].to_s
-          @config["users"][id] = [message["nick"], 0] unless @config["users"].key?(id)
-          @config["users"][id] = [message["nick"], @config["users"][id][1] + 1]
-          msg = "[b][ff3500]#{MESSAGES.sample} ПРИСОЕДИНЯЙСЯ!"
-          msg.gsub!("%", "[ff9ea1]#{@config["counter"]}[ff3500]")
-          save
-        when self.class::PATTERNS[1]
-          if @config["counter"].zero? 
-            msg = "[b][7aff38]ЕЩЕ НИКТО НЕ СБАЦАЛ, ТЫ МОЖЕШЬ СТАТЬ ПЕРВЫМ!"
-          else
-            top = @config["users"].max_by {|k, v| v[1]}
-            msg = "[b][ff312a]#{top[1][0]}[7aff38] ХАКЕРЮГА НОМЕР ОДИН! НАБАЦАЛ [ff312a]#{top[1][1]}[7aff38] РАЗ!"
-          end
+      if words[0] == self.class::PATTERNS[0]
+        @config["counter"] += 1
+        id = message["id"].to_s
+        @config["users"][id] = [message["nick"], 0] unless @config["users"].key?(id)
+        @config["users"][id] = [message["nick"], @config["users"][id][1] + 1]
+        msg = "[b][ff3500]#{MESSAGES.sample} ПРИСОЕДИНЯЙСЯ!"
+        msg.gsub!("%", "[ff9ea1]#{@config["counter"]}[ff3500]")
+        save
+        @script.say(msg)
+        return
+      end
+
+      if @config["counter"].zero?
+        msg = "[b][7aff38]ЕЩЕ НИКТО НЕ СБАЦАЛ, ТЫ МОЖЕШЬ СТАТЬ ПЕРВЫМ!"
+      else
+        users = @config["users"].sort_by {|k, v| -v[1]}
+        msg = "[b][7aff38]ТОП ХАКЕРЮГ: "
+        top = Array.new
+        3.times do |i|
+          break if users[i].nil?
+          top.push("[ff312a]#{users[i][1][0]}[7aff38] НАБАЦАЛ [ff312a]#{users[i][1][1]} [7aff38]РАЗ!")
+        end
+        msg += top.join(" ")
       end
       @script.say(msg)
     end
 
     def stat
       "[ff312a]БАЦНУТО #{@config["counter"]} РАЗ"
+    end
+
+    def watch
+      {
+        "counter" => @config["counter"],
+      }
     end
   end
   
@@ -1193,6 +1205,7 @@ class Chatbot < Sandbox::Script
 
     @randomCommands = [
       CmdStat::NAME,
+      CmdClick::NAME,
       CmdCounting::NAME,
       CmdRoulette::NAME,
       CmdCookie::NAME,
