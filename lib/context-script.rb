@@ -9,6 +9,7 @@ module Sandbox
                          "list" => ["list", "List scripts"],
                          "jobs" => ["jobs", "List active scripts"],
                          "kill" => ["kill <id>", "Kill the script"],
+                         "admin" => ["admin <id>", "Administrate the script"],
                        })
       @jobs = Hash.new
       @jobCounter = 0;
@@ -66,7 +67,7 @@ module Sandbox
 
         @shell.puts("Active jobs:")
         @jobs.each do |k, v|
-          @shell.puts(" [%d] %s" % [k, @jobs[k][0]])
+          @shell.puts(" [%d] %s" % [k, v["script"]])
         end
         return
 
@@ -82,14 +83,46 @@ module Sandbox
           return
         end
 
-        @logger.log("Killed: #{@jobs[job][0]}")
-        @jobs[job][1].kill
-        script = @jobs[job][0]
+        @logger.log("Killed: #{@jobs[job]["script"]}")
+        @jobs[job]["thread"].kill
+        script = @jobs[job]["script"]
         name = script.capitalize
         @jobs.delete(job)
-        Object.send(:remove_const, name) unless @jobs.each_value.detect {|j| j[0] == script}
+        Object.send(:remove_const, name) unless @jobs.each_value.detect {|j| j["script"] == script}
         return
         
+      when "admin"
+        if words[1].nil?
+          @shell.puts("#{cmd}: Specify job ID")
+          return
+        end
+
+        job = words[1].to_i
+        unless @jobs.key?(job)
+          @shell.puts("#{cmd}: No such job")
+          return
+        end
+
+        unless @jobs[job]["instance"].respond_to?("admin")
+          @shell.puts("#{cmd}: Not implemented")
+          return
+        end
+
+        @shell.puts("Enter ! to quit")
+        loop do
+          prompt = "\e[1;34m#{@jobs[job]["script"]}:#{job} \u273f\e[0m "
+          @shell.reading = true
+          line = Readline.readline(prompt, true)
+          @shell.reading = false
+          break if line.nil?
+          line.strip!
+          Readline::HISTORY.pop if line.empty?
+          next if line.empty?
+          break if line == "!"
+          @shell.puts(@jobs[job]["instance"].admin(line))
+        end
+        return
+
       end
             
       super(words)
@@ -97,10 +130,10 @@ module Sandbox
 
     def run(script, args)
       job = @jobCounter += 1
-      @jobs[job] = [
-        script,
-        Thread.current,
-      ]
+      @jobs[job] = {
+        "script" => script,
+        "thread" => Thread.current,
+      }
       fname = "#{SCRIPTS_DIR}/#{script}.rb"
       @logger.log("Run: #{script}")
       
@@ -115,7 +148,8 @@ module Sandbox
       begin
         name = script.capitalize
         load "#{fname}" unless Object.const_defined?(name)
-        eval("#{name}.new(@game, @shell, logger, args).main")
+        eval(%Q[@jobs[#{job}]["instance"] = #{name}.new(@game, @shell, logger, args)])
+        @jobs[job]["instance"].main
       rescue => e
         msg = String.new
         (e.backtrace.length - 1).downto(0) do |i|
@@ -127,7 +161,7 @@ module Sandbox
       end
 
       @jobs.delete(job)
-      Object.send(:remove_const, name) if !@jobs.each_value.detect {|j| j[0] == script} && Object.const_defined?(name)
+      Object.send(:remove_const, name) if !@jobs.each_value.detect {|j| j["script"] == script} && Object.const_defined?(name)
     end
   end
 end
