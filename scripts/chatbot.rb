@@ -99,77 +99,11 @@ class Chatbot < Sandbox::Script
       return unless @script.config["admins"].include?(message["id"])
       words = message["message"].split(/\s+/)
       if words.length <= 1
-        msg = "#{@msgPrefix}!admin <uptime>|<set> [var] [value]|<cmd> <on|of|watch> <names>"
-        @script.say(msg)
-        return
+        msg = @script.admin("help")
+      else
+        msg = @script.admin(words[1..-1].join(" "))
       end
-
-      case words[1]
-        when "uptime"
-          secs = (Time.now - @script.config["startup"]).to_i
-          mins = secs / 60
-          hours = mins / 60
-          days = hours / 24
-          elems = Array.new
-          elems.push("#{days % 24} days") if days > 0
-          elems.push("#{hours % 60} hours") if hours > 0
-          elems.push("#{mins % 60} mins") if mins > 0
-          elems.push("#{secs % 60} secs")
-          msg = "#{@msgPrefix}Uptime: " + elems.join(", ")
-          @script.say(msg)
-        when "set"
-          if words.length < 3
-            vars = Array.new
-            @script.config["config"].each do |var, value|
-              vars.push("#{var}=#{value}")
-            end
-            msg = "#{@msgPrefix}Config: " + vars.join(", ")
-            @script.say(msg)
-            return
-          end
-
-          return if words.length < 4
-          return unless @script.config["config"].key?(words[2])
-          @script.config["config"][words[2]] = words[3]
-          @script.save
-          msg = "#{@msgPrefix}Config updated: #{words[2]}=#{words[3]}"
-          @script.say(msg)
-        when "cmd"
-          if words.length < 3
-            msg = "#{@msgPrefix}Commands: "
-            list = @script.commands.select {|k, v| v.enabled && k != self.class::NAME}
-            msg += list.keys.join(" ")
-            @script.say(msg)
-            return
-          end
-
-          return if words.length < 4
-          case words[2]
-            when "on", "off"
-              cmds = words[3..-1].select {|cmd| @script.commands.keys.include?(cmd) && cmd != self.class::NAME}
-              return if cmds.empty?
-              cmds.each do |cmd|
-                if words[2] == "on"
-                  @script.commands[cmd].enabled = true
-                  @script.config["enabled"].push(words[3])
-                else
-                  @script.commands[cmd].enabled = false
-                  @script.config["enabled"].delete(words[3])
-                end
-              end
-              @script.save
-              msg = "#{@msgPrefix}Commands "
-              msg += words[2] == "on" ? "enabled" : "disabled"
-              msg += ": " + cmds.join(" ")
-              @script.say(msg)
-            when "watch"
-              return unless @script.commands.keys.include?(words[3])
-              return unless watch = @script.commands[words[3]].watch
-              msg = "#{@msgPrefix}Watch #{words[3]}: "
-              msg += watch.map {|k, v| "#{k}=#{v}"}.join(", ")
-              @script.say(msg)
-          end
-      end
+      @script.say("#{@msgPrefix}#{msg}") unless msg.empty?
     end
   end
 
@@ -1166,6 +1100,77 @@ class Chatbot < Sandbox::Script
     @game.cmdChatSend(@room, message)
   rescue Trickster::Hackers::RequestError => e
     @logger.error("Say error (#{e})")
+  end
+
+  def admin(line)
+    words = line.split(/\s+/)
+    return if words.empty?
+
+    case words[0]
+      when "help", "?"
+        return "Commands: <uptime>|<set> [var] [value]|<cmd> <on|of|watch> <names>"
+
+      when "uptime"
+        secs = (Time.now - @config["startup"]).to_i
+        mins = secs / 60
+        hours = mins / 60
+        days = hours / 24
+        elems = Array.new
+        elems.push("#{days % 24} days") if days > 0
+        elems.push("#{hours % 60} hours") if hours > 0
+        elems.push("#{mins % 60} mins") if mins > 0
+        elems.push("#{secs % 60} secs")
+        return "Uptime: " + elems.join(", ")
+
+      when "set"
+        if words.length < 2
+          vars = Array.new
+          @config["config"].each do |var, value|
+            vars.push("#{var}=#{value}")
+          end
+          return "Config: " + vars.join(", ")
+        end
+
+        return if words.length < 3
+        return unless @config["config"].key?(words[1])
+        @config["config"][words[1]] = words[2]
+        @save
+        return "Config updated: #{words[1]}=#{words[2]}"
+
+      when "cmd"
+        if words.length < 2
+          list = @commands.select {|k, v| v.enabled && k != CmdAdmin::NAME}
+          return "Commands: " + list.keys.join(" ")
+        end
+
+        return if words.length < 3
+        case words[1]
+          when "on", "off"
+            cmds = words[2..-1].select {|cmd| @commands.keys.include?(cmd) && cmd != CmdAdmin::NAME}
+            return if cmds.empty?
+            cmds.each do |cmd|
+              if words[1] == "on"
+                @commands[cmd].enabled = true
+                @config["enabled"].push(cmd) unless @config["enabled"].include?(cmd)
+              else
+                @commands[cmd].enabled = false
+                @config["enabled"].delete(cmd)
+              end
+            end
+            save
+            msg = "Commands "
+            msg += words[1] == "on" ? "enabled" : "disabled"
+            msg += ": " + cmds.join(" ")
+            return msg
+
+          when "watch"
+            return unless @commands.keys.include?(words[2])
+            return unless watch = @commands[words[2]].watch
+            msg = "Watch #{words[2]}: "
+            msg += watch.map {|k, v| "#{k}=#{v}"}.join(", ")
+            return msg
+        end
+    end
   end
 
   def main
