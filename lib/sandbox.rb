@@ -102,15 +102,15 @@ module Sandbox
     end
 
     def log(message)
-      @shell.puts(@logPrefix + message + @logSuffix)
+      @shell.puts(@logPrefix + message.to_s + @logSuffix)
     end
 
     def error(message)
-      @shell.puts(@errorPrefix + message + @errorSuffix)
+      @shell.puts(@errorPrefix + message.to_s + @errorSuffix)
     end
 
     def info(message)
-      @shell.puts(@infoPrefix + message + @infoSuffix)
+      @shell.puts(@infoPrefix + message.to_s + @infoSuffix)
     end
   end
 
