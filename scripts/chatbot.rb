@@ -201,29 +201,6 @@ class Chatbot < Sandbox::Script
     end
   end
 
-  class CmdFormat < CmdBase
-    NAME = "format"
-    PATTERNS = %w[!формат]
-
-    CODES = [
-      "[ b ] жирный",
-      "[ i ] курсив",
-      "[ u ] подчеркнутый",
-      "[ s ] зачёркнутый",
-      "[ sup ] надстрочный",
-      "[ sub ] подстрочный",
-      "[ c ] светлый",
-      "[ ff0000 ] красный",
-      "[ 00ff00 ] зеленый",
-      "[ 0000ff ] синий",
-    ]
-
-    def exec(message)
-      msg = "[b][00ffff]" + CODES.join(", ")
-      @script.say(msg)
-    end
-  end
-
   class CmdCounting < CmdBase
     NAME = "counting"
     PATTERNS = %w[!считалочка]
@@ -1215,7 +1192,6 @@ class Chatbot < Sandbox::Script
     @commands[CmdHelp::NAME] = CmdHelp.new(self)
     @commands[CmdStat::NAME] = CmdStat.new(self)
     @commands[CmdHello::NAME] = CmdHello.new(self)
-    @commands[CmdFormat::NAME] = CmdFormat.new(self)
     @commands[CmdCounting::NAME] = CmdCounting.new(self)
     @commands[CmdRoulette::NAME] = CmdRoulette.new(self)
     @commands[CmdCookie::NAME] = CmdCookie.new(self)
