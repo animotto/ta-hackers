@@ -83,7 +83,7 @@ module Sandbox
           return
         end
 
-        @logger.log("Killed: #{@jobs[job]["script"]}")
+        @logger.log("Killed: #{@jobs[job]["script"]} [#{job}]")
         @jobs[job]["thread"].kill
         script = @jobs[job]["script"]
         name = script.capitalize
@@ -119,7 +119,9 @@ module Sandbox
           Readline::HISTORY.pop if line.empty?
           next if line.empty?
           break if line == "!"
-          @shell.puts(@jobs[job]["instance"].admin(line))
+          msg = @jobs[job]["instance"].admin(line)
+          next if msg.nil? || msg.empty?
+          @shell.puts(msg)
         end
         return
 
@@ -135,7 +137,7 @@ module Sandbox
         "thread" => Thread.current,
       }
       fname = "#{SCRIPTS_DIR}/#{script}.rb"
-      @logger.log("Run: #{script}")
+      @logger.log("Run: #{script} [#{job}]")
       
       logger = Logger.new(@shell)
       logger.logPrefix = "\e[1;36m\u276f [#{script}]\e[22;36m "
@@ -155,9 +157,9 @@ module Sandbox
         (e.backtrace.length - 1).downto(0) do |i|
           msg += "#{i + 1}. #{e.backtrace[i]}\n"
         end
-        @logger.error("Error: #{script}\n\n#{msg}\n=> #{e.message}")
+        @logger.error("Error: #{script} [#{job}]\n\n#{msg}\n=> #{e.message}")
       else
-        @logger.log("Done: #{script}")
+        @logger.log("Done: #{script} [#{job}]")
       end
 
       @jobs.delete(job)
