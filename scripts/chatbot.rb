@@ -114,8 +114,9 @@ class Chatbot < Sandbox::Script
     def exec(message)
       list = Array.new
       @script.commands.each do |name, command|
-        next if command.class == self.class
-        list.concat(command.class::PATTERNS) if command.enabled && command.visible
+        next if command.class == self.class || !(command.enabled && command.visible)
+        list.concat(command.class::PATTERNS)
+        list.concat(command.config["patterns"].keys) if command.class::NAME == CmdMessage::NAME
       end
       hex = (0..15).to_a
       list.map! do |command|
@@ -1058,6 +1059,33 @@ class Chatbot < Sandbox::Script
     end
   end
 
+  class CmdMessage < CmdBase
+    NAME = "message"
+
+    attr_accessor :config
+
+    def load
+      super
+      @config.merge!({
+        "patterns" => {},
+      }) if @config.empty?
+    end
+
+    def matched?(message)
+      return false if !@script.users[message["id"]]["lastTime"].nil? && @script.users[message["id"]]["lastTime"] + @script.config["config"]["flood"].to_i > Time.now
+      return false if @config["patterns"].empty?
+      words = message["message"].split(/\s+/)
+      return false if words.empty?
+      return true if @config["patterns"].key?(words[0].downcase)
+      return false
+    end
+
+    def exec(message)
+      words = message["message"].split(/\s+/)
+      @script.say(@config["patterns"][words[0]]["message"])
+    end
+  end
+
   def initialize(game, shell, logger, args)
     super(game, shell, logger, args)
     Dir.mkdir(DATA_DIR) unless Dir.exist?(DATA_DIR)
@@ -1211,6 +1239,7 @@ class Chatbot < Sandbox::Script
     @commands[CmdPerson::NAME] = CmdPerson.new(self)
     @commands[CmdRanking::NAME] = CmdRanking.new(self)
     @commands[CmdWall::NAME] = CmdWall.new(self)
+    @commands[CmdMessage::NAME] = CmdMessage.new(self)
 
     @randomCommands = [
       CmdStat::NAME,
