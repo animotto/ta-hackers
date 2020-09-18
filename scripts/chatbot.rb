@@ -4,10 +4,10 @@ require "rss"
 class Chatbot < Sandbox::Script
   DATA_DIR = "#{Sandbox::ContextScript::SCRIPTS_DIR}/chatbot"
   SLEEP_TIME = 10
+  SAVE_TIME = 60
 
   attr_reader :game, :shell, :logger,
-              :room, :config, :commands,
-              :users
+              :room, :config, :commands
 
   class CmdBase
     NAME = String.new
@@ -24,7 +24,8 @@ class Chatbot < Sandbox::Script
     end
 
     def matched?(message)
-      return false if !@script.users[message["id"]]["lastTime"].nil? && @script.users[message["id"]]["lastTime"] + @script.config["config"]["flood"].to_i > Time.now
+      id = message["id"].to_s
+      return false if !@script.config["users"][id]["lastTime"].nil? && @script.config["users"][id]["lastTime"] + @script.config["config"]["flood"].to_i > Time.now
       return false if self.class::PATTERNS.empty?
       words = message["message"].split(/\s+/)
       return false if words.empty?
@@ -57,7 +58,7 @@ class Chatbot < Sandbox::Script
     def poll
     end
 
-    def stat
+    def stat(id = nil)
     end
 
     def watch
@@ -218,7 +219,7 @@ class Chatbot < Sandbox::Script
 
     def exec(message)
       msg = "[b][00ff00]#{COUNTINGS.sample}"
-      msg.gsub!("%", "[ffff00]#{@script.users[@script.users.keys.sample]["nick"]}[00ff00]")
+      msg.gsub!("%", "[ffff00]#{@script.config["users"][@script.config["users"].keys.sample]["nick"]}[00ff00]")
       @script.say(msg)
     end
   end
@@ -233,15 +234,23 @@ class Chatbot < Sandbox::Script
         "counter" => 0,
         "bullets" => 6,
         "mutetime" => 60 * 60,
+        "users" => {},
       }) if @config.empty?
     end
 
     def exec(message)
       msg = "[b][ffff00]#{message["nick"]} "
       if rand(1..@config["bullets"]) == @config["bullets"] / 2
-        @script.users[message["id"]]["muteTime"] = Time.now + @config["mutetime"].to_i
+        id = message["id"].to_s
+        @script.config["users"][id]["muteTime"] = Time.now + @config["mutetime"].to_i
         msg += "[ff0000]ПИФ ПАФ! ТЫ УБИТ! ТЕБЯ НЕ БУДЕТ СЛЫШНО [00ff00]#{@config["mutetime"] / 60} [ff0000]МИНУТ!"
         @config["counter"] += 1
+        if @config["users"][id].nil?
+          @config["users"][id] = {
+            "counter" => 0,
+          }
+        end
+        @config["users"][id]["counter"] += 1
         save
       else
         msg += "[00ff00]В ЭТОТ РАЗ ТЕБЕ ПОВЕЗЛО!"
@@ -249,8 +258,9 @@ class Chatbot < Sandbox::Script
       @script.say(msg)
     end
 
-    def stat
-      "[ff1000]ЗАСТРЕЛИЛОСЬ #{@config["counter"]} ЧЕЛОВЕК"
+    def stat(id = nil)
+      return "[ff1000]ЗАСТРЕЛИЛСЯ #{@config["users"].dig(id, "counter") || 0} РАЗ" unless id.nil?
+      return "[ff1000]ЗАСТРЕЛИЛОСЬ #{@config["counter"]} ЧЕЛОВЕК"
     end
 
     def watch
@@ -258,7 +268,7 @@ class Chatbot < Sandbox::Script
         "counter" => @config["counter"],
         "bullets" => @config["bullets"],
         "mutetime" => @config["mutetime"],
-        "muted" => @script.users.select {|k, v| !v["muteTime"].nil? && v["muteTime"] >= Time.now}.length
+        "muted" => @script.config["users"].select {|k, v| !v["muteTime"].nil? && v["muteTime"] >= Time.now}.length
       }
     end
   end
@@ -271,14 +281,22 @@ class Chatbot < Sandbox::Script
       super
       @config.merge!({
         "counter" => 0,
+        "users" => {},
         "fortune" => [],
       }) if @config.empty?
     end
 
     def exec(message)
+      id = message["id"].to_s
       if rand(0..1) == 1
         msg = "[ffff00]#{message["nick"]} [00ff00]СЪЕДАЕТ ПЕЧЕНЬКУ И ЧИТАЕТ ПРЕДСКАЗАНИЕ: [60ffda]#{@config["fortune"].sample}"
         @config["counter"] += 1
+        if @config["users"][id].nil?
+          @config["users"][id] = {
+            "counter" => 0,
+          }
+        end
+        @config["users"][id]["counter"] += 1
         save
       else
         msg = "[00ff00]ФИГУШКИ ТЕБЕ [ffff00]#{message["nick"]}[00ff00], А НЕ ПЕЧЕНЬКА!"
@@ -286,8 +304,9 @@ class Chatbot < Sandbox::Script
       @script.say(msg)
     end
 
-    def stat
-      "[ffea4f]СЪЕДЕНО #{@config["counter"]} ПЕЧЕНЕК"
+    def stat(id = nil)
+      return "[ffea4f]СЪЕЛ #{@config["users"].dig(id, "counter") || 0} ПЕЧЕНЕК" unless id.nil?
+      return "[ffea4f]СЪЕДЕНО #{@config["counter"]} ПЕЧЕНЕК"
     end
 
     def watch
@@ -344,8 +363,9 @@ class Chatbot < Sandbox::Script
       @script.say(msg)
     end
 
-    def stat
-      "[ff312a]БАЦНУТО #{@config["counter"]} РАЗ"
+    def stat(id = nil)
+      return "[ff312a]БАЦНУЛ #{@config["users"].dig(id, 1) || 0} РАЗ" unless id.nil?
+      return "[ff312a]БАЦНУТО #{@config["counter"]} РАЗ"
     end
 
     def watch
@@ -466,11 +486,13 @@ class Chatbot < Sandbox::Script
       super
       @config.merge!({
         "counter" => 0,
+        "users" => {},
       }) if @config.empty?
     end
 
     def exec(message)
-      user = @script.users.keys.sample
+      id = message["id"].to_s
+      user = @script.config["users"].keys.sample.to_i
       begin
         info = @script.game.cmdPlayerGetInfo(user)
       rescue Trickster::Hackers::RequestError => e
@@ -479,12 +501,19 @@ class Chatbot < Sandbox::Script
       end
       msg = "[b][ffa62b]ЗАПУСКАЕМ ГУСЯ! ГУСЬ ДЕЛАЕТ КУСЬ [568eff]#{info["name"]}[ffa62b]! В ЕГО КАРМАНАХ НАШЛОСЬ [ff2a16]#{info["money"]} денег[ffa62b], [ff2a16]#{info["bitcoins"]} биткойнов[ffa62b], [ff2a16]#{info["credits"]} кредитов"
       @config["counter"] += 1
+      if @config["users"][id].nil?
+        @config["users"][id] = {
+          "counter" => 0,
+        }
+      end
+      @config["users"][id]["counter"] += 1
       save
       @script.say(msg)
     end
 
-    def stat
-      "[3fefff]ЗАПУЩЕНО #{@config["counter"]} ГУСЕЙ"
+    def stat(id = nil)
+      return "[3fefff]ЗАПУСТИЛ #{@config["users"].dig(id, "counter") || 0} ГУСЕЙ" unless id.nil?
+      return "[3fefff]ЗАПУЩЕНО #{@config["counter"]} ГУСЕЙ"
     end
   end
 
@@ -495,7 +524,7 @@ class Chatbot < Sandbox::Script
       super(script)
       @visible = false
       @lastTime = Time.now
-      @lastUsers = @script.users.clone
+      @lastUsers = @script.config["users"].length
     end
 
     def poll
@@ -520,7 +549,7 @@ class Chatbot < Sandbox::Script
         hour = "#{@lastTime.hour} ЧАСОВ"
       end
 
-      users = @script.users.length - @lastUsers.length
+      users = @script.config["users"].length - @lastUsers
       case
       when users.zero?
         status = "ВСЕ СПОКОЙНО"
@@ -532,7 +561,7 @@ class Chatbot < Sandbox::Script
 
       msg = "[b][b6ff56]#{hour}! #{status}!"
       msg += " ПРИХОДИЛО ПОБОЛТАТЬ #{users} НОВЫХ ЧЕЛОВЕК!" unless users.zero?
-      @lastUsers = @script.users.clone
+      @lastUsers = @script.config["users"].length
       @script.say(msg)
     end
   end
@@ -694,6 +723,7 @@ class Chatbot < Sandbox::Script
       super
       @config.merge!({
         "counter" => 0,
+        "users" => {},
         "cities" => [],
       }) if @config.empty?
     end
@@ -707,6 +737,7 @@ class Chatbot < Sandbox::Script
     end
 
     def exec(message)
+      id = message["id"].to_s
       if @city.empty?
         return if @config["cities"].empty?
         @city = @config["cities"].sample.strip.downcase
@@ -727,6 +758,12 @@ class Chatbot < Sandbox::Script
         @city.clear
         @cityMasked.clear
         @config["counter"] += 1
+        if @config["users"][id].nil?
+          @config["users"][id] = {
+            "counter" => 0,
+          }
+        end
+        @config["users"][id]["counter"] += 1
         save
       end
     end
@@ -749,8 +786,9 @@ class Chatbot < Sandbox::Script
       @script.say(msg)
     end
 
-    def stat
-      "[ffbcdc]ОТГАДАНО #{@config["counter"]} ГОРОДОВ"
+    def stat(id = nil)
+      return "[ffbcdc]ОТГАДАЛ #{@config["users"].dig(id, "counter") || 0} ГОРОДОВ" unless id.nil?
+      return "[ffbcdc]ОТГАДАНО #{@config["counter"]} ГОРОДОВ"
     end
 
     def watch
@@ -901,7 +939,8 @@ class Chatbot < Sandbox::Script
     ]
 
     def matched?(message)
-      return false if !@script.users[message["id"]]["lastTime"].nil? && @script.users[message["id"]]["lastTime"] + @script.config["config"]["flood"].to_i > Time.now
+      id = message["id"].to_s
+      return false if !@script.config["users"][id]["lastTime"].nil? && @script.config["users"][id]["lastTime"] + @script.config["config"]["flood"].to_i > Time.now
       words = message["message"].split(/\s+/)
       return true if words.include?("@#{@script.config["name"]}")
       return false
@@ -995,7 +1034,7 @@ class Chatbot < Sandbox::Script
       msg = "[b][ff5e3a]"
       if words[0] == self.class::PATTERNS[1]
         if !@config["records"][id].nil? && Time.now - @config["records"][id]["time"] <= @config["recordtime"]
-          msg += "[7aff9f]#{message["nick"]} [ff5e3a]ТЫ УЖЕ ОСТАВИЛ ЗАПИСЬ! ОСТАВИТЬ НОВУЮ ЗАПИСЬ МОЖНО БУДЕТ В [7aff9f]#{(@config["records"][id]["time"] + @config["recordtime"]).strftime("%d.%m.%y %H:%M")}"
+          msg += "[7aff9f]#{message["nick"]} [ff5e3a]ТЫ УЖЕ ОСТАВИЛ ЗАПИСЬ! ОСТАВИТЬ НОВУЮ ЗАПИСЬ МОЖНО БУДЕТ [7aff9f]#{(@config["records"][id]["time"] + @config["recordtime"]).strftime("%d.%m.%y %H:%M")}"
         else
           record = words[1..-1].join(" ")
           if record.empty?
@@ -1024,8 +1063,12 @@ class Chatbot < Sandbox::Script
       @script.say(msg)
     end
 
-    def stat
-      "[ffadad]ОСТАВЛЕНО #{@config["records"].length} ЗАПИСЕЙ"
+    def stat(id = nil)
+      unless id.nil?
+        return "[ffadad]НА СТЕНЕ НЕ ПИСАЛ" unless @config["records"].key?(id)
+        return "[ffadad]НА СТЕНЕ ПИСАЛ #{@config["records"][id]["time"].strftime("%d.%m.%y %H:%M")}"
+      end
+      return "[ffadad]ОСТАВЛЕНО #{@config["records"].length} ЗАПИСЕЙ"
     end
 
     def watch
@@ -1049,7 +1092,8 @@ class Chatbot < Sandbox::Script
     end
 
     def matched?(message)
-      return false if !@script.users[message["id"]]["lastTime"].nil? && @script.users[message["id"]]["lastTime"] + @script.config["config"]["flood"].to_i > Time.now
+      id = message["id"].to_s
+      return false if !@script.config["users"][id]["lastTime"].nil? && @script.config["users"][id]["lastTime"] + @script.config["config"]["flood"].to_i > Time.now
       return false if @config["patterns"].empty?
       words = message["message"].split(/\s+/)
       return false if words.empty?
@@ -1060,6 +1104,36 @@ class Chatbot < Sandbox::Script
     def exec(message)
       words = message["message"].split(/\s+/)
       @script.say(@config["patterns"][words[0]]["message"])
+    end
+  end
+
+  class CmdInfo < CmdBase
+    NAME = "info"
+    PATTERNS = %w[!инфо]
+
+    MESSAGES = [
+      "И ВООБЩЕ ПРОСТО НЯШКА!",
+      "ЖИВЕТ ТАКОЙ ЧЕЛОВЕК!",
+      "НИ ДАТЬ НИ ВЗЯТЬ!",
+      "ЧТО-ТО ПОДОЗРИТЕЛЬНО!",
+      "КАК ОН ЭТО ДЕЛАЕТ?",
+    ]
+
+    def exec(message)
+      id = message["id"].to_s
+      msg = "[b][fc7cff]#{message["nick"]}: "
+      info = [
+        "[95ff93]НАПИСАЛ #{@script.config["users"][id]["counter"]} СООБЩЕНИЙ",
+      ]
+      @script.commands.each do |name, command|
+        next unless command.enabled
+        stat = command.stat(id)
+        next if stat.nil?
+        info.push(stat)
+      end
+      info.push("[ff5b5e]#{MESSAGES.sample}")
+      msg += info.join(", ")
+      @script.say(msg)
     end
   end
 
@@ -1088,7 +1162,12 @@ class Chatbot < Sandbox::Script
           },
         "admins" => [],
         "enabled" => [],
+        "users" => {},
       })
+    end
+
+    @config["users"].each do |id, info|
+      @config["users"][id]["lastTime"] = Time.parse(info["lastTime"])
     end
     return true
   end
@@ -1216,6 +1295,7 @@ class Chatbot < Sandbox::Script
     @commands[CmdRanking::NAME] = CmdRanking.new(self)
     @commands[CmdWall::NAME] = CmdWall.new(self)
     @commands[CmdMessage::NAME] = CmdMessage.new(self)
+    @commands[CmdInfo::NAME] = CmdInfo.new(self)
 
     @randomCommands = [
       CmdStat::NAME,
@@ -1236,6 +1316,7 @@ class Chatbot < Sandbox::Script
       CmdSpaceX::NAME,
       CmdCOVID19::NAME,
       CmdWall::NAME,
+      CmdInfo::NAME,
     ]
 
     @config["enabled"].each do |name|
@@ -1247,6 +1328,7 @@ class Chatbot < Sandbox::Script
 
     roomLastUser = Hash.new
     roomLastTime = String.new
+    saveLastTime = Time.now
 
     begin
       messages = @game.cmdChatDisplay(@room, roomLastTime)
@@ -1272,16 +1354,22 @@ class Chatbot < Sandbox::Script
 
       messages.each do |message|
         next if message["id"] == @game.config["id"]
-        @users[message["id"]] = Hash.new unless @users.key?(message["id"])
-        @users[message["id"]]["nick"] = message["nick"]
-        next if !@users[message["id"]]["muteTime"].nil? && @users[message["id"]]["muteTime"] >= Time.now
+        id = message["id"].to_s
+        unless @config["users"].key?(id)
+          @config["users"][id] = {
+            "counter" => 0,
+          }
+        end
+        @config["users"][id]["nick"] = message["nick"]
+        @config["users"][id]["counter"] += 1
+        next if !@config["users"][id]["muteTime"].nil? && @config["users"][id]["muteTime"] >= Time.now
 
         executed = false
         @commands.each do |name, command|
           if command.matched?(message) && command.enabled
             command.exec(message)
             executed = true
-            @users[message["id"]]["lastTime"] = Time.now
+            @config["users"][id]["lastTime"] = Time.now
           end
         end
         
@@ -1301,6 +1389,11 @@ class Chatbot < Sandbox::Script
               roomLastUser.clear
             end
           end
+        end
+
+        if saveLastTime + SAVE_TIME <= Time.now
+          save
+          saveLastTime = Time.now
         end
       end
     end
