@@ -1200,8 +1200,8 @@ class Chatbot < Sandbox::Script
         hours = mins / 60
         days = hours / 24
         elems = Array.new
-        elems.push("#{days % 24} days") if days > 0
-        elems.push("#{hours % 60} hours") if hours > 0
+        elems.push("#{days} days") if days > 0
+        elems.push("#{hours % 24} hours") if hours > 0
         elems.push("#{mins % 60} mins") if mins > 0
         elems.push("#{secs % 60} secs")
         return "Uptime: " + elems.join(", ")
