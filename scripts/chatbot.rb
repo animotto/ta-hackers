@@ -1167,8 +1167,9 @@ class Chatbot < Sandbox::Script
     end
 
     @config["users"].each do |id, info|
-      next if info["lastTime"].nil?
-      @config["users"][id]["lastTime"] = Time.parse(info["lastTime"])
+        @config["users"][id]["lastTime"] = Time.parse(info["lastTime"])
+        @config["users"][id]["muteTime"] = Time.parse(info["muteTime"])
+    rescue TypeError => e
     end
     return true
   end
@@ -1193,7 +1194,7 @@ class Chatbot < Sandbox::Script
 
     case words[0]
       when "help", "?"
-        return "Commands: <uptime>|<set> [var] [value]|<cmd> <on|of|watch> <names>"
+        return "Commands: <uptime> | <set> [var] [value] | <cmd> <on|of|watch> <names> | mute [add|del] <id>"
 
       when "uptime"
         secs = (Time.now - @config["startup"]).to_i
@@ -1219,8 +1220,32 @@ class Chatbot < Sandbox::Script
         return if words.length < 3
         return unless @config["config"].key?(words[1])
         @config["config"][words[1]] = words[2]
-        @save
+        save
         return "Config updated: #{words[1]}=#{words[2]}"
+
+      when "mute"
+        if words.length < 2
+          users = @config["users"].select {|k, v| !v["muteTime"].nil? && v["muteTime"] > Time.now}
+          return if users.empty?
+          return "Muted: " + users.map {|k, v| "#{k} => #{(v["muteTime"] - Time.now).to_i / 60}"}.join(", ")
+        end
+        return if words.length < 3
+        id = words[2]
+        unless @config["users"].key?(id)
+          return "User #{id} doesn't exist"
+        end
+        case words[1]
+          when "add"
+            time = words[3].to_i
+            @config["users"][id]["muteTime"] = Time.now + time * 60
+            save
+            return "User #{id} muted in #{time} minutes"
+
+          when "del"
+            @config["users"][id].delete("muteTime")
+            save
+            return "User #{id} unmuted"
+        end
 
       when "cmd"
         if words.length < 2
