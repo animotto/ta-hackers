@@ -104,7 +104,7 @@ class Chatbot < Sandbox::Script
       else
         msg = @script.admin(words[1..-1].join(" "))
       end
-      @script.say("#{@msgPrefix}#{msg}") unless msg.empty?
+      @script.say("#{@msgPrefix}#{msg}") unless msg.nil? && msg.empty?
     end
   end
 
