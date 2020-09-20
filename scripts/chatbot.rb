@@ -1240,7 +1240,7 @@ class Chatbot < Sandbox::Script
             time = words[3].to_i
             @config["users"][id]["muteTime"] = Time.now + time * 60
             save
-            return "User #{id} muted in #{time} minutes"
+            return "User #{id} muted for #{time} minutes"
 
           when "del"
             @config["users"][id].delete("muteTime")
