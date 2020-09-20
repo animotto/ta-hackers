@@ -1121,8 +1121,19 @@ class Chatbot < Sandbox::Script
     ]
 
     def exec(message)
+      words = message["message"].split(/\s+/)
       id = message["id"].to_s
-      msg = "[b][fc7cff]#{message["nick"]}: "
+      unless words[1].nil?
+        nick = words[1].sub(/^@/, "")
+        user = @script.config["users"].detect {|k, v| v["nick"].include?(nick)}
+        if user.nil?
+          msg = "[95ff93]Я НИЧЕГО НЕ ЗНАЮ О [fc7cff]#{nick}[95ff93]!"
+          @script.say(msg)
+          return
+        end
+        id = user.first
+      end
+      msg = "[b][fc7cff]#{@script.config["users"][id]["nick"]}: "
       info = [
         "[95ff93]НАПИСАЛ #{@script.config["users"][id]["counter"]} СООБЩЕНИЙ",
       ]
