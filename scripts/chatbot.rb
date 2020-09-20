@@ -1167,6 +1167,7 @@ class Chatbot < Sandbox::Script
     end
 
     @config["users"].each do |id, info|
+      next if info["lastTime"].nil?
       @config["users"][id]["lastTime"] = Time.parse(info["lastTime"])
     end
     return true
