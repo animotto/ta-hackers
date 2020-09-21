@@ -1,4 +1,3 @@
-# coding: utf-8
 module Trickster
   module Hackers
     require "net/http"
@@ -1433,9 +1432,364 @@ module Trickster
       def cmdRedeemPromoCode(id, code)
         url = URI.encode_www_form(
           {
-            "redeem_promo_code" => "",
+            "redeem_promo_code" => 1,
             "id_player" => id,
             "code" => code,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdPaymentPayGoogle(id, receipt, signature)
+        url = URI.encode_www_form(
+          {
+            "payment_pay_google" => "",
+            "id_player" => id,
+            "receipt" => receipt,
+            "signature" => signature,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdAuthByName(name, password)
+        url = URI.encode_www_form(
+          {
+            "auth" => 1,
+            "name" => name,
+            "password" => password,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url, true, false)
+        return response
+      end
+
+      def cmdPlayerMissionMessageDelivered(id, mission)
+        url = URI.encode_www_form(
+          {
+            "player_mission_message_delivered" => "",
+            "id_player" => id,
+            "id_mission" => mission,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdFightByFBFriend(id)
+        url = URI.encode_www_form(
+          {
+            "fight_by_fb_friend" => "",
+            "id_player" => id,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdPlayerSetNameOnce(id, name)
+        url = URI.encode_www_form(
+          {
+            "player_set_name_once" => "",
+            "id" => id,
+            "name" => name,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdAuthFB(token)
+        url = URI.encode_www_form(
+          {
+            "auth_fb" => "",
+            "token" => token,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url, true, false)
+        return response
+      end
+
+      def cmdTestFightPrepare(target, attacker)
+        url = URI.encode_www_form(
+          {
+            "testfight_prepare" => "",
+            "id_target" => target,
+            "id_attacker" => attacker,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdTestFightWrite(target, attacker, data)
+        url = URI.encode_www_form(
+          {
+            "testfight_write" => 1,
+            "finished" => "true",
+            "id_attacker" => attacker,
+            "id_target" => target,
+            "gold_main_loot" => data[:moneyMain],
+            "gold_total_loot" => data[:moneyTotal],
+            "bc_main_loot" => data[:bitcoinMain],
+            "bc_total_loot" => data[:bitcoinTotal],
+            "node_ids_list" => data[:nodes],
+            "node_loot_values" => data[:loots],
+            "attack_success" => data[:success],
+            "used_programs_list" => data[:programs],
+            "replay_version" => data[:version],
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdPlayerGetFBFriends(id, token)
+        url = URI.encode_www_form(
+          {
+            "player_get_fb_friends" => "",
+            "id" => id,
+            "token" => token,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdPlayerGetStats(id)
+        url = URI.encode_www_form(
+          {
+            "player_get_stats" => "",
+            "id" => id,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdTutorialNetUpdate(id, net, tutorial)
+        url = URI.encode_www_form(
+          {
+            "tutorial_net_update" => 1,
+            "id_player" => id,
+            "net" => net,
+            "tutorial" => tutorial,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdShieldRemove(id)
+        url = URI.encode_www_form(
+          {
+            "shield_remove" => "",
+            "id_player" => id,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdPlayerMissionReject(id, mission)
+        url = URI.encode_www_form(
+          {
+            "player_mission_reject" => 1,
+            "id_player" => id,
+            "id_mission" => mission,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdFightByPlayer(id)
+        url = URI.encode_www_form(
+          {
+            "fight_by_player" => 1,
+            "player_id" => id,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdProgramCreateFinish(id, program)
+        url = URI.encode_www_form(
+          {
+            "program_create_and_finish" => 1,
+            "id_player" => id,
+            "id_program" => program,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdAuthPairFB(id, token)
+        url = URI.encode_www_form(
+          {
+            "auth_pair_fb" => "",
+            "id_player" => id,
+            "token" => token,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdAuthUnpairFB(id)
+        url = URI.encode_www_form(
+          {
+            "auth_unpair_fb" => "",
+            "id_player" => id,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdAuthPairGoogleNew(id, code)
+        url = URI.encode_www_form(
+          {
+            "auth_pair_google_new" => "",
+            "id_player" => id,
+            "authCode" => code,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdProgramUpgradeFinish(id)
+        url = URI.encode_www_form(
+          {
+            "program_upgrade_and_finish" => 1,
+            "id" => id,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdIssueCreate(name, issue)
+        url = URI.encode_www_form(
+          {
+            "issue_create" => 1,
+            "player_name" => name,
+            "issue" => issue,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdAIProgramRevive(id)
+        url = URI.encode_www_form(
+          {
+            "ai_program_revive" => 1,
+            "id" => id,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdAIProgramReviveFinish(id)
+        url = URI.encode_www_form(
+          {
+            "ai_program_revive_and_finish" => 1,
+            "id" => id,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdAIProgramFinishRevive(id)
+        url = URI.encode_www_form(
+          {
+            "ai_program_finish_revive" => 1,
+            "id" => id,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdPlayerGetReadme(id)
+        url = URI.encode_www_form(
+          {
+            "player_get_readme" => "",
+            "id" => id,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdNodeUpgradeFinish(id)
+        url = URI.encode_www_form(
+          {
+            "node_upgrade_and_finish" => 1,
+            "id" => id,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdPlayerMissionUpdate(id, mission, data)
+        url = URI.encode_www_form(
+          {
+            "player_mission_update" => 1,
+            "id_player" => id,
+            "id_mission" => mission,
+            "money_looted" => data[:money],
+            "bcoins_looted" => data[:bitcoin],
+            "finished" => data[:finished],
+            "nodes_currencies" => data[:nodes],
+            "programs_data" => data[:programs],
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        return response
+      end
+
+      def cmdNodeCancel(id)
+        url = URI.encode_www_form(
+          {
+            "node_cancel" => 1,
+            "id" => id,
             "app_version" => @config["version"],
           }
         )
