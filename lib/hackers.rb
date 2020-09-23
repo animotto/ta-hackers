@@ -219,6 +219,12 @@ module Trickster
         return nodes
       end
 
+      def parseReadme(data)
+        readme = Array.new
+        readme = data.split("\x04") unless data.nil?
+        return readme
+      end
+
       def getLevelByExp(experience)
         level = 0
         @experienceList.each do |k, v|
@@ -440,7 +446,7 @@ module Trickster
           }
         end
 
-        data["readme"] = fields.dig(11, 0, 0)&.split("\x04") || []
+        data["readme"] = parseReadme(fields.dig(11, 0, 0))
 
         data["logs"] = Hash.new
         fields[9].each_index do |i|
@@ -1751,8 +1757,8 @@ module Trickster
             "app_version" => @config["version"],
           }
         )
-        response = request(url)
-        return response
+        fields = parseData(request(url))
+        return parseReadme(fields.dig(0, 0, 0))
       end
 
       def cmdNodeUpgradeFinish(id)
