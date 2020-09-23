@@ -1149,6 +1149,34 @@ class Chatbot < Sandbox::Script
     end
   end
 
+  class CmdReadme < CmdBase
+    NAME = "readme"
+    PATTERNS = %w[!нюхач]
+
+    def exec(message)
+      id = @script.config["users"].keys.sample
+      begin
+        readme = @script.game.cmdPlayerGetReadme(id)
+      rescue Trickster::Hackers::RequestError => e
+        @logger.error("Player get readme (e)")
+        return
+      end
+      msg = "[b][dfff6d]"
+      if readme.empty?
+        msg += "НИЧЕГО РАЗНЮХАТЬ ПРО [ff4953]#{@script.config["users"][id]["nick"]} [dfff6d]НЕ УДАЛОСЬ!"
+      else
+        msg += "Я ТУТ РАЗНЮХАЛ, ЧТО "
+        data = readme.first.split(": ")
+        if data.length == 1
+          msg += "КТО-ТО ВЗЛОМАЛ [ff4953]#{@script.config["users"][id]["nick"]} [dfff6d] И НАПИСАЛ: [77cbff]#{data.join}"
+        else
+          msg += "КОГДА-ТО [77cbff]#{data[0]} [dfff6d]ВЗЛОМАЛ [ff4953]#{@script.config["users"][id]["nick"]} [dfff6d]И НАПИСАЛ: [77cbff]#{data[1..-1].join}"
+        end
+      end
+      @script.say(msg)
+    end
+  end
+
   def initialize(game, shell, logger, args)
     super(game, shell, logger, args)
     Dir.mkdir(DATA_DIR) unless Dir.exist?(DATA_DIR)
@@ -1334,6 +1362,7 @@ class Chatbot < Sandbox::Script
     @commands[CmdWall::NAME] = CmdWall.new(self)
     @commands[CmdMessage::NAME] = CmdMessage.new(self)
     @commands[CmdInfo::NAME] = CmdInfo.new(self)
+    @commands[CmdReadme::NAME] = CmdReadme.new(self)
 
     @randomCommands = [
       CmdStat::NAME,
@@ -1355,6 +1384,7 @@ class Chatbot < Sandbox::Script
       CmdCOVID19::NAME,
       CmdWall::NAME,
       CmdInfo::NAME,
+      CmdReadme::NAME,
     ]
 
     @config["enabled"].each do |name|
