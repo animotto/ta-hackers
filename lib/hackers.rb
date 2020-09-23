@@ -20,11 +20,15 @@ module Trickster
     end
     
     class Game
+      SUCCESS_CORE = 1
+      SUCCESS_RESOURCES = 2
+      SUCCESS_CONTROL = 4
+
       attr_accessor :config, :appSettings, :transLang,
                     :nodeTypes, :programTypes, :missionsList,
                     :skinTypes, :hintsList, :experienceList,
                     :buildersList, :goalsTypes, :shieldTypes,
-                    :rankList, :sid
+                    :rankList, :countriesList, :sid
       
       def initialize(config)
         @config = config
@@ -41,6 +45,7 @@ module Trickster
         @goalsTypes = Hash.new
         @shieldTypes = Hash.new
         @rankList = Hash.new
+        @countriesList = Hash.new
         @client = Net::HTTP.new(@config["host"], @config["port"].to_s)
         @client.use_ssl = true unless @config["ssl"].nil?
         @mutex = Mutex.new

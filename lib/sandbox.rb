@@ -13,6 +13,8 @@ require "context-chat"
 
 module Sandbox
   class Shell
+    DATA_DIR = "data"
+
     attr_reader :logger
     attr_accessor :context, :reading
 
@@ -39,6 +41,9 @@ module Sandbox
       Readline.completion_proc = Proc.new do |text|
         @contexts[@context].commands.keys.grep(/^#{Regexp.escape(text)}/)
       end
+
+      @game.countriesList = Config.new("#{DATA_DIR}/countries.conf")
+      @game.countriesList.load
     end
 
     def puts(data = "")

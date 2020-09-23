@@ -22,6 +22,7 @@ module Sandbox
                          "goals" => ["goals", "Goals types"],
                          "shields" => ["shields", "Shield types"],
                          "ranks" => ["ranks", "Rank list"],
+                         "countries" => ["countries", "Contries list"],
                          "new" => ["new", "Create new account"],
                          "rename" => ["rename <name>", "Set new name"],
                          "info" => ["info <id>", "Get player info"],
@@ -230,6 +231,20 @@ module Sandbox
           @shell.puts " %-7d .. %d" % [
                         k,
                         v["rank"],
+                      ]
+        end
+        return
+
+      when "countries"
+        if @game.countriesList.empty?
+          @shell.puts "#{cmd}: No countries list"
+          return
+        end
+
+        @game.countriesList.each do |k, v|
+          @shell.puts " %-3d .. %s" % [
+                        k,
+                        v,
                       ]
         end
         return
