@@ -13,7 +13,7 @@ module Sandbox
                          "builders" => ["builders <id> <builders>", "Set node builders"],
                          "collect" => ["collect <id>", "Collect node resources"],
                          "prog" => ["prog", "Show programs"],
-                         "log" => ["log", "Show logs"],
+                         "logs" => ["logs", "Show logs"],
                          "net" => ["net", "Show network structure"],
                          "missions" => ["missions", "Show missions log"],
                        })
@@ -24,7 +24,7 @@ module Sandbox
 
       case cmd
 
-      when "profile", "readme", "node", "prog", "log", "net"
+      when "profile", "readme", "node", "prog", "logs", "net"
         if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
@@ -94,7 +94,7 @@ module Sandbox
           )
           net["programs"].each do |k, v|
             @shell.puts(
-              "  %-12d %-4d %-6d %-5d %-12s" % [
+              "      %-12d %-4d %-6d %-5d %-12s" % [
                 k,
                 v["type"],
                 v["amount"],
@@ -105,8 +105,8 @@ module Sandbox
           end
           return
 
-        when "log"
-          @shell.puts("\e[1;35m\u2022 Security log\e[0m")
+        when "logs"
+          @shell.puts("\e[1;35m\u2022 Security\e[0m")
           @shell.puts(
             "  \e[35m%-12s %-19s %-12s %s\e[0m" % [
               "ID",
@@ -116,16 +116,19 @@ module Sandbox
             ]
           )
           logsSecurity = net["logs"].select do |k, v|
-            v["target"] == @game.config["id"]
+            v["target"]["id"] == @game.config["id"]
           end
           logsSecurity = logsSecurity.to_a.reverse.to_h
           logsSecurity.each do |k, v|
             @shell.puts(
-              "  %-12s %-19s %-12s %s" % [
+              "  %s%s%s %-12s %-19s %-12s %s" % [
+                v["success"] & Trickster::Hackers::Game::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+                v["success"] & Trickster::Hackers::Game::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+                v["success"] & Trickster::Hackers::Game::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
                 k,
                 v["date"],
-                v["id"],
-                v["idName"],
+                v["attacker"]["id"],
+                v["attacker"]["name"],
               ]
             )
           end          
@@ -133,7 +136,7 @@ module Sandbox
           @shell.puts
           @shell.puts("\e[1;35m\u2022 Hacks\e[0m")
           @shell.puts(
-            "  \e[35m%-12s %-19s %-12s %s\e[0m" % [
+            "      \e[35m%-12s %-19s %-12s %s\e[0m" % [
               "ID",
               "Date",
               "Target",
@@ -141,16 +144,19 @@ module Sandbox
             ]
           )
           logsHacks = net["logs"].select do |k, v|
-            v["id"] == @game.config["id"]
+            v["attacker"]["id"] == @game.config["id"]
           end
           logsHacks = logsHacks.to_a.reverse.to_h
           logsHacks.each do |k, v|
             @shell.puts(
-              "  %-12s %-19s %-12s %s" % [
+              "  %s%s%s %-12s %-19s %-12s %s" % [
+                v["success"] & Trickster::Hackers::Game::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+                v["success"] & Trickster::Hackers::Game::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+                v["success"] & Trickster::Hackers::Game::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
                 k,
                 v["date"],
-                v["target"],
-                v["targetName"],
+                v["target"]["id"],
+                v["target"]["name"],
               ]
             )
           end

@@ -130,14 +130,14 @@ module Trickster
         return data
       end
 
-      def parseData(data)
+      def parseData(data, delim1 = "@", delim2 = ";", delim3 = ",")
         array = Array.new
         begin
-          data.split("@").each.with_index do |section, i|
+          data.split(delim1).each.with_index do |section, i|
             array[i] = Array.new if array[i].nil?
-            section.split(";").each.with_index do |record, j|
+            section.split(delim2).each.with_index do |record, j|
               array[i][j] = Array.new if array[i][j].nil?
-              record.split(",").each.with_index do |field, k|
+              record.split(delim3).each.with_index do |field, k|
                 array[i][j][k] = field
               end
             end
@@ -228,6 +228,75 @@ module Trickster
         readme = Array.new
         readme = data.split("\x04") unless data.nil?
         return readme
+      end
+
+      def parseLogs(data)
+        logs = Hash.new
+        data.each_index do |i|
+          logs[data[i][0].to_i] = {
+            "date" => data[i][1],
+            "attacker" => {
+              "id" => data[i][2].to_i,
+              "name" => data[i][9],
+              "country" => data[i][11].to_i,
+              "level" => data[i][16].to_i,
+            },
+            "target" => {
+              "id" => data[i][3].to_i,
+              "name" => data[i][10],
+              "country" => data[i][12].to_i,
+              "level" => data[i][17].to_i,
+            },
+            "programs" => parseUsedPrograms(data[i][7]),
+            "money" => data[i][4].to_i,
+            "bitcoins" => data[i][5].to_i,
+            "success" => data[i][6].to_i,
+            "rank" => data[i][13].to_i,
+          }
+        end
+        return logs
+      end
+
+      def parseUsedPrograms(data)
+        programs = Hash.new
+        fields = data.split(":")
+        0.step(fields.length - 1, 2) do |i|
+          programs[fields[i].to_i] = fields[i + 1].to_i
+        end
+        return programs
+      end
+
+      def parseReplayPrograms(data)
+        programs = Array.new
+        data.each do |program|
+          programs.push(
+            {
+              "id" => program[0].to_i,
+              "type" => program[2].to_i,
+              "level" => program[3].to_i,
+              "amount" => program[4].to_i,
+            }
+          )
+        end
+        return programs
+      end
+
+      def parseReplayTrace(data)
+        trace = Array.new
+        data.each do |t|
+          type = t[0][0]
+          time = t[0][1..-1]
+          i = {
+            "type" => type,
+            "time" => time.to_i,
+          }
+          i["node"] = t[1].to_i if type == "s" || type == "i" || type == "u"
+          i["program"] = t[2].to_i if type == "i"
+          i["index"] = t[2].to_i if type == "u"
+          trace.push(i)
+        end
+        trace.sort! {|i| -i["time"]}
+        return trace
       end
 
       def getLevelByExp(experience)
@@ -452,18 +521,8 @@ module Trickster
         end
 
         data["readme"] = parseReadme(fields.dig(11, 0, 0))
+        data["logs"] = parseLogs(fields[9])
 
-        data["logs"] = Hash.new
-        fields[9].each_index do |i|
-          data["logs"][fields[9][i][0].to_i] = {
-            "date" => fields[9][i][1],
-            "id" => fields[9][i][2].to_i,
-            "target" => fields[9][i][3].to_i,
-            "idName" => fields[9][i][9],
-            "targetName" => fields[9][i][10],
-          }
-        end
-        
         return data
       end
 
@@ -915,8 +974,19 @@ module Trickster
             "app_version" => @config["version"],
           }
         )
-        response = request(url)
-        return response
+        fields = parseData(request(url))
+        fields = parseData(fields[0][0][0], "\x03", "\x02", "\x01")
+        replay = {
+          "nodes" => parseNodes(fields[0]),
+          "net" => parseNetwork(fields[1][0][1]),
+          "profiles" => {
+            "target" => parseProfile(fields[2][0]),
+            "attacker" => parseProfile(fields[4][0]),
+          },
+          "programs" => parseReplayPrograms(fields[3]),
+          "trace" => parseReplayTrace(fields[5]),
+        }
+        return replay
       end
 
       def cmdGetMissionFight(id, mission)
@@ -1501,8 +1571,8 @@ module Trickster
             "app_version" => @config["version"],
           }
         )
-        response = request(url)
-        return response
+        fields = parseData(request(url))
+        return parseLogs(fields[0])
       end
 
       def cmdPlayerSetNameOnce(id, name)
