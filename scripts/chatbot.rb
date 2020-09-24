@@ -1153,27 +1153,62 @@ class Chatbot < Sandbox::Script
     NAME = "readme"
     PATTERNS = %w[!нюхач]
 
+    def load
+      super
+      @config.merge!({
+        "counter" => 0,
+        "users" => {},
+      }) if @config.empty?
+    end
+
     def exec(message)
-      id = @script.config["users"].keys.sample
+      id = message["id"].to_s
+      user = @script.config["users"].keys.sample
       begin
-        readme = @script.game.cmdPlayerGetReadme(id)
+        readme = @script.game.cmdPlayerGetReadme(user)
       rescue Trickster::Hackers::RequestError => e
         @logger.error("Player get readme (e)")
         return
       end
+      records = Array.new
+      readme.each do |record|
+        data = record.split(": ", 2)
+        next if data[0] == "Admin" || data[0] == "Админ"
+        records.push(
+          {
+            "name" => data.length == 1 ? nil : data[0],
+            "message" => data[1],
+          }
+        )
+      end
+
       msg = "[b][dfff6d]"
-      if readme.empty?
-        msg += "НИЧЕГО РАЗНЮХАТЬ ПРО [ff4953]#{@script.config["users"][id]["nick"]} [dfff6d]НЕ УДАЛОСЬ!"
+      if records.empty?
+        msg += "НИЧЕГО РАЗНЮХАТЬ ПРО [ff4953]#{@script.config["users"][user]["nick"]} [dfff6d]НЕ УДАЛОСЬ!"
       else
+        record = records.sample
         msg += "Я ТУТ РАЗНЮХАЛ, ЧТО "
-        data = readme.first.split(": ")
-        if data.length == 1
-          msg += "КТО-ТО ВЗЛОМАЛ [ff4953]#{@script.config["users"][id]["nick"]} [dfff6d] И НАПИСАЛ: [77cbff]#{data.join}"
+        if record["name"].nil?
+          msg += "КТО-ТО ВЗЛОМАЛ [ff4953]#{@script.config["users"][user]["nick"]} [dfff6d] И НАПИСАЛ: [77cbff]#{record["message"]}"
         else
-          msg += "КОГДА-ТО [77cbff]#{data[0]} [dfff6d]ВЗЛОМАЛ [ff4953]#{@script.config["users"][id]["nick"]} [dfff6d]И НАПИСАЛ: [77cbff]#{data[1..-1].join}"
+          msg += "КОГДА-ТО [77cbff]#{record["name"]} [dfff6d]ВЗЛОМАЛ [ff4953]#{@script.config["users"][user]["nick"]} [dfff6d]И НАПИСАЛ: [77cbff]#{record["message"]}"
         end
+
+        @config["counter"] += 1
+        if @config["users"][id].nil?
+          @config["users"][id] = {
+            "counter" => 0,
+          }
+        end
+        @config["users"][id]["counter"] += 1
+        save
       end
       @script.say(msg)
+    end
+
+    def stat(id = nil)
+      return "[dfff6d]РАЗНЮХАЛ #{@config["users"].dig(id, "counter") || 0} АТАК" unless id.nil?
+      return "[dfff6d]РАЗНЮХАНО #{@config["counter"]} АТАК"
     end
   end
 
