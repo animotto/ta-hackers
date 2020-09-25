@@ -252,6 +252,7 @@ module Trickster
             "bitcoins" => data[i][5].to_i,
             "success" => data[i][6].to_i,
             "rank" => data[i][13].to_i,
+            "test" => data[i][18].to_i == 1,
           }
         end
         return logs
