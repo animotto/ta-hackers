@@ -1173,10 +1173,19 @@ class Chatbot < Sandbox::Script
       records = Array.new
       readme.each do |record|
         data = record.split(": ", 2)
-        next if data[0] == "Admin" || data[0] == "Админ"
+        if data.length == 1
+          records.push(
+            {
+              "message" => record,
+            }
+          )
+          next
+        end
+
+        next if data[0] == "Admin" || data[0] == "Aдмин"
         records.push(
           {
-            "name" => data.length == 1 ? nil : data[0],
+            "name" => data[0],
             "message" => data[1],
           }
         )
