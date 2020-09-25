@@ -892,6 +892,24 @@ class Chatbot < Sandbox::Script
           time.push("[bcd6ff]#{hours} [fff544]ЧАСОВ") if hours > 0
           time.push("[bcd6ff]#{mins % 60} [fff544]МИНУТ")
           msg = "[b][bcd6ff]#{@config["active"][id]["nick"]} [fff544]ВЫЛЕЗАЕТ ИЗ ПОД ТАЗИКА! ПРОСИДЕЛ ПОД НИМ #{time.join(", ")}!"
+
+          logs = Hash.new
+          begin
+            logs = @script.game.cmdFightByFBFriend(id)
+          rescue Trickster::Hackers::RequestError => e2
+            @script.logger.error("Get logs error (#{e2})")
+          end
+          begin
+            logs.select! {|k, v| v["target"]["id"] == id.to_i && Time.parse(v["date"]) >= @config["active"][id]["startTime"]}
+          rescue ArgumentError => e2
+            @script.logger.error("Time parse error (#{e2})")
+          end
+          if logs.empty?
+            msg += " НИКТО НЕ ПРОЛЕЗ!"
+          else
+            msg += " ПРОЛЕЗЛО [bcd6ff]#{logs.length} [fff544]ИГРОКОВ!"
+          end
+
           @script.say(msg)
           @config["active"].delete(id)
           save
