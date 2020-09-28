@@ -122,7 +122,7 @@ module Sandbox
             "Name",
           ]
         )
-        targets.each do |k, v|
+        targets["targets"].each do |k, v|
           @shell.puts(
             "  %-12d %s" % [
               k,

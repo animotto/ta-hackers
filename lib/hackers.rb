@@ -20,6 +20,7 @@ module Trickster
     end
     
     class Game
+      SUCCESS_FAIL = 0
       SUCCESS_CORE = 1
       SUCCESS_RESOURCES = 2
       SUCCESS_CONTROL = 4
@@ -298,6 +299,45 @@ module Trickster
         end
         trace.sort! {|i| -i["time"]}
         return trace
+      end
+
+      def parseTargets(data)
+        targets = Hash.new
+        data.each do |target|
+          targets[target[0].to_i] = {
+            "name" => target[1],
+            "experience" => target[2].to_i,
+            "x" => target[3].to_i,
+            "y" => target[4].to_i,
+            "country" => target[5].to_i,
+            "skin" => target[6].to_i,
+          }
+        end
+        return targets
+      end
+
+      def parseBonuses(data)
+        bonuses = Hash.new
+        data.each do |bonus|
+          bonuses[bonus[0].to_i] = {
+            "amount" => bonus[2].to_i,
+            "x" => bonus[3].to_i,
+            "y" => bonus[4].to_i,
+          }
+        end
+        return bonuses
+      end
+
+      def parseGoals(data)
+        goals = Hash.new
+        data.each do |goal|
+          goals[goal[0].to_i] = {
+            "type" => goal[1],
+            "credits" => goal[2].to_i,
+            "finished" => goal[3].to_i,
+          }
+        end
+        return goals
       end
 
       def getLevelByExp(experience)
@@ -731,29 +771,20 @@ module Trickster
         )
         response = request(url, true, true)
         fields = parseData(response)
+
         data = Hash.new
+        data["targets"] = parseTargets(fields[0])
+        data["money"] = fields.dig(2, 0, 0)
+        data["bonuses"] = parseBonuses(fields[1])
+        data["goals"] = parseGoals(fields[4])
 
-        data["targets"] = Hash.new
-        fields[0].each_index do |i|
-          data["targets"][fields[0][i][0].to_i] = {
-            "name" => fields[0][i][1],
-          }
-        end
-
-        data["bonuses"] = Hash.new
-        fields[1].each_index do |i|
-          data["bonuses"][fields[1][i][0].to_i] = {
-            "amount" => fields[1][i][2].to_i,
-          }
-        end
-
-        data["goals"] = Hash.new
-        fields[4].each_index do |i|
-          data["goals"][fields[4][i][0].to_i] = {
-            "type" => fields[4][i][1],
-            "finished" => fields[4][i][3].to_i,
-          }
-        end
+        data["best"] = {
+          "id" => fields[6][0][0].to_i,
+          "name" => fields[6][0][1],
+          "experience" => fields[6][0][2].to_i,
+          "country" => fields[6][0][3].to_i,
+          "rank" => fields[6][0][4].to_i,
+        }
         
         return data
       end
@@ -768,12 +799,13 @@ module Trickster
         )
         response = request(url)
         fields = parseData(response)
+
         data = Hash.new
-        fields[0].each do |field|
-          data[field[0].to_i] = {
-            "name" => field[1],
-          }
-        end
+        data["targets"] = parseTargets(fields[0])
+        data["bonuses"] = parseBonuses(fields[1])
+        data["money"] = fields.dig(2, 0, 0)
+        data["goals"] = parseGoals(fields[4])
+
         return data
       end
 
@@ -884,8 +916,10 @@ module Trickster
         response = request(url)
         fields = parseData(response)
         data = Hash.new
-        data["profile"] = parseProfile(fields[2][0])
+        data["nodes"] = parseNodes(fields[0])
         data["net"] = parseNetwork(fields[1][0][1])
+        data["profile"] = parseProfile(fields[2][0])
+        data["readme"] = parseReadme(fields.dig(4, 0, 0))
         return data
       end
 
