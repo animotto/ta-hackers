@@ -1,31 +1,27 @@
 class Autohack < Sandbox::Script
+  BLACKLIST = [
+    127,
+  ]
+
   def main
     if @args[0].nil?
-      @shell.log("Specify the number of hosts", :script)
+      @logger.log("Specify the number of hosts")
       return
     end
 
-    unless @game.config["sid"]
-      @shell.log("No session ID", :script)
+    if @game.sid.empty?
+      @logger.log("No session ID")
       return
     end
     
     n = 0
+    world = @game.cmdPlayerWorld(0)
+    targets = world["targets"]
+
     loop do
-      begin
-        world = @game.cmdPlayerWorld(0)
-        if world["targets"].empty?
-          @shell.log("Get new targets", :script)
-          @game.cmdGetNewTargets
-          redo
-        end
-      rescue Trickster::Hackers::RequestError => e
-        @shell.log("#{e}", :script)
-        return
-      end
-        
-      world["targets"].each do |k, v|
-        @shell.log("Attack #{k} / #{v["name"]}", :script)
+      targets.each do |k, v|
+        next if BLACKLIST.include?(k)
+        @logger.log("Attack #{k} / #{v["name"]}")
 
         begin
           net = @game.cmdNetGetForAttack(k)
@@ -36,7 +32,7 @@ class Autohack < Sandbox::Script
                                           bitcoin: 0,
                                           nodes: "",
                                           loots: "",
-                                          success: 0,
+                                          success: Trickster::Hackers::Game::SUCCESS_FAIL,
                                           programs: "",
                                         })
           sleep(rand(35..95))
@@ -46,12 +42,13 @@ class Autohack < Sandbox::Script
             @game.appSettings["node types"],
             @game.appSettings["program types"],
           ].join(",")
+          success = Trickster::Hackers::Game::SUCCESS_CORE | Trickster::Hackers::Game::SUCCESS_RESOURCES | Trickster::Hackers::Game::SUCCESS_CONTROL
           fight = @game.cmdFight(k, {
-                                   money: 0,
-                                   bitcoin: 0,
+                                   money: net["profile"]["money"],
+                                   bitcoin: net["profile"]["bitcoins"],
                                    nodes: "",
                                    loots: "",
-                                   success: 23,
+                                   success: success,
                                    programs: "",
                                    summary: "",
                                    version: version,
@@ -61,15 +58,26 @@ class Autohack < Sandbox::Script
 
           leave = @game.cmdNetLeave(k)
           @game.cmdNetGetForMaint
-        rescue Trickster::Hackers::RequestError => e
-          @shell.log("#{e}", :script)
-          return
+        rescue => e
+          @logger.error("#{e.message}")
+          sleep(rand(165..295))
+          next
         end
 
         n += 1
-        return if n >= @args[0].to_i
-        sleep(rand(420..950))
+        return if n == @args[0].to_i
+        sleep(rand(15..25))
+      end
+
+      begin
+        @logger.log("Get new targets")
+        new = @game.cmdGetNewTargets
+        targets = new["targets"]
+      rescue Trickster::Hackers::RequestError => e
+        @logger.error("#{e}")
+        return
       end
     end
   end
 end
+
