@@ -108,12 +108,12 @@ module Trickster
             )
           end
         rescue => e
-          raise RequestError.new(e.message), e.message
+          raise RequestError.new(e.class.to_s, e.message)
         end
 
-        if response.code != "200"
+        if response.class != Net::HTTPOK
           fields = parseData(response.body.force_encoding("utf-8"))
-          raise RequestError.new(fields.dig(0, 0, 0), fields.dig(0, 0, 1)), fields.dig(0, 0, 0)
+          raise RequestError.new(fields.dig(0, 0, 0), fields.dig(0, 0, 1))
         end
         return response.body.force_encoding("utf-8")
       end

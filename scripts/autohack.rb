@@ -59,7 +59,7 @@ class Autohack < Sandbox::Script
           leave = @game.cmdNetLeave(k)
           @game.cmdNetGetForMaint
         rescue => e
-          @logger.error("#{e.message}")
+          @logger.error("#{e}")
           sleep(rand(165..295))
           next
         end
@@ -70,11 +70,14 @@ class Autohack < Sandbox::Script
       end
 
       begin
-        @logger.log("Get new targets")
         new = @game.cmdGetNewTargets
         targets = new["targets"]
       rescue Trickster::Hackers::RequestError => e
-        @logger.error("#{e}")
+        if e.type == "Net::ReadTimeout"
+          @logger.error("Get new targets timeout")
+          retry
+        end
+        @logger.error("Get new targets (#{e})")
         return
       end
     end

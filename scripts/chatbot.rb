@@ -1185,7 +1185,7 @@ class Chatbot < Sandbox::Script
       begin
         readme = @script.game.cmdPlayerGetReadme(user)
       rescue Trickster::Hackers::RequestError => e
-        @logger.error("Player get readme (e)")
+        @logger.error("Player get readme (#{e})")
         return
       end
       records = Array.new
