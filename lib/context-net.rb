@@ -5,14 +5,14 @@ module Sandbox
       @commands.merge!({
                          "profile" => ["profile", "Show profile"],
                          "readme" => ["readme", "Show readme"],
-                         "node" => ["node", "Show nodes"],
+                         "nodes" => ["nodes", "Show nodes"],
                          "create" => ["create <type>", "Create node"],
                          "delete" => ["delete <id>", "Delete node"],
                          "upgrade" => ["upgrade <id>", "Upgrade node"],
                          "finish" => ["finish <id>", "Finish node"],
                          "builders" => ["builders <id> <builders>", "Set node builders"],
                          "collect" => ["collect <id>", "Collect node resources"],
-                         "prog" => ["prog", "Show programs"],
+                         "progs" => ["progs", "Show programs"],
                          "logs" => ["logs", "Show logs"],
                          "net" => ["net", "Show network structure"],
                          "missions" => ["missions", "Show missions log"],
@@ -24,7 +24,7 @@ module Sandbox
 
       case cmd
 
-      when "profile", "readme", "node", "prog", "logs", "net"
+      when "profile", "readme", "nodes", "progs", "logs", "net"
         if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
@@ -56,7 +56,7 @@ module Sandbox
           end
           return
 
-        when "node"
+        when "nodes"
           @shell.puts("\e[1;35m\u2022 Nodes\e[0m")
           @shell.puts(
             "  \e[35m%-12s %-4s %-5s %-12s %-12s\e[0m" % [
@@ -81,7 +81,7 @@ module Sandbox
           end
           return
 
-        when "prog"
+        when "progs"
           @shell.puts("\e[1;35m\u2022 Programs\e[0m")
           @shell.puts(
             "  \e[35m%-12s %-4s %-6s %-5s %-12s\e[0m" % [
@@ -94,7 +94,7 @@ module Sandbox
           )
           net["programs"].each do |k, v|
             @shell.puts(
-              "      %-12d %-4d %-6d %-5d %-12s" % [
+              "  %-12d %-4d %-6d %-5d %-12s" % [
                 k,
                 v["type"],
                 v["amount"],
@@ -108,7 +108,7 @@ module Sandbox
         when "logs"
           @shell.puts("\e[1;35m\u2022 Security\e[0m")
           @shell.puts(
-            "  \e[35m%-12s %-19s %-12s %s\e[0m" % [
+            "      \e[35m%-12s %-19s %-12s %s\e[0m" % [
               "ID",
               "Date",
               "Attacker",

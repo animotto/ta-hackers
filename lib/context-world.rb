@@ -3,11 +3,11 @@ module Sandbox
     def initialize(game, shell)
       super(game, shell)
       @commands.merge!({
-                         "target" => ["target", "Show targets"],
+                         "targets" => ["targets", "Show targets"],
                          "new" => ["new", "Get new targets"],
-                         "bonus" => ["bonus", "Show bonuses"],
+                         "bonuses" => ["bonuses", "Show bonuses"],
                          "collect" => ["collect <id>", "Collect bonus"],
-                         "goal" => ["goal", "Show goals"],
+                         "goals" => ["goals", "Show goals"],
                          "update" => ["update <id> <record>", "Update goal"],
                          "reject" => ["reject <id>", "Reject goal"],
                        })
@@ -17,7 +17,7 @@ module Sandbox
       cmd = words[0].downcase
       case cmd
 
-      when "target", "bonus", "goal"
+      when "targets", "bonuses", "goals"
         if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
@@ -43,7 +43,7 @@ module Sandbox
 
         case cmd
 
-        when "target"        
+        when "targets"
           @shell.puts("\e[1;35m\u2022 Targets\e[0m")
           @shell.puts(
             "  \e[35m%-12s %s\e[0m" % [
@@ -61,7 +61,7 @@ module Sandbox
           end
           return
 
-        when "bonus"        
+        when "bonuses"
           @shell.puts("\e[1;35m\u2022 Bonuses\e[0m")
           @shell.puts(
             "  \e[35m%-12s %-2s\e[0m" % [
@@ -79,7 +79,7 @@ module Sandbox
           end
           return
 
-        when "goal"        
+        when "goals"
           @shell.puts("\e[1;35m\u2022 Goals\e[0m")
           @shell.puts(
             "  \e[35m%-12s %-8s %s\e[0m" % [
