@@ -405,11 +405,41 @@ module Trickster
         response = request(url, true, false)
         fields = parseData(response)
         data = Hash.new
-        fields[0].each_index do |i|
-          data[fields[0][i][0].to_i] = {
-            "name" => fields[0][i][1],
+
+        fields[0].each do |f|
+          data[f[0].to_i] = {
+            "name" => f[1],
+            "levels" => Hash.new,
+            "limits" => Hash.new,
+            "titles" => [
+              f[2], f[3], f[4],
+              f[5], f[6], f[7],
+            ],
           }
         end
+
+        fields[1].each do |f|
+          next unless data.key?(f[1].to_i)
+          data[f[1].to_i]["levels"][f[2].to_i] = {
+            "cost" => f[3].to_i,
+            "core" => f[5].to_i,
+            "experience" => f[6].to_i,
+            "upgrade" => f[7].to_i,
+            "connections" => f[8].to_i,
+            "slots" => f[9].to_i,
+            "firewall" => f[10].to_i,
+            "data" => [
+              f[13].to_i, f[14].to_i, f[15].to_i,
+              f[16].to_i, f[17].to_i, f[18].to_i,
+            ],
+          }
+        end
+
+        fields[2].each do |f|
+          next unless data.key?(f[1].to_i)
+          data[f[1].to_i]["limits"][f[2].to_i] = f[3].to_i
+        end
+
         return data
       end
       
@@ -423,11 +453,38 @@ module Trickster
         response = request(url, true, false)
         fields = parseData(response)
         data = Hash.new
-        fields[0].each_index do |i|
-          data[fields[0][i][0].to_i] = {
-            "name" => fields[0][i][2],
+
+        fields[0].each do |f|
+          data[f[0].to_i] = {
+            "type" => f[1].to_i,
+            "name" => f[2],
+            "levels" => Hash.new,
+            "titles" => [
+              f[3], f[4], f[5],
+              f[6], f[7],
+            ],
           }
         end
+
+        fields[1].each do |f|
+          data[f[1].to_i]["levels"][f[2].to_i] = {
+            "cost" => f[3].to_i,
+            "experience" => f[4].to_i,
+            "price" => f[5].to_i,
+            "compile" => f[6].to_i,
+            "disk" => f[7].to_i,
+            "install" => f[8].to_i,
+            "upgrade" => f[9].to_i,
+            "rate" => f[10].to_i,
+            "strength" => f[11].to_i,
+            "data" => [
+              f[12], f[13], f[14],
+              f[15], f[16],
+            ],
+            "evolver" => f[17].to_i,
+          }
+        end
+
         return data
       end
 

@@ -11,8 +11,8 @@ module Sandbox
                          "connect" => ["connect", "Connect to the server"],
                          "trans" => ["trans", "Language translations"],
                          "settings" => ["settings", "Application settings"],
-                         "nodes" => ["nodes", "Node types"],
-                         "progs" => ["progs", "Program types"],
+                         "nodes" => ["nodes [id]", "Node types"],
+                         "progs" => ["progs [id]", "Program types"],
                          "missions" => ["missions", "Missions list"],
                          "skins" => ["skins", "Skin types"],
                          "news" => ["news", "News"],
@@ -73,6 +73,46 @@ module Sandbox
           return
         end
 
+        unless words[1].nil?
+          id = words[1].to_i
+          unless @game.nodeTypes.key?(id)
+            @shell.puts "#{cmd}: No such node type"
+            return
+          end
+
+          @shell.puts "#{@game.nodeTypes[id]["name"]}:"
+          @shell.puts " %-5s %-10s %-4s %-5s %-7s %-5s %-5s %-5s %-5s" % [
+            "Level",
+            "Cost",
+            "Core",
+            "Exp",
+            "Upgrade",
+            "Conns",
+            "Slots",
+            "Firewall",
+            "Limit",
+          ]
+          @game.nodeTypes[id]["levels"].each do |k, v|
+            limit = @game.nodeTypes[id]["limits"].dig(k)
+            if limit.nil?
+              limits = @game.nodeTypes[id]["limits"].sort_by {|k, v| v}
+              limit = limits.dig(-1, 1) || "-"
+            end
+            @shell.puts " %-5d %-10d %-4d %-5d %-7d %-5d %-5d %-8d %-5s" % [
+              k,
+              v["cost"],
+              v["core"],
+              v["experience"],
+              v["upgrade"],
+              v["connections"],
+              v["slots"],
+              v["firewall"],
+              limit,
+            ]
+          end
+          return
+        end
+
         @shell.puts "Node types:"
         @game.nodeTypes.each do |k, v|
           @shell.puts " %-2s .. %s" % [k, v["name"]]
@@ -82,6 +122,45 @@ module Sandbox
       when "progs"
         if @game.programTypes.empty?
           @shell.puts "#{cmd}: No program types"
+          return
+        end
+
+        unless words[1].nil?
+          id = words[1].to_i
+          unless @game.programTypes.key?(id)
+            @shell.puts "#{cmd}: No such program type"
+            return
+          end
+
+          @shell.puts "#{@game.programTypes[id]["name"]}:"
+          @shell.puts " %-5s %-6s %-4s %-5s %-7s %-4s %-7s %-7s %-4s %-8s %-7s" % [
+            "Level",
+            "Cost",
+            "Exp",
+            "Price",
+            "Compile",
+            "Disk",
+            "Install",
+            "Upgrade",
+            "Rate",
+            "Strength",
+            "Evolver",
+          ]
+          @game.programTypes[id]["levels"].each do |k, v|
+            @shell.puts " %-5d %-6d %-4d %-5d %-7d %-4d %-7d %-7d %-4d %-8d %-7d" % [
+              k,
+              v["cost"],
+              v["experience"],
+              v["price"],
+              v["compile"],
+              v["disk"],
+              v["install"],
+              v["upgrade"],
+              v["rate"],
+              v["strength"],
+              v["evolver"],
+            ]
+          end
           return
         end
 
