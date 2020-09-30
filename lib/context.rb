@@ -18,7 +18,7 @@ module Sandbox
     def help(commands)
       @shell.puts "Available commands:"
       commands.each do |k, v|
-        @shell.puts " %-24s%s" % [v[0], v[1]]
+        @shell.puts " %-28s%s" % [v[0], v[1]]
       end
     end
     

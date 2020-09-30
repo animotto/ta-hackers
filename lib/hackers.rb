@@ -29,7 +29,7 @@ module Trickster
                     :nodeTypes, :programTypes, :missionsList,
                     :skinTypes, :hintsList, :experienceList,
                     :buildersList, :goalsTypes, :shieldTypes,
-                    :rankList, :countriesList, :sid
+                    :rankList, :countriesList, :sid, :syncSeq
       
       def initialize(config)
         @config = config
@@ -47,6 +47,7 @@ module Trickster
         @shieldTypes = Hash.new
         @rankList = Hash.new
         @countriesList = Hash.new
+        @syncSeq = 0
         @client = Net::HTTP.new(@config["host"], @config["port"].to_s)
         @client.use_ssl = true unless @config["ssl"].nil?
         @mutex = Mutex.new
@@ -219,7 +220,7 @@ module Trickster
           nodes[node[0].to_i] = {
             "type" => node[2].to_i,
             "level" => node[3].to_i,
-            "time" => node[4].to_i,
+            "timer" => node[4].to_i,
           }
         end
         return nodes
@@ -338,6 +339,33 @@ module Trickster
           }
         end
         return goals
+      end
+
+      def parsePrograms(data)
+        programs = Hash.new
+        data.each do |program|
+          programs[program[0].to_i] = {
+            "type" => program[2].to_i,
+            "level" => program[3].to_i,
+            "amount" => program[4].to_i,
+            "timer" => program[5].to_i,
+          }
+        end
+        return programs
+      end
+
+      def parseQueue(data)
+        queue = Array.new
+        data.each do |q|
+          queue.push(
+            {
+              "type" => q[0].to_i,
+              "amount" => q[1].to_i,
+              "timer" => q[2].to_i,
+            }
+          )
+        end
+        return queue
       end
 
       def getLevelByExp(experience)
@@ -608,18 +636,12 @@ module Trickster
         data["nodes"] = parseNodes(fields[0])
         data["net"] = parseNetwork(fields[1][0][1])
         data["profile"] = parseProfile(fields[2][0])
-
-        data["programs"] = Hash.new
-        fields[3].each_index do |i|
-          data["programs"][fields[3][i][0].to_i] = {
-            "type" => fields[3][i][2].to_i,
-            "level" => fields[3][i][3].to_i,
-            "amount" => fields[3][i][4].to_i,
-          }
-        end
-
-        data["readme"] = parseReadme(fields.dig(11, 0, 0))
+        data["programs"] = parsePrograms(fields[3])
+        data["queue"] = parseQueue(fields[4])
+        data["rank"] = fields.dig(7, 0, 0).to_i
         data["logs"] = parseLogs(fields[9])
+        data["time"] = fields.dig(10, 0, 0)
+        data["readme"] = parseReadme(fields.dig(11, 0, 0))
 
         return data
       end
@@ -765,7 +787,7 @@ module Trickster
         return response
       end
 
-      def cmdDeleteProgram(id, programs)
+      def cmdDeleteProgram(programs)
         data = String.new
         programs.each do |program|
           data += program.join(",") + ";"
@@ -773,13 +795,21 @@ module Trickster
         url = URI.encode_www_form(
           {
             "program_delete" => "",
-            "id_player" => id,
+            "id_player" => @config["id"],
             "data" => data,
             "app_version" => @config["version"],
           }
         )
         response = request(url)
-        return response
+        fields = parseData(response)
+
+        data = Hash.new
+        fields[0].each do |f|
+          data[f[0].to_i] = {
+            "amount" => f[1].to_i,
+          }
+        end
+        return data
       end
 
       def cmdQueueSync(programs, seq)
@@ -797,7 +827,12 @@ module Trickster
           }
         )
         response = request(url)
-        return response
+        fields = parseData(response)
+
+        data = Hash.new
+        data["programs"] = parsePrograms(fields[0])
+        data["queue"] = parseQueue(fields[1])
+        return data
       end
 
       def cmdQueueSyncFinish(programs)
@@ -1303,7 +1338,7 @@ module Trickster
         fields[0].each do |field|
           data[field[1]] = {
             "money" => field[2].to_i,
-            "bitcoin" => field[3].to_i,
+            "bitcoins" => field[3].to_i,
             "date" => field[5],
           }
         end
