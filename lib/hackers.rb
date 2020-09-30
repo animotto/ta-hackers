@@ -229,6 +229,7 @@ module Trickster
       def parseReadme(data)
         readme = Array.new
         readme = data.split("\x04") unless data.nil?
+        readme.map! {|line| normalizeData(line)}
         return readme
       end
 
@@ -969,7 +970,7 @@ module Trickster
       end
 
       def cmdChatSend(room, message, last = "")
-        message = normalizeData(message, true)
+        message = normalizeData(message, false)
         url = URI.encode_www_form(
           {
             "chat_send" => "",
@@ -1346,30 +1347,32 @@ module Trickster
       end
 
       def cmdPlayerSetReadme(text)
+        readme = normalizeData(text.join("\x04"), false)
         url = URI.encode_www_form(
           {
             "player_set_readme" => "",
             "id" => @config["id"],
-            "text" => text,
+            "text" => readme,
             "app_version" => @config["version"],
           }
         )
         response = request(url)
-        return true
+        return response
       end
 
       def cmdPlayerSetReadmeFight(target, text)
+        readme = normalizeData(text.join("\x04"), false)
         url = URI.encode_www_form(
           {
             "player_set_readme_fight" => "",
             "id_attacker" => @config["id"],
             "id_target" => target,
-            "text" => text,
+            "text" => readme,
             "app_version" => @config["version"],
           }
         )
         response = request(url)
-        return true
+        return response
       end
 
       def cmdGoalByPlayer

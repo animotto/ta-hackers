@@ -5,6 +5,9 @@ module Sandbox
       @commands.merge!({
                          "profile" => ["profile", "Show profile"],
                          "readme" => ["readme", "Show readme"],
+                         "write" => ["write <text>", "Write text to readme"],
+                         "remove" => ["remove <id>", "Remove text from readme"],
+                         "clear" => ["clear", "Clear readme"],
                          "nodes" => ["nodes", "Show nodes"],
                          "create" => ["create <type>", "Create node"],
                          "delnode" => ["delnode <id>", "Delete node"],
@@ -27,7 +30,9 @@ module Sandbox
 
       case cmd
 
-      when "profile", "readme", "nodes", "progs", "queue", "logs", "net"
+      when "profile", "readme", "write",
+           "remove", "nodes", "progs",
+           "queue", "logs", "net"
         if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
@@ -54,8 +59,68 @@ module Sandbox
 
         when "readme"
           @shell.puts("\e[1;35m\u2022 Readme\e[0m")
-          net["readme"].each do |item|
-            @shell.puts("  #{item}")
+          net["readme"].each_with_index do |item, i|
+            @shell.puts("  [#{i}] #{item}")
+          end
+          return
+
+        when "write"
+          if words[1].nil?
+            @shell.puts("#{cmd}: Specify text")
+            return
+          end
+
+          if @game.sid.empty?
+            @shell.puts("#{cmd}: No session ID")
+            return
+          end
+
+          msg = "Set readme"
+          begin
+            net["readme"].push(words[1])
+            @game.cmdPlayerSetReadme(net["readme"])
+          rescue
+            @shell.logger.error("#{msg} (#{e})")
+            return
+          end
+
+          @shell.logger.log(msg)
+          @shell.puts("\e[1;35m\u2022 Readme\e[0m")
+          net["readme"].each_with_index do |item, i|
+            @shell.puts("  [#{i}] #{item}")
+          end
+          return
+
+        when "remove"
+          if words[1].nil?
+            @shell.puts("#{cmd}: Specify text ID")
+            return
+          end
+
+          id = words[1].to_i
+          if net["readme"][id].nil?
+            @shell.puts("#{cmd}: No such text ID")
+            return
+          end
+
+          if @game.sid.empty?
+            @shell.puts("#{cmd}: No session ID")
+            return
+          end
+
+          msg = "Set readme"
+          begin
+            net["readme"].delete_at(id)
+            @game.cmdPlayerSetReadme(net["readme"])
+          rescue
+            @shell.logger.error("#{msg} (#{e})")
+            return
+          end
+
+          @shell.logger.log(msg)
+          @shell.puts("\e[1;35m\u2022 Readme\e[0m")
+          net["readme"].each_with_index do |item, i|
+            @shell.puts("  [#{i}] #{item}")
           end
           return
 
@@ -216,6 +281,22 @@ module Sandbox
           return
           
         end
+        return
+
+      when "clear"
+        if @game.sid.empty?
+          @shell.puts("#{cmd}: No session ID")
+          return
+        end
+
+        msg = "Set readme"
+        begin
+          @game.cmdPlayerSetReadme([])
+        rescue Trickster::Hackers::RequestError => e
+          @shell.logger.error("#{msg} (#{e})")
+          return
+        end
+        @shell.logger.log(msg)
         return
 
       when "create"
