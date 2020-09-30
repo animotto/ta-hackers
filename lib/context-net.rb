@@ -418,10 +418,11 @@ module Sandbox
 
         begin
           sync = @game.cmdQueueSync(programs, @game.syncSeq)
-          @game.syncSeq += 1
         rescue Trickster::Hackers::RequestError => e
           @shell.logger.error("#{msg} (#{e})")
           return
+        ensure
+          @game.syncSeq += 1
         end
         @shell.logger.log(msg)
 
