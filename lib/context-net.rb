@@ -126,23 +126,29 @@ module Sandbox
         when "nodes"
           @shell.puts("\e[1;35m\u2022 Nodes\e[0m")
           @shell.puts(
-            "  \e[35m%-12s %-12s %-4s %-5s %-12s\e[0m" % [
+            "  \e[35m%-12s %-12s %-4s %-5s %-12s %-8s\e[0m" % [
               "ID",
               "Name",
               "Type",
               "Level",
               "Timer",
+              "Builders",
             ]
           )
 
           net["nodes"].each do |k, v|
+            builders = String.new
+            if v["timer"].negative? && !v["builders"].nil?
+              builders = "\e[32m" + "\u25b0" * v["builders"] + "\e[0m"
+            end
             @shell.puts(
-              "  %-12d %-12s %-4d %-5d %-12d" % [
+              "  %-12d %-12s %-4d %-5d %-12d %-8s" % [
                 k,
                 @game.nodeTypes[v["type"]]["name"],
                 v["type"],
                 v["level"],
                 v["timer"],
+                builders,
               ]
             )
           end

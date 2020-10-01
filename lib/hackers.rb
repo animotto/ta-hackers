@@ -225,6 +225,7 @@ module Trickster
             "type" => node[2].to_i,
             "level" => node[3].to_i,
             "timer" => node[4].to_i,
+            "builders" => node[5]&.to_i,
           }
         end
         return nodes
