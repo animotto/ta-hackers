@@ -21,7 +21,6 @@ module Sandbox
                          "delprog" => ["delprog <type,amount>", "Delete program"],
                          "logs" => ["logs", "Show logs"],
                          "net" => ["net", "Show network structure"],
-                         "missions" => ["missions", "Show missions log"],
                        })
     end
 
@@ -437,42 +436,6 @@ module Sandbox
           return
         end
         @shell.logger.log(msg)
-        return
-
-      when "missions"
-        if @game.sid.empty?
-          @shell.puts("#{cmd}: No session ID")
-          return
-        end
-
-        msg = "Player missions get log"
-        begin
-          missions = @game.cmdPlayerMissionsGetLog
-        rescue Trickster::Hackers::RequestError => e
-          @shell.logger.error("#{msg} (#{e})")
-          return
-        end
-        @shell.logger.log(msg)
-
-        @shell.puts("\e[1;35m\u2022 Missions log\e[0m")
-        @shell.puts(
-          "  \e[35m%-7s %-7s %-8s %-20s\e[0m" % [
-            "ID",
-            "Money",
-            "Bitcoins",
-            "Date",
-          ]
-        )
-        missions.each do |k, v|
-          @shell.puts(
-            "  %-7d %-7d %-8d %-20s" % [
-              k,
-              v["money"],
-              v["bitcoins"],
-              v["date"],
-            ]
-          )
-          end
         return
 
       when "sync"

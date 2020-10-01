@@ -25,6 +25,10 @@ module Trickster
       SUCCESS_RESOURCES = 2
       SUCCESS_CONTROL = 4
 
+      MISSION_AWAITS = 0
+      MISSION_FINISHED = 1
+      MISSION_REJECTED = 2
+
       attr_accessor :config, :appSettings, :transLang,
                     :nodeTypes, :programTypes, :missionsList,
                     :skinTypes, :hintsList, :experienceList,
@@ -369,6 +373,24 @@ module Trickster
         return queue
       end
 
+      def parseMissionCurrencies(data)
+        currencies = Hash.new
+        return currencies if data.nil?
+        data.split("Y").each do |node|
+          id, amount = node.split("X")
+          currencies[id.to_i] = amount.to_i
+        end
+        return currencies
+      end
+
+      def generateMissionCurrencies(currencies)
+        currencies.map {|k, v| "#{k}X#{v}"}.join("Y")
+      end
+
+      def generateMissionPrograms(programs)
+        programs.map {|k, v| "#{v["type"]},#{v["amount"]};"}.join
+      end
+
       def getLevelByExp(experience)
         level = 0
         @experienceList.each do |k, v|
@@ -528,13 +550,32 @@ module Trickster
         fields = parseData(response)
         data = Hash.new
         fields[0].each do |field|
-          data[field[0]] = {
+          data[field[0].to_i] = {
             "name" => field[1],
             "target" => field[2],
-            "message_begin" => field[3],
-            "goal" => field[4],
-            "message_end" => field[17],
+            "messages" => {
+              "begin" => normalizeData(field[3]),
+              "end" => normalizeData(field[17]),
+              "news" => normalizeData(field[19]),
+            },
+            "goals" => normalizeData(field[4]).split(","),
+            "x" => field[5].to_i,
+            "y" => field[6].to_i,
+            "country" => field[7].to_i,
+            "requirements" => {
+              # TODO: parse mission data
+              "mission" => normalizeData(field[9]),
+              "core" => field[12].to_i,
+            },
+            "reward" => {
+              "money" => field[13].to_i,
+              "bitcoins" => field[14].to_i,
+            },
             "network" => parseNetwork(field[21]),
+            "nodes" => parseNodes(parseData(normalizeData(field[22]))[0]),
+            "money" => field[24].to_i,
+            "bitcoins" => field[25].to_i,
+            "group" => field[28],
           }
         end
         return data
@@ -1082,10 +1123,10 @@ module Trickster
             "id_player" => @config["id"],
             "id_mission" => mission,
             "money_looted" => data[:money],
-            "bcoins_looted" => data[:bitcoin],
+            "bcoins_looted" => data[:bitcoins],
             "finished" => data[:finished],
-            "nodes_currencies" => data[:finished],
-            "programs_data" => data[:programs],
+            "nodes_currencies" => generateMissionCurrencies(data[:currencies]),
+            "programs_data" => generateMissionPrograms(data[:programs]),
             "tutorial" => data[:tutorial],
             "app_version" => @config["version"],
           }
@@ -1117,17 +1158,24 @@ module Trickster
         return replay
       end
 
-      def cmdGetMissionFight(id, mission)
+      def cmdGetMissionFight(mission)
         url = URI.encode_www_form(
           {
             "get_mission_fight" => 1,
             "id_mission" => mission,
-            "id_attacker" => id,
+            "id_attacker" => @config["id"],
             "app_version" => @config["version"],
           }
         )
         response = request(url)
-        return response
+        fields = parseData(response)
+
+        data = Hash.new
+        data["nodes"] = parseNodes(parseData(normalizeData(fields[0][0][0]))[0])
+        data["net"] = parseNetwork(fields[1][0][0])
+        data["programs"] = parsePrograms(fields[3])
+        data["profile"] = parseProfile(fields[4][0])
+        return data
       end
 
       def cmdPlayerGetInfo(id)
@@ -1334,13 +1382,16 @@ module Trickster
         )
         response = request(url)
         fields = parseData(response)
+
         data = Hash.new
         return data if fields.empty?
         fields[0].each do |field|
-          data[field[1]] = {
+          data[field[1].to_i] = {
             "money" => field[2].to_i,
             "bitcoins" => field[3].to_i,
-            "date" => field[5],
+            "finished" => field[4].to_i,
+            "datetime" => field[5],
+            "currencies" => parseMissionCurrencies(field[7]),
           }
         end
         return data
@@ -1680,11 +1731,11 @@ module Trickster
         return response
       end
 
-      def cmdPlayerMissionMessageDelivered(id, mission)
+      def cmdPlayerMissionMessageDelivered(mission)
         url = URI.encode_www_form(
           {
             "player_mission_message_delivered" => "",
-            "id_player" => id,
+            "id_player" => @config["id"],
             "id_mission" => mission,
             "app_version" => @config["version"],
           }
@@ -1817,11 +1868,11 @@ module Trickster
         return response
       end
 
-      def cmdPlayerMissionReject(id, mission)
+      def cmdPlayerMissionReject(mission)
         url = URI.encode_www_form(
           {
             "player_mission_reject" => 1,
-            "id_player" => id,
+            "id_player" => @config["id"],
             "id_mission" => mission,
             "app_version" => @config["version"],
           }
@@ -1978,17 +2029,17 @@ module Trickster
         return response
       end
 
-      def cmdPlayerMissionUpdate(id, mission, data)
+      def cmdPlayerMissionUpdate(mission, data)
         url = URI.encode_www_form(
           {
             "player_mission_update" => 1,
-            "id_player" => id,
+            "id_player" => @config["id"],
             "id_mission" => mission,
             "money_looted" => data[:money],
-            "bcoins_looted" => data[:bitcoin],
+            "bcoins_looted" => data[:bitcoins],
             "finished" => data[:finished],
-            "nodes_currencies" => data[:nodes],
-            "programs_data" => data[:programs],
+            "nodes_currencies" => generateMissionCurrencies(data[:currencies]),
+            "programs_data" => generateMissionPrograms(data[:programs]),
             "app_version" => @config["version"],
           }
         )

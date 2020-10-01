@@ -5,6 +5,7 @@ module Sandbox
       @commands.merge!({
                          "query" => ["[query]", "Analyze queries and data dumps"],
                          "net" => ["[net]", "Network"],
+                         "mission" => ["[mission]", "Mission"],
                          "world" => ["[world]", "World"],
                          "script" => ["[script]", "Scripts"],
                          "chat" => ["[chat]", "Internal chat"],
@@ -13,7 +14,7 @@ module Sandbox
                          "settings" => ["settings", "Application settings"],
                          "nodes" => ["nodes [id]", "Node types"],
                          "progs" => ["progs [id]", "Program types"],
-                         "missions" => ["missions", "Missions list"],
+                         "missions" => ["missions [id]", "Missions list"],
                          "skins" => ["skins", "Skin types"],
                          "news" => ["news", "News"],
                          "hints" => ["hints", "Hints list"],
@@ -39,7 +40,7 @@ module Sandbox
       cmd = words[0].downcase
       case cmd
 
-      when "query", "net", "world", "script", "chat"
+      when "query", "net", "mission", "world", "script", "chat"
         @shell.context = "/#{cmd}"
         return
 
@@ -176,13 +177,42 @@ module Sandbox
           return
         end
 
+        unless words[1].nil?
+          id = words[1].to_i
+          unless @game.missionsList.key?(id)
+            @shell.puts "#{cmd}: No such mission"
+            return
+          end
+
+          @shell.puts "%-20s %d" % ["ID", id]
+          @shell.puts "%-20s %s" % ["Group", @game.missionsList[id]["group"]]
+          @shell.puts "%-20s %s" % ["Name", @game.missionsList[id]["name"]]
+          @shell.puts "%-20s %s" % ["Target", @game.missionsList[id]["target"]]
+          @shell.puts "%-20s %d, %d" % ["Coordinates", @game.missionsList[id]["x"], @game.missionsList[id]["y"]]
+          @shell.puts "%-20s %d (%s)" % ["Country", @game.missionsList[id]["country"], @game.countriesList.fetch(@game.missionsList[id]["country"].to_s), "Unknown"]
+          @shell.puts "%-20s %d" % ["Money", @game.missionsList[id]["money"]]
+          @shell.puts "%-20s %d" % ["Bitcoins", @game.missionsList[id]["bitcoins"]]
+          @shell.puts "Requirements"
+          @shell.puts " %-20s %s" % ["Mission", @game.missionsList[id]["requirements"]["mission"]]
+          @shell.puts " %-20s %d" % ["Core", @game.missionsList[id]["requirements"]["core"]]
+          @shell.puts "%-20s %s" % ["Goals", @game.missionsList[id]["goals"].join(", ")]
+          @shell.puts "Reward"
+          @shell.puts " %-20s %d" % ["Money", @game.missionsList[id]["reward"]["money"]]
+          @shell.puts " %-20s %d" % ["Bitcoins", @game.missionsList[id]["reward"]["bitcoins"]]
+          @shell.puts "Messages"
+          @shell.puts " %-20s %s" % ["Begin", @game.missionsList[id]["messages"]["begin"]]
+          @shell.puts " %-20s %s" % ["End", @game.missionsList[id]["messages"]["end"]]
+          @shell.puts " %-20s %s" % ["News", @game.missionsList[id]["messages"]["news"]]
+          return
+        end
+
         @shell.puts "Missions list:"
         @game.missionsList.each do |k, v|
-          @shell.puts " %-7s .. %s, %s, %s" % [
+          @shell.puts " %-4d .. %-15s %-15s %s" % [
                         k,
+                        v["group"],
                         v["name"],
                         v["target"],
-                        v["goal"],
                       ]
         end
         return

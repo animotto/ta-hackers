@@ -8,6 +8,7 @@ require "context-root"
 require "context-query"
 require "context-script"
 require "context-net"
+require "context-mission"
 require "context-world"
 require "context-chat"
 
@@ -25,6 +26,7 @@ module Sandbox
         "/" => ContextRoot.new(@game, self),
         "/query" => ContextQuery.new(@game, self),
         "/net" => ContextNet.new(@game, self),
+        "/mission" => ContextMission.new(@game, self),
         "/world" => ContextWorld.new(@game, self),
         "/script" => ContextScript.new(@game, self),
         "/chat" => ContextChat.new(@game, self),
