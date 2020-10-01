@@ -1116,11 +1116,11 @@ module Trickster
         return response
       end
 
-      def cmdTutorialPlayerMissionUpdate(mission, data)
+      def cmdTutorialPlayerMissionUpdate(mission, data, id = @config["id"])
         url = URI.encode_www_form(
           {
             "tutorial_player_mission_update" => 1,
-            "id_player" => @config["id"],
+            "id_player" => id,
             "id_mission" => mission,
             "money_looted" => data[:money],
             "bcoins_looted" => data[:bitcoins],
@@ -1372,11 +1372,11 @@ module Trickster
         return data
       end
 
-      def cmdPlayerMissionsGetLog
+      def cmdPlayerMissionsGetLog(id = @config["id"])
         url = URI.encode_www_form(
           {
             "player_missions_get_log" => "",
-            "id" => @config["id"],
+            "id" => id,
             "app_version" => @config["version"],
           }
         )
@@ -1731,11 +1731,11 @@ module Trickster
         return response
       end
 
-      def cmdPlayerMissionMessageDelivered(mission)
+      def cmdPlayerMissionMessageDelivered(mission, id = @config["id"])
         url = URI.encode_www_form(
           {
             "player_mission_message_delivered" => "",
-            "id_player" => @config["id"],
+            "id_player" => id,
             "id_mission" => mission,
             "app_version" => @config["version"],
           }
@@ -2029,11 +2029,11 @@ module Trickster
         return response
       end
 
-      def cmdPlayerMissionUpdate(mission, data)
+      def cmdPlayerMissionUpdate(mission, data, id = @config["id"])
         url = URI.encode_www_form(
           {
             "player_mission_update" => 1,
-            "id_player" => @config["id"],
+            "id_player" => id,
             "id_mission" => mission,
             "money_looted" => data[:money],
             "bcoins_looted" => data[:bitcoins],
