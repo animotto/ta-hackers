@@ -869,17 +869,17 @@ class Chatbot < Sandbox::Script
 
     def poll
       @config["active"].keys.each do |id|
+        if @config["active"][id]["checkTime"] + @config["checktime"] <= Time.now
+          @config["active"][id]["game"].cmdCheckCon
+          @config["active"][id]["checkTime"] = Time.now
+          save
+        end
         if @config["active"][id]["authTime"] + @config["authtime"] + rand(@config["authtimerand"]) <= Time.now
           auth = @config["active"][id]["game"].cmdAuthIdPassword
           @config["active"][id]["sid"] = auth["sid"]
           @config["active"][id]["game"].sid = auth["sid"]
           @config["active"][id]["game"].cmdNetGetForMaint
           @config["active"][id]["authTime"] = Time.now
-          @config["active"][id]["checkTime"] = Time.now
-          save
-        end
-        if @config["active"][id]["checkTime"] + @config["checktime"] <= Time.now
-          @config["active"][id]["game"].cmdCheckCon
           @config["active"][id]["checkTime"] = Time.now
           save
         end
