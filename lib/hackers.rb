@@ -29,6 +29,10 @@ module Trickster
       MISSION_FINISHED = 1
       MISSION_REJECTED = 2
 
+      PRODUCTION_TITLE = "CurrencyProduction"
+      PRODUCTION_MONEY = 0
+      PRODUCTION_BITCOINS = 1
+
       attr_accessor :config, :appSettings, :transLang,
                     :nodeTypes, :programTypes, :missionsList,
                     :skinTypes, :hintsList, :experienceList,
@@ -398,6 +402,15 @@ module Trickster
           level = v["level"] if experience >= v["experience"]
         end
         return level
+      end
+
+      def timerToDHMS(timer)
+        dhms = Array.new
+        dhms.push("%02d" % [timer / 60 / 60 / 24])
+        dhms.push("%02d" % [timer / 60 / 60 % 24])
+        dhms.push("%02d" % [timer / 60 % 60])
+        dhms.push("%02d" % [timer % 60])
+        return dhms.join(":")
       end
 
       def cmdTransLang

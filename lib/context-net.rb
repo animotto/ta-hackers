@@ -50,10 +50,22 @@ module Sandbox
         case cmd
 
         when "profile"
+          builders = 0
+          net["nodes"].each {|k, v| builders += v["builders"] if v["timer"].negative?}
           @shell.puts("\e[1;35m\u2022 Profile\e[0m")
-          net["profile"].each do |k, v|
-            @shell.puts("  %s: %s" % [k.capitalize, v])
-          end
+          @shell.puts("  %-15s %d" % ["ID", net["profile"]["id"]])
+          @shell.puts("  %-15s %s" % ["Name", net["profile"]["name"]])
+          @shell.puts("  %-15s \e[33m$ %d\e[0m" % ["Money", net["profile"]["money"]])
+          @shell.puts("  %-15s \e[31m\u20bf %d\e[0m" % ["Bitcoins", net["profile"]["bitcoins"]])
+          @shell.puts("  %-15s %d" % ["Credits", net["profile"]["credits"]])
+          @shell.puts("  %-15s %d" % ["Experience", net["profile"]["experience"]])
+          @shell.puts("  %-15s %d" % ["Rank", net["profile"]["rank"]])
+          @shell.puts("  %-15s %s" % ["Builders", "\e[32m" + "\u25b0" * builders + "\e[37m" + "\u25b1" * (net["profile"]["builders"] - builders) + "\e[0m"])
+          @shell.puts("  %-15s %d" % ["X", net["profile"]["x"]])
+          @shell.puts("  %-15s %d" % ["Y", net["profile"]["y"]])
+          @shell.puts("  %-15s %d" % ["Country", net["profile"]["country"]])
+          @shell.puts("  %-15s %d" % ["Skin", net["profile"]["skin"]])
+          @shell.puts("  %-15s %d" % ["Level", net["profile"]["level"]])
           return
 
         when "readme"
@@ -126,29 +138,43 @@ module Sandbox
         when "nodes"
           @shell.puts("\e[1;35m\u2022 Nodes\e[0m")
           @shell.puts(
-            "  \e[35m%-12s %-12s %-4s %-5s %-12s %-8s\e[0m" % [
+            "  \e[35m%-12s %-12s %-4s %-5s %-16s\e[0m" % [
               "ID",
               "Name",
               "Type",
               "Level",
               "Timer",
-              "Builders",
             ]
           )
 
+          production = @game.nodeTypes.select {|k, v| v["titles"][0] == Trickster::Hackers::Game::PRODUCTION_TITLE}
           net["nodes"].each do |k, v|
-            builders = String.new
-            if v["timer"].negative? && !v["builders"].nil?
-              builders = "\e[32m" + "\u25b0" * v["builders"] + "\e[0m"
+            timer = String.new
+            if v["timer"].negative?
+              timer += "\e[32m" + "\u25b0" * v["builders"] + "\e[37m" + "\u25b1" * (net["profile"]["builders"] - v["builders"]) + "\e[0m " unless v["builders"].nil?
+              timer += @game.timerToDHMS(v["timer"] * -1)
+            else
+              if production.key?(v["type"])
+                level = production[v["type"]]["levels"][v["level"]]
+                case level["data"][0]
+                  when Trickster::Hackers::Game::PRODUCTION_MONEY
+                    timer += "\e[33m$ "
+                  when Trickster::Hackers::Game::PRODUCTION_BITCOINS
+                    timer += "\e[31m\u20bf "
+                end
+                produced = (level["data"][2].to_f / 60 / 60 * v["timer"]).to_i
+                timer += produced < level["data"][1] ? produced.to_s : level["data"][1].to_s
+                timer += "/" + level["data"][1].to_s
+                timer += "\e[0m"
+              end
             end
             @shell.puts(
-              "  %-12d %-12s %-4d %-5d %-12d %-8s" % [
+              "  %-12d %-12s %-4d %-5d %-17s" % [
                 k,
                 @game.nodeTypes[v["type"]]["name"],
                 v["type"],
                 v["level"],
-                v["timer"],
-                builders,
+                timer,
               ]
             )
           end
@@ -167,14 +193,18 @@ module Sandbox
             ]
           )
           net["programs"].each do |k, v|
+            timer = String.new
+            if v["timer"].negative?
+              timer = @game.timerToDHMS(v["timer"] * -1)
+            end
             @shell.puts(
-              "  %-12d %-12s %-4d %-6d %-5d %-12d" % [
+              "  %-12d %-12s %-4d %-6d %-5d %-12s" % [
                 k,
                 @game.programTypes[v["type"]]["name"],
                 v["type"],
                 v["amount"],
                 v["level"],
-                v["timer"],
+                timer,
               ]
             )
           end
@@ -190,15 +220,24 @@ module Sandbox
               "Timer",
             ]
           )
+
+          total = 0
           net["queue"].each do |queue|
+            id, program = net["programs"].detect {|k, v| v["type"] == queue["type"]}
+            compile = @game.programTypes[queue["type"]]["levels"][program["level"]]["compile"]
+            total += queue["amount"] * compile - queue["timer"]
             @shell.puts(
               "  %-12s %-4d %-6d %-5d" % [
                 @game.programTypes[queue["type"]]["name"],
                 queue["type"],
                 queue["amount"],
-                queue["timer"],
+                compile - queue["timer"],
               ]
             )
+          end
+          unless total.zero?
+            @shell.puts
+            @shell.puts("  \e[35mTotal: #{@game.timerToDHMS(total)}\e[0m")
           end
           return
 
