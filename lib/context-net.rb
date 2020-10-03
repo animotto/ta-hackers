@@ -15,10 +15,6 @@ module Sandbox
                          "finish" => ["finish <id>", "Finish node"],
                          "builders" => ["builders <id> <builders>", "Set node builders"],
                          "collect" => ["collect <id>", "Collect node resources"],
-                         "progs" => ["progs", "Show programs"],
-                         "queue" => ["queue", "Show programs queue"],
-                         "sync" => ["sync <type,amount>", "Set programs queue"],
-                         "delprog" => ["delprog <type,amount>", "Delete program"],
                          "logs" => ["logs", "Show logs"],
                          "net" => ["net", "Show network structure"],
                        })
@@ -30,8 +26,8 @@ module Sandbox
       case cmd
 
       when "profile", "readme", "write",
-           "remove", "nodes", "progs",
-           "queue", "logs", "net"
+           "remove", "nodes", "logs",
+           "net"
         if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
@@ -177,67 +173,6 @@ module Sandbox
                 timer,
               ]
             )
-          end
-          return
-
-        when "progs"
-          @shell.puts("\e[1;35m\u2022 Programs\e[0m")
-          @shell.puts(
-            "  \e[35m%-12s %-12s %-4s %-6s %-5s %-12s\e[0m" % [
-              "ID",
-              "Name",
-              "Type",
-              "Amount",
-              "Level",
-              "Timer",
-            ]
-          )
-          net["programs"].each do |k, v|
-            timer = String.new
-            if v["timer"].negative?
-              timer = @game.timerToDHMS(v["timer"] * -1)
-            end
-            @shell.puts(
-              "  %-12d %-12s %-4d %-6d %-5d %-12s" % [
-                k,
-                @game.programTypes[v["type"]]["name"],
-                v["type"],
-                v["amount"],
-                v["level"],
-                timer,
-              ]
-            )
-          end
-          return
-
-        when "queue"
-          @shell.puts("\e[1;35m\u2022 Programs queue\e[0m")
-          @shell.puts(
-            "  \e[35m%-12s %-4s %-6s %-5s\e[0m" % [
-              "Name",
-              "Type",
-              "Amount",
-              "Timer",
-            ]
-          )
-
-          total = 0
-          net["queue"].each do |queue|
-            id, program = net["programs"].detect {|k, v| v["type"] == queue["type"]}
-            compile = @game.programTypes[queue["type"]]["levels"][program["level"]]["compile"]
-            total += queue["amount"] * compile - queue["timer"]
-            @shell.puts(
-              "  %-12s %-4d %-6d %-5d" % [
-                @game.programTypes[queue["type"]]["name"],
-                queue["type"],
-                queue["amount"],
-                compile - queue["timer"],
-              ]
-            )
-          end
-          unless total.zero?
-            @shell.puts
-            @shell.puts("  \e[35mTotal: #{@game.timerToDHMS(total)}\e[0m")
           end
           return
 
@@ -481,108 +416,6 @@ module Sandbox
           return
         end
         @shell.logger.log(msg)
-        return
-
-      when "sync"
-        if @game.sid.empty?
-          @shell.puts("#{cmd}: No session ID")
-          return
-        end
-
-        if words.length < 2
-          @shell.puts("#{cmd}: Specify queue data")
-          return
-        end
-
-        msg = "Sync queue"
-        programs = Array.new
-        words[1..-1].each do |data|
-          data = data.split(",")
-          if data.length != 2
-            @shell.puts("#{cmd}: Invalid queue data")
-            return
-          end
-          programs.push(data)
-        end
-
-        begin
-          sync = @game.cmdQueueSync(programs, @game.syncSeq)
-        rescue Trickster::Hackers::RequestError => e
-          @shell.logger.error("#{msg} (#{e})")
-          return
-        ensure
-          @game.syncSeq += 1
-        end
-        @shell.logger.log(msg)
-
-        @shell.puts("\e[1;35m\u2022 Programs queue\e[0m")
-        @shell.puts(
-          "  \e[35m%-12s %-4s %-6s %-5s\e[0m" % [
-            "Name",
-            "Type",
-            "Amount",
-            "Timer",
-          ]
-        )
-        sync["queue"].each do |queue|
-          @shell.puts(
-            "  %-12s %-4d %-6d %-5d" % [
-              @game.programTypes[queue["type"]]["name"],
-              queue["type"],
-              queue["amount"],
-              queue["timer"],
-            ]
-          )
-        end
-        return
-
-      when "delprog"
-        if @game.sid.empty?
-          @shell.puts("#{cmd}: No session ID")
-          return
-        end
-
-        if words.length < 2
-          @shell.puts("#{cmd}: Specify program data")
-          return
-        end
-
-        msg = "Delete program"
-        programs = Array.new
-        words[1..-1].each do |data|
-          data = data.split(",")
-          if data.length != 2
-            @shell.puts("#{cmd}: Invalid program data")
-            return
-          end
-          programs.push(data)
-        end
-
-        begin
-          programs = @game.cmdDeleteProgram(programs)
-        rescue Trickster::Hackers::RequestError => e
-          @shell.logger.error("#{msg} (#{e})")
-          return
-        end
-        @shell.logger.log(msg)
-
-        @shell.puts("\e[1;35m\u2022 Programs\e[0m")
-        @shell.puts(
-          "  \e[35m%-12s %-4s %-6s\e[0m" % [
-            "Name",
-            "Type",
-            "Amount",
-          ]
-        )
-        programs.each do |k, v|
-          @shell.puts(
-            "  %-12s %-4d %-6d" % [
-              @game.programTypes[k]["name"],
-              k,
-              v["amount"],
-            ]
-          )
-        end
         return
 
       end

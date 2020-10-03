@@ -364,6 +364,18 @@ module Trickster
         return programs
       end
 
+      ##
+      # Returns programs as a string in the format:
+      #
+      #   type1,amount1;type2,amount2;type3,amount3;
+      def generatePrograms(programs)
+        data = String.new
+        programs.each do |type, amount|
+          data += "#{type},#{amount};"
+        end
+        return data
+      end
+
       def parseQueue(data)
         queue = Array.new
         data.each do |q|
@@ -844,15 +856,11 @@ module Trickster
       end
 
       def cmdDeleteProgram(programs)
-        data = String.new
-        programs.each do |program|
-          data += program.join(",") + ";"
-        end
         url = URI.encode_www_form(
           {
             "program_delete" => "",
             "id_player" => @config["id"],
-            "data" => data,
+            "data" => generatePrograms(programs),
             "app_version" => @config["version"],
           }
         )
@@ -868,17 +876,33 @@ module Trickster
         return data
       end
 
-      def cmdQueueSync(programs, seq)
-        data = String.new
-        programs.each do |program|
-          data += program.join(",") + ";"
-        end
+      def cmdQueueSync(programs, seq = @syncSeq)
         url = URI.encode_www_form(
           {
             "queue_sync_new" => 1,
             "id_player" => @config["id"],
-            "data" => data,
+            "data" => generatePrograms(programs),
             "seq" => seq,
+            "app_version" => @config["version"],
+          }
+        )
+        response = request(url)
+        @syncSeq += 1
+        fields = parseData(response)
+
+        data = Hash.new
+        data["programs"] = parsePrograms(fields[0])
+        data["queue"] = parseQueue(fields[1])
+        data["bitcoins"] = fields[2][0][0].to_i
+        return data
+      end
+
+      def cmdQueueSyncFinish(programs)
+        url = URI.encode_www_form(
+          {
+            "queue_sync_and_finish_new" => 1,
+            "id_player" => @config["id"],
+            "data" => generatePrograms(programs),
             "app_version" => @config["version"],
           }
         )
@@ -888,24 +912,8 @@ module Trickster
         data = Hash.new
         data["programs"] = parsePrograms(fields[0])
         data["queue"] = parseQueue(fields[1])
+        data["bitcoins"] = fields[2][0][0].to_i
         return data
-      end
-
-      def cmdQueueSyncFinish(programs)
-        data = String.new
-        programs.each do |program|
-          data += program.join(",") + ";"
-        end
-        url = URI.encode_www_form(
-          {
-            "queue_sync_and_finish_new" => 1,
-            "id_player" => @config["id"],
-            "data" => data,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        return response
       end
       
       def cmdPlayerWorld(country)
@@ -1907,12 +1915,12 @@ module Trickster
         return response
       end
 
-      def cmdProgramCreateFinish(id, program)
+      def cmdProgramCreateFinish(type)
         url = URI.encode_www_form(
           {
             "program_create_and_finish" => 1,
-            "id_player" => id,
-            "id_program" => program,
+            "id_player" => @config["id"],
+            "id_program" => type,
             "app_version" => @config["version"],
           }
         )

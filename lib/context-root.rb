@@ -5,6 +5,7 @@ module Sandbox
       @commands.merge!({
                          "query" => ["[query]", "Analyze queries and data dumps"],
                          "net" => ["[net]", "Network"],
+                         "prog" => ["[prog]", "Programs"],
                          "mission" => ["[mission]", "Mission"],
                          "world" => ["[world]", "World"],
                          "script" => ["[script]", "Scripts"],
@@ -40,7 +41,9 @@ module Sandbox
       cmd = words[0].downcase
       case cmd
 
-      when "query", "net", "mission", "world", "script", "chat"
+      when "query", "net", "prog", 
+           "mission", "world", "script", 
+           "chat"
         @shell.context = "/#{cmd}"
         return
 
