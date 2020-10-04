@@ -203,33 +203,67 @@ module Trickster
         return net
       end
 
+      ##
+      # Parses profile:
+      #   data = fields in format:
+      #     ID,Name,Money,Bitcoins,Credits,Experience,Unknown,Unknown,Unknown,Rank,Builders,X,Y,Country,Skin;
+      #
+      # Returns hash:
+      #   {
+      #     "id"          => ID,
+      #     "name"        => Name,
+      #     "money"       => Money,
+      #     "bitcoins"    => Bitcoins,
+      #     "credits"     => Credits,
+      #     "experience"  => Experience,
+      #     "rank"i       => Rank,
+      #     "builders"    => Builders,
+      #     "x"           => X,
+      #     "y"           => Y,
+      #     "country"     => Country,
+      #     "skin"        => Skin,
+      #   }
       def parseProfile(data)
         profile = {
-          "id" => data[0].to_i,
-          "name" => data[1],
-          "money" => data[2].to_i,
-          "bitcoins" => data[3].to_i,
-          "credits" => data[4].to_i,
-          "experience" => data[5].to_i,
-          "rank" => data[9].to_i,
-          "builders" => data[10].to_i,
-          "x" => data[11].to_i,
-          "y" => data[12].to_i,
-          "country" => data[13].to_i,
-          "skin" => data[14].to_i,
+          "id"          => data[0].to_i,
+          "name"        => data[1],
+          "money"       => data[2].to_i,
+          "bitcoins"    => data[3].to_i,
+          "credits"     => data[4].to_i,
+          "experience"  => data[5].to_i,
+          "rank"        => data[9].to_i,
+          "builders"    => data[10].to_i,
+          "x"           => data[11].to_i,
+          "y"           => data[12].to_i,
+          "country"     => data[13].to_i,
+          "skin"        => data[14].to_i,
         }
         return profile
       end
       
+      ##
+      # Parses nodes:
+      #   data = fields in format:
+      #     ID,PlayerID,Type,Level,Timer,Builders;
+      #
+      # Returns hash:
+      #   {
+      #     ID => {
+      #       "type"       => Type,
+      #       "level"     => Level,
+      #       "Timer"     => Timer,
+      #       "Builders"  => Builders,
+      #     }
+      #   }
       def parseNodes(data)
         nodes = Hash.new
         return nodes if data.nil?
         data.each do |node|
           nodes[node[0].to_i] = {
-            "type" => node[2].to_i,
-            "level" => node[3].to_i,
-            "timer" => node[4].to_i,
-            "builders" => node[5]&.to_i,
+            "type"      => node[2].to_i,
+            "level"     => node[3].to_i,
+            "timer"     => node[4].to_i,
+            "builders"  => node[5]&.to_i,
           }
         end
         return nodes
@@ -312,16 +346,32 @@ module Trickster
         return trace
       end
 
+      ##
+      # Parses targets:
+      #   data = fields in format:
+      #       ID,Name,Experience,X,Y,Country,Skin;
+      #
+      # Returns hash:
+      #   {
+      #     ID => {
+      #       "name"        => Name,
+      #       "experience"  => Experience,
+      #       "x"           => X,
+      #       "y"           => Y,
+      #       "country"     => Country,
+      #       "skin"        => Skin,
+      #     }
+      #   }
       def parseTargets(data)
         targets = Hash.new
         data.each do |target|
           targets[target[0].to_i] = {
-            "name" => target[1],
-            "experience" => target[2].to_i,
-            "x" => target[3].to_i,
-            "y" => target[4].to_i,
-            "country" => target[5].to_i,
-            "skin" => target[6].to_i,
+            "name"        => target[1],
+            "experience"  => target[2].to_i,
+            "x"           => target[3].to_i,
+            "y"           => target[4].to_i,
+            "country"     => target[5].to_i,
+            "skin"        => target[6].to_i,
           }
         end
         return targets
@@ -339,13 +389,26 @@ module Trickster
         return bonuses
       end
 
+      ##
+      # Parses goals:
+      #   data = fields in format:
+      #     ID1,Type1,Credits1,Finished1;ID1,Type2,Credits2,Finished2;ID3,Type3,Credits3,Finished3;
+      #
+      # Returns hash:
+      #   {
+      #     ID => {
+      #       "type"      => Type,
+      #       "credits"   => Credits,
+      #       "finished"  => Finished,
+      #     }
+      #   }
       def parseGoals(data)
         goals = Hash.new
         data.each do |goal|
           goals[goal[0].to_i] = {
-            "type" => goal[1],
-            "credits" => goal[2].to_i,
-            "finished" => goal[3].to_i,
+            "type"      => goal[1],
+            "credits"   => goal[2].to_i,
+            "finished"  => goal[3].to_i,
           }
         end
         return goals
@@ -390,6 +453,45 @@ module Trickster
         return queue
       end
 
+      ##
+      # Parses missions log:
+      #   data = fields in format:
+      #     PlayerID,MissionID,Money,Bitcoins,Finished,Datetime,Unknown,NodesCurrencies;
+      #
+      # Returns hash:
+      #   {
+      #     MissionID => {
+      #       "money"       => Money,
+      #       "bitcoins"    => Bitcoins,
+      #       "finished"    => Finished,
+      #       "datetime"    => Datetime,
+      #       "currencies"  => NodesCurrencies,
+      #     }
+      #   }
+      def parseMissionsLog(data)
+        log = Hash.new
+        return log if data.nil?
+        data.each do |field|
+          log[field[1].to_i] = {
+            "money"       => field[2].to_i,
+            "bitcoins"    => field[3].to_i,
+            "finished"    => field[4].to_i,
+            "datetime"    => field[5],
+            "currencies"  => parseMissionCurrencies(field[7]),
+          }
+        end
+        return log
+      end
+
+      ##
+      # Parses mission nodes currencies:
+      #   data = fields in format:
+      #     nodeid1Xamount1Ynodeid2Xamount2Ynodeid3Xamount3
+      #
+      # Returns hash:
+      #   {
+      #     nodeid => amount,
+      #   }
       def parseMissionCurrencies(data)
         currencies = Hash.new
         return currencies if data.nil?
@@ -406,6 +508,33 @@ module Trickster
 
       def generateMissionPrograms(programs)
         programs.map {|k, v| "#{v["type"]},#{v["amount"]};"}.join
+      end
+
+      ##
+      # Parses fight map:
+      #   data = fields in format:
+      #     ID,X1,Y1,X2,Y2;
+      #
+      # Returns hash:
+      #   {
+      #     ID => {
+      #       "x1" => X1,
+      #       "y1" => Y1,
+      #       "x2" => X2,
+      #       "y2" => Y2,
+      #     }
+      #   }
+      def parseFightMap(data)
+        map = Hash.new
+        data.each do |field|
+          map[field[0].to_i] = {
+            "x1" => field[1].to_i,
+            "y1" => field[2].to_i,
+            "x2" => field[3].to_i,
+            "y2" => field[4].to_i,
+          }
+        end
+        return map
       end
 
       def getLevelByExp(experience)
@@ -673,20 +802,39 @@ module Trickster
         return response
       end
       
+      ##
+      # Authenticates by ID and password
+      #
+      # Returns a hash:
+      #   {
+      #     "id"          => ID,
+      #     "password"    => Password,
+      #     "sid"         => Session ID,
+      #     "experience"  => Experience,
+      #     "goals"       => Goals,
+      #     "missions"    => Missions log,
+      #   }
       def cmdAuthIdPassword
         url = URI.encode_www_form(
           {
-            "auth_id_password" => "",
-            "id_player" => @config["id"],
-            "password" => @config["password"],
-            "app_version" => @config["version"],
+            "auth_id_password"  => "",
+            "id_player"         => @config["id"],
+            "password"          => @config["password"],
+            "app_version"       => @config["version"],
           }
         )
         response = request(url, true, false)
         @syncSeq = 0
         fields = parseData(response)
-        data = Hash.new
-        data["sid"] = fields[0][0][3]
+
+        data = {
+          "id"          => fields[0][0][0].to_i,
+          "password"    => fields[0][0][1],
+          "sid"         => fields[0][0][3],
+          "experience"  => fields[0][0][5].to_i,
+          "goals"       => parseGoals(fields[1]),
+          "missions"    => parseMissionsLog(fields[2]),
+        }
         return data
       end
 
@@ -737,11 +885,11 @@ module Trickster
       def cmdCreateNodeUpdateNet(type, net)
         url = URI.encode_www_form(
           {
-            "create_node_and_update_net" => 1,
-            "id_player" => @config["id"],
-            "id_node" => type,
-            "net" => generateNetwork(net),
-            "app_version" => @config["version"],
+            "create_node_and_update_net"  => 1,
+            "id_player"                   => @config["id"],
+            "id_node"                     => type,
+            "net"                         => generateNetwork(net),
+            "app_version"                 => @config["version"],
           }
         )
         response = request(url)
@@ -757,11 +905,11 @@ module Trickster
       def cmdDeleteNodeUpdateNet(id, net)
         url = URI.encode_www_form(
           {
-            "node_delete_net_update" => 1,
-            "id_player" => @config["id"],
-            "id" => id,
-            "net" => generateNetwork(net),
-            "app_version" => @config["version"],
+            "node_delete_net_update"  => 1,
+            "id_player"               => @config["id"],
+            "id"                      => id,
+            "net"                     => generateNetwork(net),
+            "app_version"             => @config["version"],
           }
         )
         response = request(url)
@@ -776,9 +924,9 @@ module Trickster
       def cmdUpgradeNode(id)
         url = URI.encode_www_form(
           {
-            "upgrade_node" => 1,
-            "id" => id,
-            "app_version" => @config["version"],
+            "upgrade_node"  => 1,
+            "id"            => id,
+            "app_version"   => @config["version"],
           }
         )
         response = request(url)
@@ -794,11 +942,11 @@ module Trickster
       def cmdTutorialUpgradeNode(id, tutorial)
         url = URI.encode_www_form(
           {
-            "tutorial_upgrade_node" => 1,
-            "id_player" => @config["id"],
-            "id_node" => id,
-            "tutorial" => tutorial,
-            "app_version" => @config["version"],
+            "tutorial_upgrade_node"   => 1,
+            "id_player"               => @config["id"],
+            "id_node"                 => id,
+            "tutorial"                => tutorial,
+            "app_version"             => @config["version"],
           }
         )
         response = request(url)
@@ -813,9 +961,9 @@ module Trickster
       def cmdFinishNode(id)
         url = URI.encode_www_form(
           {
-            "finish_node" => 1,
-            "id" => id,
-            "app_version" => @config["version"],
+            "finish_node"   => 1,
+            "id"            => id,
+            "app_version"   => @config["version"],
           }
         )
         response = request(url)
@@ -834,16 +982,16 @@ module Trickster
       def cmdCollectNode(id)
         url = URI.encode_www_form(
           {
-            "collect" => 1,
-            "id_node" => id,
-            "app_version" => @config["version"],
+            "collect"       => 1,
+            "id_node"       => id,
+            "app_version"   => @config["version"],
           }
         )
         response = request(url)
         fields = parseData(response)
         data = {
-          "currency" => fields[0][0][0],
-          "amount" => fields[0][0][1],
+          "currency"  => fields[0][0][0],
+          "amount"    => fields[0][0][1],
         }
         return data
       end
@@ -857,10 +1005,10 @@ module Trickster
       def cmdNodeSetBuilders(id, builders)
         url = URI.encode_www_form(
           {
-            "node_set_builders" => 1,
-            "id_node" => id,
-            "builders" => builders,
-            "app_version" => @config["version"],
+            "node_set_builders"   => 1,
+            "id_node"             => id,
+            "builders"            => builders,
+            "app_version"         => @config["version"],
           }
         )
         response = request(url)
@@ -965,13 +1113,36 @@ module Trickster
         return data
       end
       
+      ##
+      # Gets world data:
+      #   country = Country ID
+      #
+      # Returns hash:
+      #   {
+      #     "targets"   => Targets,
+      #     "bonuses"   => Bonuses,
+      #     "money"     => Money,
+      #     "goals"     => Goals,
+      #     "best"      => [
+      #       "id"          => ID,
+      #       "name"        => Name,
+      #       "experience"  => Experience,
+      #       "country"     => Country,
+      #       "rank"        => Rank,
+      #     ],
+      #     "map"       => Fight map,
+      #     "players"   => [
+      #       "profile"   => Profile,
+      #       "nodes"     => Nodes,
+      #     ]
+      #   }
       def cmdPlayerWorld(country)
         url = URI.encode_www_form(
           {
-            "player_get_world" => 1,
-            "id" => @config["id"],
-            "id_country" => country,
-            "app_version" => @config["version"],
+            "player_get_world"  => 1,
+            "id"                => @config["id"],
+            "id_country"        => country,
+            "app_version"       => @config["version"],
           }
         )
         response = request(url, true, true)
@@ -979,27 +1150,47 @@ module Trickster
 
         data = Hash.new
         data["targets"] = parseTargets(fields[0])
-        data["money"] = fields.dig(2, 0, 0)
         data["bonuses"] = parseBonuses(fields[1])
+        data["money"] = fields.dig(2, 0, 0).to_i
         data["goals"] = parseGoals(fields[4])
 
         data["best"] = {
-          "id" => fields[6][0][0].to_i,
-          "name" => fields[6][0][1],
-          "experience" => fields[6][0][2].to_i,
-          "country" => fields[6][0][3].to_i,
-          "rank" => fields[6][0][4].to_i,
+          "id"          => fields[6][0][0].to_i,
+          "name"        => fields[6][0][1],
+          "experience"  => fields[6][0][2].to_i,
+          "country"     => fields[6][0][3].to_i,
+          "rank"        => fields[6][0][4].to_i,
         }
+
+        data["map"] = parseFightMap(fields[9])
+
+        data["players"] = Array.new
+        data["targets"].length.times do |i|
+          data["players"] << {
+            "profile"   => parseProfile(fields[10 + i][0]),
+            "nodes"     => parseNodes(fields[10 + i + 1]),
+          }
+        end
         
         return data
       end
 
+      ##
+      # Gets new targets
+      #
+      # Returns hash:
+      #   {
+      #     "targets"   => Targets,
+      #     "bonuses"   => Bonuses,
+      #     "money"     => Money,
+      #     "goals"     => Goals,
+      #   }
       def cmdGetNewTargets
         url = URI.encode_www_form(
           {
-            "player_get_new_targets" => 1,
-            "id" => @config["id"],
-            "app_version" => @config["version"],
+            "player_get_new_targets"  => 1,
+            "id"                      => @config["id"],
+            "app_version"             => @config["version"],
           }
         )
         response = request(url)
@@ -1014,46 +1205,67 @@ module Trickster
         return data
       end
 
+      ##
+      # Collects bonus:
+      #   id = Bonus ID
+      #
+      # Returns the string "ok" if the request is successful
       def cmdBonusCollect(id)
         url = URI.encode_www_form(
           {
             "bonus_collect" => 1,
-            "id" => id,
-            "app_version" => @config["version"],
+            "id"            => id,
+            "app_version"   => @config["version"],
           }
         )
         response = request(url)
-        return true
+        return response
       end
 
+      ##
+      # Updates goal:
+      #   id     = Goal ID
+      #   record = New record
+      #
+      # Returns hash:
+      #   {
+      #     "status"   => Status,
+      #     "credits"  => Credits,
+      #   }
       def cmdGoalUpdate(id, record)
         url = URI.encode_www_form(
           {
             "goal_update" => "",
-            "id" => id,
-            "record" => record,
+            "id"          => id,
+            "record"      => record,
             "app_version" => @config["version"],
           }
         )
         response = request(url)
         fields = parseData(response)
+
         data = {
-          "status" => fields[0][0][0],
-          "credits" => fields[0][0][1],
+          "status"   => fields[0][0][0],
+          "credits"  => fields[0][0][1],
         }
         return data
       end
 
+      ##
+      # Rejects goal:
+      #   id = Goal ID
+      #
+      # Returns the string "ok" if the request is successful
       def cmdGoalReject(id)
         url = URI.encode_www_form(
           {
             "goal_reject" => "",
-            "id" => id,
+            "id"          => id,
             "app_version" => @config["version"],
           }
         )
         response = request(url)
-        return true
+        return response
       end
       
       def cmdChatDisplay(room, last = "")
@@ -1249,31 +1461,46 @@ module Trickster
         return data
       end
 
+      ##
+      # Gets player info:
+      #   id = Player ID
+      #
+      # Returns profile
       def cmdPlayerGetInfo(id)
         url = URI.encode_www_form(
           {
-            "player_get_info" => "",
-            "id" => id,
-            "app_version" => @config["version"],
+            "player_get_info"   => "",
+            "id"                => id,
+            "app_version"       => @config["version"],
           }
         )
         response = request(url)
-
         fields = parseData(response)
+
         profile = parseProfile(fields[0][0])
         return profile
       end
 
+      ##
+      # Gets detailed player info:
+      #   id = Player ID
+      #
+      # Returns hash:
+      #   {
+      #     "profile" => Profile,
+      #     "nodes"   => Nodes,
+      #   }
       def cmdGetNetDetailsWorld(id)
         url = URI.encode_www_form(
           {
             "get_net_details_world" => 1,
-            "id_player" => id,
-            "app_version" => @config["version"],
+            "id_player"             => id,
+            "app_version"           => @config["version"],
           }
         )
         response = request(url)
         fields = parseData(response)
+
         data = Hash.new
         data["profile"] = parseProfile(fields[0][0])
         data["nodes"] = parseNodes(fields[1])
@@ -1454,17 +1681,7 @@ module Trickster
         response = request(url)
         fields = parseData(response)
 
-        data = Hash.new
-        return data if fields.empty?
-        fields[0].each do |field|
-          data[field[1].to_i] = {
-            "money" => field[2].to_i,
-            "bitcoins" => field[3].to_i,
-            "finished" => field[4].to_i,
-            "datetime" => field[5],
-            "currencies" => parseMissionCurrencies(field[7]),
-          }
-        end
+        data = parseMissionsLog(fields[0])
         return data
       end
 
@@ -1654,15 +1871,22 @@ module Trickster
         return data
       end
 
+      ##
+      # Gets fight map
+      #
+      # Returns hash fight map
       def cmdFightGetMap
         url = URI.encode_www_form(
           {
-            "fight_get_map" => "",
-            "app_version" => @config["version"],
+            "fight_get_map"   => "",
+            "app_version"     => @config["version"],
           }
         )
         response = request(url)
-        return response
+        fields = parseData(response)
+
+        data = parseFightMap(fields[0])
+        return data
       end
 
       def cmdCreateException(name, exception, version)
@@ -2096,9 +2320,9 @@ module Trickster
       def cmdNodeUpgradeFinish(id)
         url = URI.encode_www_form(
           {
-            "node_upgrade_and_finish" => 1,
-            "id" => id,
-            "app_version" => @config["version"],
+            "node_upgrade_and_finish"   => 1,
+            "id"                        => id,
+            "app_version"               => @config["version"],
           }
         )
         response = request(url)
@@ -2132,7 +2356,7 @@ module Trickster
         url = URI.encode_www_form(
           {
             "node_cancel" => 1,
-            "id" => id,
+            "id"          => id,
             "app_version" => @config["version"],
           }
         )
