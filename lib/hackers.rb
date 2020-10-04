@@ -127,6 +127,12 @@ module Trickster
         return response.body.force_encoding("utf-8")
       end
 
+      ##
+      # Normalizes data - special characters substitution:
+      #   data  = Raw data
+      #   dir   = Direction
+      #
+      # Returns a normalized string
       def normalizeData(data, dir = true)
         if dir
           data.gsub!("\x01", ",")
@@ -140,6 +146,19 @@ module Trickster
         return data
       end
 
+      ##
+      # Parses data:
+      #   data    = Raw data
+      #   delim1  = Delimiter1
+      #   delim2  = Delimiter2
+      #   delim3  = Delimiter3
+      #
+      # Returns a 3-dimensional array:
+      #   [
+      #     [
+      #       [field1, field2, field3]
+      #     ]
+      #   ]
       def parseData(data, delim1 = "@", delim2 = ";", delim3 = ",")
         array = Array.new
         begin
@@ -158,6 +177,25 @@ module Trickster
         return array
       end
 
+      ##
+      # Parses network structure:
+      #   data = fields in format:
+      #     X1*Y1*Z1_X2*Y2*Z2_X3*Y3*Z3_|I1*R1_I2*R2_I3*R3_|ID1_ID2_ID3_
+      #
+      # Returns array:
+      #   [
+      #     {
+      #       "id"    => Node ID,
+      #       "x"     => X,
+      #       "y"     => Y,
+      #       "z"     => Z,
+      #       "rels"  => [
+      #         Relation1,
+      #         Relation2,
+      #         Relation3,
+      #       ],
+      #     }
+      #   ]
       def parseNetwork(data)
         net = Array.new
         begin
@@ -186,6 +224,12 @@ module Trickster
         return net
       end
 
+      ##
+      # Generates network structure:
+      #   data = Network structure
+      #
+      # Returns the string in format:
+      #   X1*Y1*Z1_X2*Y2*Z2_X3*Y3*Z3_|I1*R1_I2*R2_I3*R3_|ID1_ID2_ID3_
       def generateNetwork(data)
         nodes = String.new
         coords = String.new
@@ -601,11 +645,36 @@ module Trickster
         return data
       end
 
+      ##
+      # Gets node types list
+      #
+      # Returns hash:
+      #   {
+      #     Type => {
+      #       "name"    => Name,
+      #       "levels"  => {
+      #         Level => {
+      #           "cost"        => Upgrade cost,
+      #           "core"        => Core level requirements,
+      #           "experience"  => Experience gained,
+      #           "upgrade"     => Upgrade time,
+      #           "connections" => Amount of connections,
+      #           "slots"       => Amount of slots,
+      #           "firewall"    => Firewall,
+      #           "data"        => [Extra data],
+      #         }
+      #       },
+      #       "limits"  => {
+      #         Level => Node amount limit,
+      #       },
+      #       "titles"  => [Extra data titles],
+      #     }
+      #   }
       def cmdGetNodeTypes
         url = URI.encode_www_form(
           {
             "get_node_types_and_levels" => 1,
-            "app_version" => @config["version"],
+            "app_version"               => @config["version"],
           }
         )
         response = request(url, true, false)
@@ -614,10 +683,10 @@ module Trickster
 
         fields[0].each do |f|
           data[f[0].to_i] = {
-            "name" => f[1],
-            "levels" => Hash.new,
-            "limits" => Hash.new,
-            "titles" => [
+            "name"    => f[1],
+            "levels"  => Hash.new,
+            "limits"  => Hash.new,
+            "titles"  => [
               f[2], f[3], f[4],
               f[5], f[6], f[7],
             ],

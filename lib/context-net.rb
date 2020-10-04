@@ -245,9 +245,11 @@ module Sandbox
         when "net"
           @shell.puts("\e[1;35m\u2022 Network structure\e[0m")
           @shell.puts(
-            "  \e[35m%-5s %-12s %-4s %-4s %-4s %s\e[0m" % [
+            "  \e[35m%-5s %-12s %-12s %-5s %-4s %-4s %-4s %s\e[0m" % [
               "Index",
               "ID",
+              "Name",
+              "Type",
               "X",
               "Y",
               "Z",
@@ -255,10 +257,14 @@ module Sandbox
             ]
           )
           net["net"].each_index do |i|
+            id = net["net"][i]["id"]
+            type = net["nodes"][id]["type"]
             @shell.puts(
-              "  %-5d %-12d %-+4d %-+4d %-+4d %s" % [
+              "  %-5d %-12d %-12s %-5d %-+4d %-+4d %-+4d %s" % [
                 i,
-                net["net"][i]["id"],
+                id,
+                @game.nodeTypes[type]["name"],
+                type,
                 net["net"][i]["x"],
                 net["net"][i]["y"],
                 net["net"][i]["z"],
