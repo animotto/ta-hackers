@@ -180,10 +180,12 @@ module Sandbox
         when "logs"
           @shell.puts("\e[1;35m\u2022 Security\e[0m")
           @shell.puts(
-            "      \e[35m%-12s %-19s %-12s %s\e[0m" % [
+            "  \e[35m%-7s %-10s %-19s %-10s %-5s %s\e[0m" % [
+              "",
               "ID",
               "Date",
               "Attacker",
+              "Level",
               "Name",
             ]
           )
@@ -193,13 +195,15 @@ module Sandbox
           logsSecurity = logsSecurity.to_a.reverse.to_h
           logsSecurity.each do |k, v|
             @shell.puts(
-              "  %s%s%s %-12s %-19s %-12s %s" % [
+              "  %s%s%s %+-3d %-10s %-19s %-10s %-5d %s" % [
                 v["success"] & Trickster::Hackers::Game::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
                 v["success"] & Trickster::Hackers::Game::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
                 v["success"] & Trickster::Hackers::Game::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+                v["rank"],
                 k,
                 v["date"],
                 v["attacker"]["id"],
+                v["attacker"]["level"],
                 v["attacker"]["name"],
               ]
             )
@@ -208,10 +212,12 @@ module Sandbox
           @shell.puts
           @shell.puts("\e[1;35m\u2022 Hacks\e[0m")
           @shell.puts(
-            "      \e[35m%-12s %-19s %-12s %s\e[0m" % [
+            "  \e[35m%-7s %-10s %-19s %-10s %-5s %s\e[0m" % [
+              "",
               "ID",
               "Date",
               "Target",
+              "Level",
               "Name",
             ]
           )
@@ -221,13 +227,15 @@ module Sandbox
           logsHacks = logsHacks.to_a.reverse.to_h
           logsHacks.each do |k, v|
             @shell.puts(
-              "  %s%s%s %-12s %-19s %-12s %s" % [
+              "  %s%s%s %+-3d %-10s %-19s %-10s %-5d %s" % [
                 v["success"] & Trickster::Hackers::Game::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
                 v["success"] & Trickster::Hackers::Game::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
                 v["success"] & Trickster::Hackers::Game::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+                v["rank"],
                 k,
                 v["date"],
                 v["target"]["id"],
+                v["target"]["level"],
                 v["target"]["name"],
               ]
             )
