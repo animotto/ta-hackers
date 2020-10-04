@@ -727,6 +727,12 @@ module Trickster
         return true
       end
 
+      ##
+      # Creates a node and updates the network structure:
+      #   type  = Node type
+      #   net   = Network structure
+      #
+      # Returns the ID of the created node
       def cmdCreateNodeUpdateNet(type, net)
         url = URI.encode_www_form(
           {
@@ -738,9 +744,15 @@ module Trickster
           }
         )
         response = request(url)
-        return response
+        return response.to_i
       end
 
+      ##
+      # Deletes node and updates network structure:
+      #   id  = Node ID
+      #   net = Network structure
+      #
+      # Returns the string "ok" if the request is successful
       def cmdDeleteNodeUpdateNet(id, net)
         url = URI.encode_www_form(
           {
@@ -755,6 +767,11 @@ module Trickster
         return response
       end
 
+      ##
+      # Upgrades node:
+      #   id = Node ID
+      #
+      # Returns the string "ok" if the request is successful
       def cmdUpgradeNode(id)
         url = URI.encode_www_form(
           {
@@ -767,12 +784,18 @@ module Trickster
         return response
       end
 
-      def cmdTutorialUpgradeNode(id, node, tutorial)
+      ##
+      # Upgrades node in tutorial mode:
+      #   id        = Node ID
+      #   tutorial  = Tutorial ID
+      #
+      # Returns the string "ok" if the request is successful
+      def cmdTutorialUpgradeNode(id, tutorial)
         url = URI.encode_www_form(
           {
             "tutorial_upgrade_node" => 1,
-            "id_player" => id,
-            "id_node" => node,
+            "id_player" => @config["id"],
+            "id_node" => id,
             "tutorial" => tutorial,
             "app_version" => @config["version"],
           }
@@ -781,6 +804,11 @@ module Trickster
         return response
       end
 
+      ##
+      # Finishes node upgrade:
+      #   id = Node ID
+      #
+      # Returns the string "ok" if the request is successful
       def cmdFinishNode(id)
         url = URI.encode_www_form(
           {
@@ -793,6 +821,15 @@ module Trickster
         return response
       end
       
+      ##
+      # Collects node resources:
+      #   id = Node ID
+      #
+      # Returns a hash containing currency data:
+      #   {
+      #     "currency"  => Currency ID,
+      #     "amount"    => Amount,
+      #   }
       def cmdCollectNode(id)
         url = URI.encode_www_form(
           {
@@ -802,9 +839,20 @@ module Trickster
           }
         )
         response = request(url)
-        return true
+        fields = parseData(response)
+        data = {
+          "currency" => fields[0][0][0],
+          "amount" => fields[0][0][1],
+        }
+        return data
       end
 
+      ##
+      # Sets amount of builders for node:
+      #   id        = Node ID
+      #   builders  = Amount of builders
+      #
+      # Returns the string "ok" if the request is successful
       def cmdNodeSetBuilders(id, builders)
         url = URI.encode_www_form(
           {
@@ -2039,6 +2087,11 @@ module Trickster
         return parseReadme(fields.dig(0, 0, 0))
       end
 
+      ##
+      # Finishes node upgrade immediately:
+      #   id = Node ID
+      #
+      # Returns the string "ok" if the request is successful
       def cmdNodeUpgradeFinish(id)
         url = URI.encode_www_form(
           {
@@ -2069,6 +2122,11 @@ module Trickster
         return response
       end
 
+      ##
+      # Cancels node upgrade:
+      #   id = Node ID
+      #
+      # Returns the string "ok" if the request is successful
       def cmdNodeCancel(id)
         url = URI.encode_www_form(
           {

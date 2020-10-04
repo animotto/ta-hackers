@@ -3,21 +3,22 @@ module Sandbox
     def initialize(game, shell)
       super(game, shell)
       @commands.merge!({
-                         "profile" => ["profile", "Show profile"],
-                         "readme" => ["readme", "Show readme"],
-                         "write" => ["write <text>", "Write text to readme"],
-                         "remove" => ["remove <id>", "Remove text from readme"],
-                         "clear" => ["clear", "Clear readme"],
-                         "nodes" => ["nodes", "Show nodes"],
-                         "create" => ["create <type>", "Create node"],
-                         "delnode" => ["delnode <id>", "Delete node"],
-                         "upgrade" => ["upgrade <id>", "Upgrade node"],
-                         "finish" => ["finish <id>", "Finish node"],
-                         "builders" => ["builders <id> <builders>", "Set node builders"],
-                         "collect" => ["collect <id>", "Collect node resources"],
-                         "logs" => ["logs", "Show logs"],
-                         "net" => ["net", "Show network structure"],
-                       })
+        "profile"  => ["profile", "Show profile"],
+        "logs"     => ["logs", "Show logs"],
+        "readme"   => ["readme", "Show readme"],
+        "write"    => ["write <text>", "Write text to readme"],
+        "remove"   => ["remove <id>", "Remove text from readme"],
+        "clear"    => ["clear", "Clear readme"],
+        "nodes"    => ["nodes", "Show nodes"],
+        "create"   => ["create <type>", "Create node"],
+        "upgrade"  => ["upgrade <id>", "Upgrade node"],
+        "finish"   => ["finish <id>", "Finish node"],
+        "cancel"   => ["cancel <id>", "Cancel node upgrade"],
+        "delete"   => ["delete <id>", "Delete node"],
+        "builders" => ["builders <id> <builders>", "Set node builders"],
+        "collect"  => ["collect <id>", "Collect node resources"],
+        "net"      => ["net", "Show network structure"],
+     })
     end
 
     def exec(words)
@@ -301,7 +302,7 @@ module Sandbox
         @shell.logger.log(msg)
         return
 
-      when "delnode"
+      when "delete"
         if words[1].nil?
           @shell.puts("#{cmd}: Specify node ID")
           return
@@ -368,6 +369,28 @@ module Sandbox
         @shell.logger.log(msg)
         return
 
+      when "cancel"
+        if words[1].nil?
+          @shell.puts("#{cmd}: Specify node ID")
+          return
+        end
+        id = words[1].to_i
+
+        if @game.sid.empty?
+          @shell.puts("#{cmd}: No session ID")
+          return
+        end
+
+        msg = "Cancel node"
+        begin
+          @game.cmdNodeCancel(id)
+        rescue Trickster::Hackers::RequestError => e
+          @shell.logger.error("#{msg} (#{e})")
+          return
+        end
+        @shell.logger.log(msg)
+        return
+
       when "builders"
         if words[1].nil?
           @shell.puts("#{cmd}: Specify node ID")
@@ -380,7 +403,7 @@ module Sandbox
           return
         end
         builders = words[2].to_i
-        
+
         if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
