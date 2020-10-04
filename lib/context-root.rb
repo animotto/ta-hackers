@@ -3,38 +3,39 @@ module Sandbox
     def initialize(game, shell)
       super(game, shell)
       @commands.merge!({
-                         "query" => ["[query]", "Analyze queries and data dumps"],
-                         "net" => ["[net]", "Network"],
-                         "prog" => ["[prog]", "Programs"],
-                         "mission" => ["[mission]", "Mission"],
-                         "world" => ["[world]", "World"],
-                         "script" => ["[script]", "Scripts"],
-                         "chat" => ["[chat]", "Internal chat"],
-                         "connect" => ["connect", "Connect to the server"],
-                         "trans" => ["trans", "Language translations"],
-                         "settings" => ["settings", "Application settings"],
-                         "nodes" => ["nodes [id]", "Node types"],
-                         "progs" => ["progs [id]", "Program types"],
-                         "missions" => ["missions [id]", "Missions list"],
-                         "skins" => ["skins", "Skin types"],
-                         "news" => ["news", "News"],
-                         "hints" => ["hints", "Hints list"],
-                         "experience" => ["experience", "Experience list"],
-                         "builders" => ["builders", "Builders list"],
-                         "goals" => ["goals", "Goals types"],
-                         "shields" => ["shields", "Shield types"],
-                         "ranks" => ["ranks", "Rank list"],
-                         "countries" => ["countries", "Contries list"],
-                         "new" => ["new", "Create new account"],
-                         "rename" => ["rename <name>", "Set new name"],
-                         "info" => ["info <id>", "Get player info"],
-                         "detail" => ["detail <id>", "Get detail player network"],
-                         "hq" => ["hq <x> <y> <country>", "Set player HQ"],
-                         "skin" => ["skin <skin>", "Set player skin"],
-                         "top" => ["top <country>", "Show top ranking"],
-                         "cpgen" => ["cpgen", "Cp generate code"],
-                         "cpuse" => ["cpuse <code>", "Cp use code"],
-                       })
+        "query"       => ["[query]", "Analyze queries and data dumps"],
+        "net"         => ["[net]", "Network"],
+        "prog"        => ["[prog]", "Programs"],
+        "mission"     => ["[mission]", "Mission"],
+        "world"       => ["[world]", "World"],
+        "script"      => ["[script]", "Scripts"],
+        "chat"        => ["[chat]", "Internal chat"],
+        "connect"     => ["connect", "Connect to the server"],
+        "sid"         => ["sid", "Show session ID"],
+        "trans"       => ["trans", "Language translations"],
+        "settings"    => ["settings", "Application settings"],
+        "nodes"       => ["nodes [id]", "Node types"],
+        "progs"       => ["progs [id]", "Program types"],
+        "missions"    => ["missions [id]", "Missions list"],
+        "skins"       => ["skins", "Skin types"],
+        "news"        => ["news", "News"],
+        "hints"       => ["hints", "Hints list"],
+        "experience"  => ["experience", "Experience list"],
+        "builders"    => ["builders", "Builders list"],
+        "goals"       => ["goals", "Goals types"],
+        "shields"     => ["shields", "Shield types"],
+        "ranks"       => ["ranks", "Rank list"],
+        "countries"   => ["countries", "Contries list"],
+        "new"         => ["new", "Create new account"],
+        "rename"      => ["rename <name>", "Set new name"],
+        "info"        => ["info <id>", "Get player info"],
+        "detail"      => ["detail <id>", "Get detail player network"],
+        "hq"          => ["hq <x> <y> <country>", "Set player HQ"],
+        "skin"        => ["skin <skin>", "Set player skin"],
+        "top"         => ["top <country>", "Show top ranking"],
+        "cpgen"       => ["cpgen", "Cp generate code"],
+        "cpuse"       => ["cpuse <code>", "Cp use code"],
+      })
     end
     
     def exec(words)
@@ -480,6 +481,14 @@ module Sandbox
         @shell.logger.log(msg)
 
         @game.sid = auth["sid"]        
+        return
+
+      when "sid"
+        if @game.sid.empty?
+          @shell.puts("#{cmd}: No session ID")
+          return
+        end
+        @shell.puts("SID: #{@game.sid}")
         return
 
       when "new"
