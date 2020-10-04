@@ -584,7 +584,7 @@ module Sandbox
             "ID",
             "Type",
             "Level",
-            "Time",
+            "Timer",
             "Name",
           ]
         )
@@ -594,7 +594,7 @@ module Sandbox
               k,
               v["type"],
               v["level"],
-              v["time"],
+              v["timer"],
               @game.nodeTypes[v["type"]]["name"],
             ]
           )
