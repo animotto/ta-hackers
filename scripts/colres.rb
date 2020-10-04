@@ -3,27 +3,23 @@ class Colres < Sandbox::Script
   INTERVAL_ADD = 120
   
   def main
+    if @game.sid.empty?
+      @logger.log("No session ID")
+      return
+    end
+
     loop do
-      sleep(INTERVAL_MIN + rand(INTERVAL_ADD))
-
-      begin
-        net = @game.cmdNetGetForMaint
-      rescue Trickster::Hackers::RequestError => e
-        @logger.error("#{e}")
-        return
-      end
-
+      net = @game.cmdNetGetForMaint
       net["nodes"].each do |k, v|
         next unless v["type"] == 11 || v["type"] == 13
-        begin
-          @game.cmdCollectNode(k)
-        rescue Trickster::Hackers::RequestError => e
-          @logger.error("#{e}")
-          return
-        end
-        
+        @game.cmdCollectNode(k)
         @logger.log("Node #{k} resources collected")
       end
+    rescue Trickster::Hackers::RequestError => e
+      @logger.error("#{e}")
+    ensure
+      sleep(INTERVAL_MIN + rand(INTERVAL_ADD))
     end
   end
 end
+
