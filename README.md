@@ -1,1 +1,2 @@
-# Reverse engineering of Trickster Arts mobile game Hackers
+# Trickster Arts Hackers reverse engineering
+
