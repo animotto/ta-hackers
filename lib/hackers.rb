@@ -683,6 +683,7 @@ module Trickster
           }
         )
         response = request(url, true, false)
+        @syncSeq = 0
         fields = parseData(response)
         data = Hash.new
         data["sid"] = fields[0][0][3]
