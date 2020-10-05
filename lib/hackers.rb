@@ -209,10 +209,10 @@ module Trickster
         nodes.each_index do |i|
           coord = coords[i].split("*")
           net[i] = {
-            "id" => nodes[i].to_i,
-            "x" => coord[0].to_i,
-            "y" => coord[1].to_i,
-            "z" => coord[2].to_i,
+            "id"  => nodes[i].to_i,
+            "x"   => coord[0].to_i,
+            "y"   => coord[1].to_i,
+            "z"   => coord[2].to_i,
           }
         end
         rels.each_index do |i|
@@ -313,6 +313,17 @@ module Trickster
         return nodes
       end
 
+      ##
+      # Parses readme:
+      #   data = fields in format:
+      #     Text1\x04Text2\x04Text3
+      #
+      # Returns array:
+      #   [
+      #     Text1,
+      #     Text2,
+      #     Text3,
+      #   ]
       def parseReadme(data)
         readme = Array.new
         readme = data.split("\x04") unless data.nil?
@@ -458,14 +469,28 @@ module Trickster
         return goals
       end
 
+      ##
+      # Parses programs list:
+      #   data = fields in format:
+      #     ID,PlayerID,Type,Level,Amount,Timer;
+      #
+      # Returns hash:
+      #   {
+      #     ID => {
+      #       "type"   => Type,
+      #       "level"  => Level,
+      #       "amount" => Amount,
+      #       "Timer"  => Timer,
+      #     }
+      #   }
       def parsePrograms(data)
         programs = Hash.new
         data.each do |program|
           programs[program[0].to_i] = {
-            "type" => program[2].to_i,
-            "level" => program[3].to_i,
-            "amount" => program[4].to_i,
-            "timer" => program[5].to_i,
+            "type"    => program[2].to_i,
+            "level"   => program[3].to_i,
+            "amount"  => program[4].to_i,
+            "timer"   => program[5].to_i,
           }
         end
         return programs
@@ -2145,17 +2170,38 @@ module Trickster
         return response
       end
 
-      def cmdTestFightPrepare(target, attacker)
+      ##
+      # Gets network structure for test fight:
+      #   target    = Target ID
+      #   attacker  = Attacker ID (default: ID from config)
+      #
+      # Returns hash:
+      #   {
+      #     "nodes"     => Nodes,
+      #     "net"       => Network structure,
+      #     "profile"   => Target profile,
+      #     "programs"  => Programs list,
+      #     "readme"    => Readme,
+      #   }
+      def cmdTestFightPrepare(target, attacker = @config["id"])
         url = URI.encode_www_form(
           {
             "testfight_prepare" => "",
-            "id_target" => target,
-            "id_attacker" => attacker,
-            "app_version" => @config["version"],
+            "id_target"         => target,
+            "id_attacker"       => attacker,
+            "app_version"       => @config["version"],
           }
         )
         response = request(url)
-        return response
+        fields = parseData(response)
+
+        data = Hash.new
+        data["nodes"] = parseNodes(fields[0])
+        data["net"] = parseNetwork(fields[1][0][1])
+        data["profile"] = parseProfile(fields[2][0])
+        data["programs"] = parsePrograms(fields[3])
+        data["readme"] = parseReadme(fields.dig(5, 0, 0))
+        return data
       end
 
       def cmdTestFightWrite(target, attacker, data)
