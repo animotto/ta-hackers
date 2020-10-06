@@ -491,7 +491,7 @@ module Trickster
       #   ]
       def parseReadme(section, record, field)
         readme = Array.new
-        readme = @fields[section][record][field].split("\x04") unless @fields[section][record][field].nil?
+        readme = @fields[section][record][field].split("\x04") unless @fields.dig(section, record, field).nil?
         readme.map! {|line| self.class.normalizeData(line)}
         return readme
       end
