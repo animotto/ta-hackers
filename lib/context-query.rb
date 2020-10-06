@@ -35,16 +35,16 @@ module Sandbox
           data[param[0]] = param.length > 1 ? param[1] : ""
         end
         
-        url = @game.encodeUrl(data)
+        uri = @game.client.encodeURI(data)
         if cmd == "qs" && @game.sid.empty?
           @shell.puts "#{cmd}: No session ID"
           return
         end
 
-        query = @game.makeUrl(url, (cmd == "qc" || cmd == "qs"), (cmd == "qs"))
+        query = @game.client.makeURI(uri, @game.sid, (cmd == "qc" || cmd == "qs"), (cmd == "qs"))
         msg = "Query: #{query}"
         begin
-          response = @game.request(url, (cmd == "qc" || cmd == "qs"), (cmd == "qs"))
+          response = @game.client.request(data, @game.sid, (cmd == "qc" || cmd == "qs"), (cmd == "qs"))
         rescue Trickster::Hackers::RequestError => e
           @shell.logger.error("#{msg} (#{e})")
           return          

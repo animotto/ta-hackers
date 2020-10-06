@@ -40,10 +40,10 @@ class Telegram < Sandbox::Script
     private
 
     def request(method, params = {})
-      url = "/bot#{@token}/#{method}"
-      url += "?" + encodeUrl(params) unless params.empty?
+      uri = "/bot#{@token}/#{method}"
+      uri += "?" + encodeURI(params) unless params.empty?
       begin
-        response = @client.get(url)
+        response = @client.get(uri)
       rescue => e
         raise APIError.new("HTTP request", e.message)
       end
@@ -58,7 +58,7 @@ class Telegram < Sandbox::Script
       return data["result"]
     end
 
-    def encodeUrl(data)
+    def encodeURI(data)
       params = Array.new
       data.each do |k, v|
         params.push(

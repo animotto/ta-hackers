@@ -1,24 +1,10 @@
 module Trickster
   module Hackers
-    require "net/http"
-    require "digest"
-    require "base64"
+    require "hackers-client"
+    require "hackers-serializer"
 
-    class RequestError < StandardError
-      attr_reader :type, :description
-      
-      def initialize(type = nil, description = nil)
-        @type = type&.strip
-        @description = description&.strip
-      end
-
-      def to_s
-        msg = @type.nil? ? "Unknown" : @type
-        msg += ": #{@description}" unless @description.nil?
-        return msg
-      end
-    end
-    
+    ##
+    # Game API implementation
     class Game
       SUCCESS_FAIL = 0
       SUCCESS_CORE = 1
@@ -37,7 +23,8 @@ module Trickster
                     :nodeTypes, :programTypes, :missionsList,
                     :skinTypes, :hintsList, :experienceList,
                     :buildersList, :goalsTypes, :shieldTypes,
-                    :rankList, :countriesList, :sid, :syncSeq
+                    :rankList, :countriesList, :sid, :syncSeq,
+                    :client
       
       def initialize(config)
         @config = config
@@ -56,554 +43,13 @@ module Trickster
         @rankList = Hash.new
         @countriesList = Hash.new
         @syncSeq = 0
-        @client = Net::HTTP.new(@config["host"], @config["port"].to_s)
-        @client.use_ssl = true unless @config["ssl"].nil?
-        @mutex = Mutex.new
-      end
-
-      def encodeUrl(data)
-        params = Array.new
-        data.each do |k, v|
-          params.push(
-            [
-              k,
-              URI.encode_www_form_component(v).gsub("+", "%20"),
-            ].join("=")
+        @client = Client.new(
+          @config["host"], 
+          @config["port"], 
+          !@config["ssl"].nil?,
+          @config["url"], 
+          @config["salt"], 
           )
-        end
-        return params.join("&")
-      end
-
-      def hashUrl(url)
-        data = url.clone
-        offset = data.length < 10 ? data.length : 10
-        data.insert(offset, @config["salt"])
-        hash = Digest::MD5.digest(data)
-        hash = Base64.strict_encode64(hash[2..7])
-        hash.gsub!(
-          /[=+\/]/,
-          {"=" => ".", "+" => "-", "/" => "_"},
-        )
-        return hash
-      end
-
-      def makeUrl(url, cmd = true, session = true)
-        request = @config["url"] + "?" + url
-        request += "&session_id=" + @sid if session
-        request += "&cmd_id=" + hashUrl(request) if cmd
-        return request
-      end
-
-      def request(url, cmd = true, session = true, data = "")
-        header = {
-          "Content-Type" => "application/x-www-form-urlencoded",
-          "Accept-Charset" => "utf-8",
-          "Accept-Encoding" => "gzip",
-          "User-Agent" => "UniWeb (http://www.differentmethods.com)",
-        }
-
-        response = nil
-        @mutex.synchronize do
-          if data.empty?
-            response = @client.get(
-              makeUrl(url, cmd, session),
-              header,
-            )
-          else
-            response = @client.post(
-              makeUrl(url, cmd, session),
-              data,
-              header,
-            )
-          end
-        rescue => e
-          raise RequestError.new(e.class.to_s, e.message)
-        end
-
-        if response.class != Net::HTTPOK
-          fields = parseData(response.body.force_encoding("utf-8"))
-          raise RequestError.new(fields.dig(0, 0, 0), fields.dig(0, 0, 1))
-        end
-        return response.body.force_encoding("utf-8")
-      end
-
-      ##
-      # Normalizes data - special characters substitution:
-      #   data  = Raw data
-      #   dir   = Direction
-      #
-      # Returns a normalized string
-      def normalizeData(data, dir = true)
-        if dir
-          data.gsub!("\x01", ",")
-          data.gsub!("\x02", ";")
-          data.gsub!("\x03", "@")
-        else
-          data.gsub!(",", "\x01")
-          data.gsub!(";", "\x02")
-          data.gsub!("@", "\x03")
-        end
-        return data
-      end
-
-      ##
-      # Parses data:
-      #   data    = Raw data
-      #   delim1  = Delimiter1
-      #   delim2  = Delimiter2
-      #   delim3  = Delimiter3
-      #
-      # Returns a 3-dimensional array:
-      #   [
-      #     [
-      #       [field1, field2, field3]
-      #     ]
-      #   ]
-      def parseData(data, delim1 = "@", delim2 = ";", delim3 = ",")
-        array = Array.new
-        begin
-          data.split(delim1).each.with_index do |section, i|
-            array[i] = Array.new if array[i].nil?
-            section.split(delim2).each.with_index do |record, j|
-              array[i][j] = Array.new if array[i][j].nil?
-              record.split(delim3).each.with_index do |field, k|
-                array[i][j][k] = field
-              end
-            end
-          end
-        rescue
-          return array
-        end
-        return array
-      end
-
-      ##
-      # Parses network structure:
-      #   data = fields in format:
-      #     X1*Y1*Z1_X2*Y2*Z2_X3*Y3*Z3_|I1*R1_I2*R2_I3*R3_|ID1_ID2_ID3_
-      #
-      # Returns array:
-      #   [
-      #     {
-      #       "id"    => Node ID,
-      #       "x"     => X,
-      #       "y"     => Y,
-      #       "z"     => Z,
-      #       "rels"  => [
-      #         Relation1,
-      #         Relation2,
-      #         Relation3,
-      #       ],
-      #     }
-      #   ]
-      def parseNetwork(data)
-        net = Array.new
-        begin
-          records = data.split("|")
-          coords = records[0].split("_")
-          rels = records[1].split("_")
-          nodes = records[2].split("_")
-        rescue
-          return net
-        end
-        nodes.each_index do |i|
-          coord = coords[i].split("*")
-          net[i] = {
-            "id"  => nodes[i].to_i,
-            "x"   => coord[0].to_i,
-            "y"   => coord[1].to_i,
-            "z"   => coord[2].to_i,
-          }
-        end
-        rels.each_index do |i|
-          rel = rels[i].split("*")
-          index = rel[0].to_i
-          net[index]["rels"] = Array.new if net[index]["rels"].nil?
-          net[index]["rels"].append(rel[1].to_i)
-        end
-        return net
-      end
-
-      ##
-      # Generates network structure:
-      #   data = Network structure
-      #
-      # Returns the string in format:
-      #   X1*Y1*Z1_X2*Y2*Z2_X3*Y3*Z3_|I1*R1_I2*R2_I3*R3_|ID1_ID2_ID3_
-      def generateNetwork(data)
-        nodes = String.new
-        coords = String.new
-        rels = String.new
-        data.each_index do |i|
-          nodes += "#{data[i]["id"]}_"
-          coords += "#{data[i]["x"]}*#{data[i]["y"]}*#{data[i]["z"]}_"
-          unless data[i]["rels"].nil?
-            data[i]["rels"].each do |rel|
-              rels += "#{i}*#{rel}_"
-            end
-          end
-        end
-        net = "#{coords}|#{rels}|#{nodes}"
-        return net
-      end
-
-      ##
-      # Parses profile:
-      #   data = fields in format:
-      #     ID,Name,Money,Bitcoins,Credits,Experience,Unknown,Unknown,Unknown,Rank,Builders,X,Y,Country,Skin;
-      #
-      # Returns hash:
-      #   {
-      #     "id"          => ID,
-      #     "name"        => Name,
-      #     "money"       => Money,
-      #     "bitcoins"    => Bitcoins,
-      #     "credits"     => Credits,
-      #     "experience"  => Experience,
-      #     "rank"i       => Rank,
-      #     "builders"    => Builders,
-      #     "x"           => X,
-      #     "y"           => Y,
-      #     "country"     => Country,
-      #     "skin"        => Skin,
-      #   }
-      def parseProfile(data)
-        profile = {
-          "id"          => data[0].to_i,
-          "name"        => data[1],
-          "money"       => data[2].to_i,
-          "bitcoins"    => data[3].to_i,
-          "credits"     => data[4].to_i,
-          "experience"  => data[5].to_i,
-          "rank"        => data[9].to_i,
-          "builders"    => data[10].to_i,
-          "x"           => data[11].to_i,
-          "y"           => data[12].to_i,
-          "country"     => data[13].to_i,
-          "skin"        => data[14].to_i,
-        }
-        return profile
-      end
-      
-      ##
-      # Parses nodes:
-      #   data = fields in format:
-      #     ID,PlayerID,Type,Level,Timer,Builders;
-      #
-      # Returns hash:
-      #   {
-      #     ID => {
-      #       "type"       => Type,
-      #       "level"     => Level,
-      #       "Timer"     => Timer,
-      #       "Builders"  => Builders,
-      #     }
-      #   }
-      def parseNodes(data)
-        nodes = Hash.new
-        return nodes if data.nil?
-        data.each do |node|
-          nodes[node[0].to_i] = {
-            "type"      => node[2].to_i,
-            "level"     => node[3].to_i,
-            "timer"     => node[4].to_i,
-            "builders"  => node[5]&.to_i,
-          }
-        end
-        return nodes
-      end
-
-      ##
-      # Parses readme:
-      #   data = fields in format:
-      #     Text1\x04Text2\x04Text3
-      #
-      # Returns array:
-      #   [
-      #     Text1,
-      #     Text2,
-      #     Text3,
-      #   ]
-      def parseReadme(data)
-        readme = Array.new
-        readme = data.split("\x04") unless data.nil?
-        readme.map! {|line| normalizeData(line)}
-        return readme
-      end
-
-      def parseLogs(data)
-        logs = Hash.new
-        data.each_index do |i|
-          logs[data[i][0].to_i] = {
-            "date" => data[i][1],
-            "attacker" => {
-              "id" => data[i][2].to_i,
-              "name" => data[i][9],
-              "country" => data[i][11].to_i,
-              "level" => data[i][16].to_i,
-            },
-            "target" => {
-              "id" => data[i][3].to_i,
-              "name" => data[i][10],
-              "country" => data[i][12].to_i,
-              "level" => data[i][17].to_i,
-            },
-            "programs" => parseUsedPrograms(data[i][7]),
-            "money" => data[i][4].to_i,
-            "bitcoins" => data[i][5].to_i,
-            "success" => data[i][6].to_i,
-            "rank" => data[i][13].to_i,
-            "test" => data[i][18].to_i == 1,
-          }
-        end
-        return logs
-      end
-
-      def parseUsedPrograms(data)
-        programs = Hash.new
-        fields = data.split(":")
-        0.step(fields.length - 1, 2) do |i|
-          programs[fields[i].to_i] = fields[i + 1].to_i
-        end
-        return programs
-      end
-
-      def parseReplayPrograms(data)
-        programs = Array.new
-        data.each do |program|
-          programs.push(
-            {
-              "id" => program[0].to_i,
-              "type" => program[2].to_i,
-              "level" => program[3].to_i,
-              "amount" => program[4].to_i,
-            }
-          )
-        end
-        return programs
-      end
-
-      def parseReplayTrace(data)
-        trace = Array.new
-        data.each do |t|
-          type = t[0][0]
-          time = t[0][1..-1]
-          i = {
-            "type" => type,
-            "time" => time.to_i,
-          }
-          i["node"] = t[1].to_i if type == "s" || type == "i" || type == "u"
-          i["program"] = t[2].to_i if type == "i"
-          i["index"] = t[2].to_i if type == "u"
-          trace.push(i)
-        end
-        trace.sort! {|i| -i["time"]}
-        return trace
-      end
-
-      ##
-      # Parses targets:
-      #   data = fields in format:
-      #       ID,Name,Experience,X,Y,Country,Skin;
-      #
-      # Returns hash:
-      #   {
-      #     ID => {
-      #       "name"        => Name,
-      #       "experience"  => Experience,
-      #       "x"           => X,
-      #       "y"           => Y,
-      #       "country"     => Country,
-      #       "skin"        => Skin,
-      #     }
-      #   }
-      def parseTargets(data)
-        targets = Hash.new
-        data.each do |target|
-          targets[target[0].to_i] = {
-            "name"        => target[1],
-            "experience"  => target[2].to_i,
-            "x"           => target[3].to_i,
-            "y"           => target[4].to_i,
-            "country"     => target[5].to_i,
-            "skin"        => target[6].to_i,
-          }
-        end
-        return targets
-      end
-
-      def parseBonuses(data)
-        bonuses = Hash.new
-        data.each do |bonus|
-          bonuses[bonus[0].to_i] = {
-            "amount" => bonus[2].to_i,
-            "x" => bonus[3].to_i,
-            "y" => bonus[4].to_i,
-          }
-        end
-        return bonuses
-      end
-
-      ##
-      # Parses goals:
-      #   data = fields in format:
-      #     ID1,Type1,Credits1,Finished1;ID1,Type2,Credits2,Finished2;ID3,Type3,Credits3,Finished3;
-      #
-      # Returns hash:
-      #   {
-      #     ID => {
-      #       "type"      => Type,
-      #       "credits"   => Credits,
-      #       "finished"  => Finished,
-      #     }
-      #   }
-      def parseGoals(data)
-        goals = Hash.new
-        data.each do |goal|
-          goals[goal[0].to_i] = {
-            "type"      => goal[1],
-            "credits"   => goal[2].to_i,
-            "finished"  => goal[3].to_i,
-          }
-        end
-        return goals
-      end
-
-      ##
-      # Parses programs list:
-      #   data = fields in format:
-      #     ID,PlayerID,Type,Level,Amount,Timer;
-      #
-      # Returns hash:
-      #   {
-      #     ID => {
-      #       "type"   => Type,
-      #       "level"  => Level,
-      #       "amount" => Amount,
-      #       "Timer"  => Timer,
-      #     }
-      #   }
-      def parsePrograms(data)
-        programs = Hash.new
-        data.each do |program|
-          programs[program[0].to_i] = {
-            "type"    => program[2].to_i,
-            "level"   => program[3].to_i,
-            "amount"  => program[4].to_i,
-            "timer"   => program[5].to_i,
-          }
-        end
-        return programs
-      end
-
-      ##
-      # Returns programs as a string in the format:
-      #
-      #   type1,amount1;type2,amount2;type3,amount3;
-      def generatePrograms(programs)
-        data = String.new
-        programs.each do |type, amount|
-          data += "#{type},#{amount};"
-        end
-        return data
-      end
-
-      def parseQueue(data)
-        queue = Array.new
-        data.each do |q|
-          queue.push(
-            {
-              "type" => q[0].to_i,
-              "amount" => q[1].to_i,
-              "timer" => q[2].to_i,
-            }
-          )
-        end
-        return queue
-      end
-
-      ##
-      # Parses missions log:
-      #   data = fields in format:
-      #     PlayerID,MissionID,Money,Bitcoins,Finished,Datetime,Unknown,NodesCurrencies;
-      #
-      # Returns hash:
-      #   {
-      #     MissionID => {
-      #       "money"       => Money,
-      #       "bitcoins"    => Bitcoins,
-      #       "finished"    => Finished,
-      #       "datetime"    => Datetime,
-      #       "currencies"  => NodesCurrencies,
-      #     }
-      #   }
-      def parseMissionsLog(data)
-        log = Hash.new
-        return log if data.nil?
-        data.each do |field|
-          log[field[1].to_i] = {
-            "money"       => field[2].to_i,
-            "bitcoins"    => field[3].to_i,
-            "finished"    => field[4].to_i,
-            "datetime"    => field[5],
-            "currencies"  => parseMissionCurrencies(field[7]),
-          }
-        end
-        return log
-      end
-
-      ##
-      # Parses mission nodes currencies:
-      #   data = fields in format:
-      #     nodeid1Xamount1Ynodeid2Xamount2Ynodeid3Xamount3
-      #
-      # Returns hash:
-      #   {
-      #     nodeid => amount,
-      #   }
-      def parseMissionCurrencies(data)
-        currencies = Hash.new
-        return currencies if data.nil?
-        data.split("Y").each do |node|
-          id, amount = node.split("X")
-          currencies[id.to_i] = amount.to_i
-        end
-        return currencies
-      end
-
-      def generateMissionCurrencies(currencies)
-        currencies.map {|k, v| "#{k}X#{v}"}.join("Y")
-      end
-
-      def generateMissionPrograms(programs)
-        programs.map {|k, v| "#{v["type"]},#{v["amount"]};"}.join
-      end
-
-      ##
-      # Parses fight map:
-      #   data = fields in format:
-      #     ID,X1,Y1,X2,Y2;
-      #
-      # Returns hash:
-      #   {
-      #     ID => {
-      #       "x1" => X1,
-      #       "y1" => Y1,
-      #       "x2" => X2,
-      #       "y2" => Y2,
-      #     }
-      #   }
-      def parseFightMap(data)
-        map = Hash.new
-        data.each do |field|
-          map[field[0].to_i] = {
-            "x1" => field[1].to_i,
-            "y1" => field[2].to_i,
-            "x2" => field[3].to_i,
-            "y2" => field[4].to_i,
-          }
-        end
-        return map
       end
 
       def getLevelByExp(experience)
@@ -623,390 +69,233 @@ module Trickster
         return dhms.join(":")
       end
 
+      ##
+      # Gets translations by specified language
+      #
+      # Returns Serializer#parseTransLang
       def cmdTransLang
-        url = URI.encode_www_form(
-          {
-            "i18n_translations_get_language" => 1,
-            "language_code" => @config["language"],
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url, true, false)
-        data = Hash.new
-        fields = parseData(response)
-        fields[0].each_index do |i|
-          data[fields[0][i][0]] = fields[0][i][1]
-        end
-        return data
+        params = {
+          "i18n_translations_get_language"  => 1,
+          "language_code"                   => @config["language"],
+          "app_version"                     => @config["version"],
+        }
+        response = @client.request(params, @sid, true, false)
+        serializer = Serializer.new(response)
+        return serializer.parseTransLang(0)
       end
       
+      ##
+      # Gets application settings
+      #
+      # Returns Serializer#parseAppSettings
       def cmdAppSettings
-        url = URI.encode_www_form(
-          {
-            "app_setting_get_list" => 1,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url, true, false)
-        fields = parseData(response)
-        data = Hash.new
-        
-        for i in (0..10) do
-          data[fields[0][i][1]] = fields[0][i][2..3]
-        end
-        
-        data["datetime"] = fields[0][11][0]
-
-        data["languages"] = Hash.new
-        fields[0][12].each_index do |i|
-          language = fields[0][12][i].split(":")
-          data["languages"][language[0]] = language[1]
-        end
-
-        for i in (13..17) do
-          data[fields[0][i][0]] = fields[0][i][1]
-        end
-        
-        return data
+        params = {
+          "app_setting_get_list"  => 1,
+          "app_version"           => @config["version"],
+        }
+        response = @client.request(params, @sid, true, false)
+        serializer = Serializer.new(response)
+        return serializer.parseAppSettings(0)
       end
 
       ##
       # Gets node types list
       #
-      # Returns hash:
-      #   {
-      #     Type => {
-      #       "name"    => Name,
-      #       "levels"  => {
-      #         Level => {
-      #           "cost"        => Upgrade cost,
-      #           "core"        => Core level requirements,
-      #           "experience"  => Experience gained,
-      #           "upgrade"     => Upgrade time,
-      #           "connections" => Amount of connections,
-      #           "slots"       => Amount of slots,
-      #           "firewall"    => Firewall,
-      #           "data"        => [Extra data],
-      #         }
-      #       },
-      #       "limits"  => {
-      #         Level => Node amount limit,
-      #       },
-      #       "titles"  => [Extra data titles],
-      #     }
-      #   }
+      # Returns Serializer#parseNodeTypes
       def cmdGetNodeTypes
-        url = URI.encode_www_form(
-          {
-            "get_node_types_and_levels" => 1,
-            "app_version"               => @config["version"],
-          }
-        )
-        response = request(url, true, false)
-        fields = parseData(response)
-        data = Hash.new
-
-        fields[0].each do |f|
-          data[f[0].to_i] = {
-            "name"    => f[1],
-            "levels"  => Hash.new,
-            "limits"  => Hash.new,
-            "titles"  => [
-              f[2], f[3], f[4],
-              f[5], f[6], f[7],
-            ],
-          }
-        end
-
-        fields[1].each do |f|
-          next unless data.key?(f[1].to_i)
-          data[f[1].to_i]["levels"][f[2].to_i] = {
-            "cost" => f[3].to_i,
-            "core" => f[5].to_i,
-            "experience" => f[6].to_i,
-            "upgrade" => f[7].to_i,
-            "connections" => f[8].to_i,
-            "slots" => f[9].to_i,
-            "firewall" => f[10].to_i,
-            "data" => [
-              f[13].to_i, f[14].to_i, f[15].to_i,
-              f[16].to_i, f[17].to_i, f[18].to_i,
-            ],
-          }
-        end
-
-        fields[2].each do |f|
-          next unless data.key?(f[1].to_i)
-          data[f[1].to_i]["limits"][f[2].to_i] = f[3].to_i
-        end
-
-        return data
+        params = {
+          "get_node_types_and_levels" => 1,
+          "app_version"               => @config["version"],
+        }
+        response = @client.request(params, @sid, true, false)
+        serializer = Serializer.new(response)
+        return serializer.parseNodeTypes
       end
       
+      ##
+      # Gets program types list
+      #
+      # Returns Serializer#parseProgramTypes
       def cmdGetProgramTypes
-        url = URI.encode_www_form(
-          {
-            "get_program_types_and_levels" => 1,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url, true, false)
-        fields = parseData(response)
-        data = Hash.new
-
-        fields[0].each do |f|
-          data[f[0].to_i] = {
-            "type" => f[1].to_i,
-            "name" => f[2],
-            "levels" => Hash.new,
-            "titles" => [
-              f[3], f[4], f[5],
-              f[6], f[7],
-            ],
-          }
-        end
-
-        fields[1].each do |f|
-          data[f[1].to_i]["levels"][f[2].to_i] = {
-            "cost" => f[3].to_i,
-            "experience" => f[4].to_i,
-            "price" => f[5].to_i,
-            "compile" => f[6].to_i,
-            "disk" => f[7].to_i,
-            "install" => f[8].to_i,
-            "upgrade" => f[9].to_i,
-            "rate" => f[10].to_i,
-            "strength" => f[11].to_i,
-            "data" => [
-              f[12], f[13], f[14],
-              f[15], f[16],
-            ],
-            "evolver" => f[17].to_i,
-          }
-        end
-
-        return data
+        params = {
+          "get_program_types_and_levels"  => 1,
+          "app_version"                   => @config["version"],
+        }
+        response = @client.request(params, @sid, true, false)
+        serializer = Serializer.new(response)
+        return serializer.parseProgramTypes
       end
 
+      ##
+      # Gets missions list
+      #
+      # Returns Serializer#parseMissionsList
       def cmdGetMissionsList
-        url = URI.encode_www_form(
-          {
-            "missions_get_list" => 1,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url, true, false)
-        fields = parseData(response)
-        data = Hash.new
-        fields[0].each do |field|
-          data[field[0].to_i] = {
-            "name" => field[1],
-            "target" => field[2],
-            "messages" => {
-              "begin" => normalizeData(field[3]),
-              "end" => normalizeData(field[17]),
-              "news" => normalizeData(field[19]),
-            },
-            "goals" => normalizeData(field[4]).split(","),
-            "x" => field[5].to_i,
-            "y" => field[6].to_i,
-            "country" => field[7].to_i,
-            "requirements" => {
-              # TODO: parse mission data
-              "mission" => normalizeData(field[9]),
-              "core" => field[12].to_i,
-            },
-            "reward" => {
-              "money" => field[13].to_i,
-              "bitcoins" => field[14].to_i,
-            },
-            "network" => parseNetwork(field[21]),
-            "nodes" => parseNodes(parseData(normalizeData(field[22]))[0]),
-            "money" => field[24].to_i,
-            "bitcoins" => field[25].to_i,
-            "group" => field[28],
-          }
-        end
-        return data
+        params = {
+          "missions_get_list" => 1,
+          "app_version"       => @config["version"],
+        }
+        response = @client.request(params, @sid, true, false)
+        serializer = Serializer.new(response)
+        return serializer.parseMissionsList
       end
       
+      ##
+      # Checks network connectivity
+      #
+      # Returns 1 if the request is successful
       def cmdCheckCon
-        url = URI.encode_www_form(
-          {
-            "check_connectivity" => 1,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        return true
+        params = {
+          "check_connectivity"  => 1,
+          "app_version"         => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        return response.to_i
       end
 
+      ##
+      # Creates new account
+      #
+      # Returns Serializer#parsePlayerCreate
       def cmdPlayerCreate
-        url = URI.encode_www_form(
-          {
-            "player_create" => 1,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url, true, false)
-        fields = parseData(response)
-        data = Hash.new
-        data["id"] = fields[0][0][0].to_i
-        data["password"] = fields[0][0][1]
-        data["sid"] = fields[0][0][2]
-        return data
+        params = {
+          "player_create" => 1,
+          "app_version"   => @config["version"],
+        }
+        response = @client.request(params, @sid, true, false)
+        serializer = Serializer.new(response)
+        return serializer.parsePlayerCreate
       end
 
+      ##
+      # Sets new player name:
+      #   id    = Player ID
+      #   name  = Player name
+      #
+      # Returns the string "ok" if the request is successful
       def cmdPlayerSetName(id, name)
-        url = URI.encode_www_form(
-          {
-            "player_set_name" => "",
-            "id" => id,
-            "name" => name,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url, true, false)
-        return true
-      end
-
-      def cmdTutorialPlayerSetName(id, name, tutorial)
-        url = URI.encode_www_form(
-          {
-            "tutorial_player_set_name" => "",
-            "id_player" => id,
-            "name" => name,
-            "tutorial" => tutorial,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "player_set_name" => "",
+          "id"              => id,
+          "name"            => name,
+          "app_version"     => @config["version"],
+        }
+        response = @client.request(params, @sid, true, false)
         return response
       end
 
+      ##
+      # Sets new player name in tutorial mode:
+      #   id        = Player ID
+      #   name      = Player name
+      #   tutorial  = Tutorial ID
+      #
+      # Returns the string "ok" if the request is successful
+      def cmdTutorialPlayerSetName(id, name, tutorial)
+        params = {
+          "tutorial_player_set_name"  => "",
+          "id_player"                 => id,
+          "name"                      => name,
+          "tutorial"                  => tutorial,
+          "app_version"               => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        return response
+      end
+
+      ##
+      # Authenticates by Google services
       def cmdAuthGoogle(code)
-        url = URI.encode_www_form(
-          {
-            "auth_google_new" => "",
-            "authCode" => code,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url, true, false)
+        params = {
+          "auth_google_new" => "",
+          "authCode"        => code,
+          "app_version"     => @config["version"],
+        }
+        response = @client.request(params, @sid, true, false)
         return response
       end
       
       ##
       # Authenticates by ID and password
       #
-      # Returns a hash:
-      #   {
-      #     "id"          => ID,
-      #     "password"    => Password,
-      #     "sid"         => Session ID,
-      #     "experience"  => Experience,
-      #     "goals"       => Goals,
-      #     "missions"    => Missions log,
-      #   }
+      # Returns Serializer#parseAuthIdPassword
       def cmdAuthIdPassword
-        url = URI.encode_www_form(
-          {
-            "auth_id_password"  => "",
-            "id_player"         => @config["id"],
-            "password"          => @config["password"],
-            "app_version"       => @config["version"],
-          }
-        )
-        response = request(url, true, false)
-        @syncSeq = 0
-        fields = parseData(response)
-
-        data = {
-          "id"          => fields[0][0][0].to_i,
-          "password"    => fields[0][0][1],
-          "sid"         => fields[0][0][3],
-          "experience"  => fields[0][0][5].to_i,
-          "goals"       => parseGoals(fields[1]),
-          "missions"    => parseMissionsLog(fields[2]),
+        params = {
+          "auth_id_password"  => "",
+          "id_player"         => @config["id"],
+          "password"          => @config["password"],
+          "app_version"       => @config["version"],
         }
-        return data
+        response = @client.request(params, @sid, true, false)
+        @syncSeq = 0
+        serializer = Serializer.new(response)
+        return serializer.parseAuthIdPassword
       end
 
+      ##
+      # Gets player network
+      #
+      # Returns Serializer#parseNetGetForMaint
       def cmdNetGetForMaint
-        url = URI.encode_www_form(
-          {
-            "net_get_for_maintenance" => 1,
-            "id_player" => @config["id"],
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        fields = parseData(response)
-        data = Hash.new
-
-        data["nodes"] = parseNodes(fields[0])
-        data["net"] = parseNetwork(fields[1][0][1])
-        data["profile"] = parseProfile(fields[2][0])
-        data["programs"] = parsePrograms(fields[3])
-        data["queue"] = parseQueue(fields[4])
-        data["rank"] = fields.dig(7, 0, 0).to_i
-        data["logs"] = parseLogs(fields[9])
-        data["time"] = fields.dig(10, 0, 0)
-        data["readme"] = parseReadme(fields.dig(11, 0, 0))
-
-        return data
+        params = {
+          "net_get_for_maintenance" => 1,
+          "id_player"               => @config["id"],
+          "app_version"             => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        serializer = Serializer.new(response)
+        return serializer.parseNetGetForMaint
       end
 
+      ##
+      # Updates player network:
+      #   net = Serialize#parseNetwork
+      #
+      # Returns the string "ok" if the request is successful
       def cmdUpdateNet(net)
-        url = URI.encode_www_form(
-          {
-            "net_update" => 1,
-            "id_player" => @config["id"],
-            "net" => generateNetwork(net),
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        return true
+        params = {
+          "net_update"  => 1,
+          "id_player"   => @config["id"],
+          "net"         => Serializer.generateNetwork(net),
+          "app_version" => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        return response
       end
 
       ##
       # Creates a node and updates the network structure:
       #   type  = Node type
-      #   net   = Network structure
+      #   net   = Serialize#parseNetwork
       #
       # Returns the ID of the created node
       def cmdCreateNodeUpdateNet(type, net)
-        url = URI.encode_www_form(
-          {
-            "create_node_and_update_net"  => 1,
-            "id_player"                   => @config["id"],
-            "id_node"                     => type,
-            "net"                         => generateNetwork(net),
-            "app_version"                 => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "create_node_and_update_net"  => 1,
+          "id_player"                   => @config["id"],
+          "id_node"                     => type,
+          "net"                         => Serializer.generateNetwork(net),
+          "app_version"                 => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response.to_i
       end
 
       ##
       # Deletes node and updates network structure:
       #   id  = Node ID
-      #   net = Network structure
+      #   net = Serialize#parseNetwork
       #
       # Returns the string "ok" if the request is successful
       def cmdDeleteNodeUpdateNet(id, net)
-        url = URI.encode_www_form(
-          {
-            "node_delete_net_update"  => 1,
-            "id_player"               => @config["id"],
-            "id"                      => id,
-            "net"                     => generateNetwork(net),
-            "app_version"             => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "node_delete_net_update"  => 1,
+          "id_player"               => @config["id"],
+          "id"                      => id,
+          "net"                     => Serializer.generateNetwork(net),
+          "app_version"             => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
@@ -1016,14 +305,12 @@ module Trickster
       #
       # Returns the string "ok" if the request is successful
       def cmdUpgradeNode(id)
-        url = URI.encode_www_form(
-          {
-            "upgrade_node"  => 1,
-            "id"            => id,
-            "app_version"   => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "upgrade_node"  => 1,
+          "id"            => id,
+          "app_version"   => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
@@ -1034,16 +321,14 @@ module Trickster
       #
       # Returns the string "ok" if the request is successful
       def cmdTutorialUpgradeNode(id, tutorial)
-        url = URI.encode_www_form(
-          {
-            "tutorial_upgrade_node"   => 1,
-            "id_player"               => @config["id"],
-            "id_node"                 => id,
-            "tutorial"                => tutorial,
-            "app_version"             => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "tutorial_upgrade_node"   => 1,
+          "id_player"               => @config["id"],
+          "id_node"                 => id,
+          "tutorial"                => tutorial,
+          "app_version"             => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
@@ -1053,14 +338,12 @@ module Trickster
       #
       # Returns the string "ok" if the request is successful
       def cmdFinishNode(id)
-        url = URI.encode_www_form(
-          {
-            "finish_node"   => 1,
-            "id"            => id,
-            "app_version"   => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "finish_node"   => 1,
+          "id"            => id,
+          "app_version"   => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
       
@@ -1068,26 +351,16 @@ module Trickster
       # Collects node resources:
       #   id = Node ID
       #
-      # Returns a hash containing currency data:
-      #   {
-      #     "currency"  => Currency ID,
-      #     "amount"    => Amount,
-      #   }
+      # Returns Serializer#parseCollectNode
       def cmdCollectNode(id)
-        url = URI.encode_www_form(
-          {
-            "collect"       => 1,
-            "id_node"       => id,
-            "app_version"   => @config["version"],
-          }
-        )
-        response = request(url)
-        fields = parseData(response)
-        data = {
-          "currency"  => fields[0][0][0],
-          "amount"    => fields[0][0][1],
+        params = {
+          "collect"       => 1,
+          "id_node"       => id,
+          "app_version"   => @config["version"],
         }
-        return data
+        response = @client.request(params, @sid)
+        serializer = Serializer.new(response)
+        return serializer.parseCollectNode
       end
 
       ##
@@ -1097,206 +370,161 @@ module Trickster
       #
       # Returns the string "ok" if the request is successful
       def cmdNodeSetBuilders(id, builders)
-        url = URI.encode_www_form(
-          {
-            "node_set_builders"   => 1,
-            "id_node"             => id,
-            "builders"            => builders,
-            "app_version"         => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "node_set_builders"   => 1,
+          "id_node"             => id,
+          "builders"            => builders,
+          "app_version"         => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
+      ##
+      # Creates program:
+      #   type = Program type
+      #
+      # Returns the ID of the created program
       def cmdCreateProgram(type)
-        url = URI.encode_www_form(
-          {
-            "create_program" => 1,
-            "id_player" => @config["id"],
-            "id_program" => type,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        return response
+        params = {
+          "create_program"  => 1,
+          "id_player"       => @config["id"],
+          "id_program"      => type,
+          "app_version"     => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        return response.to_i
       end
 
+      ##
+      # Upgrades program:
+      #   id = Program ID
+      #
+      # Returns the string "ok" if the request is successful
       def cmdUpgradeProgram(id)
-        url = URI.encode_www_form(
-          {
-            "upgrade_program" => 1,
-            "id" => id,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "upgrade_program" => 1,
+          "id"              => id,
+          "app_version"     => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
+      ##
+      # Finishes program upgrade:
+      #   id = Program ID
+      #
+      # Returns the string "ok" if the request is successful
       def cmdFinishProgram(id)
-        url = URI.encode_www_form(
-          {
-            "finish_program" => 1,
-            "id" => id,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "finish_program" => 1,
+          "id"             => id,
+          "app_version"    => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
+      ##
+      # Deletes program:
+      #   programs = {
+      #     Type1 => Amount1,
+      #     Type2 => Amount2,
+      #     Type3 => Amount3,
+      #     ...
+      #   }
+      #
+      # Returns Serializer#parseDeleteProgram
       def cmdDeleteProgram(programs)
-        url = URI.encode_www_form(
-          {
-            "program_delete" => "",
-            "id_player" => @config["id"],
-            "data" => generatePrograms(programs),
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        fields = parseData(response)
-
-        data = Hash.new
-        fields[0].each do |f|
-          data[f[0].to_i] = {
-            "amount" => f[1].to_i,
-          }
-        end
-        return data
+        params = {
+          "program_delete"  => "",
+          "id_player"       => @config["id"],
+          "data"            => Serializer.generatePrograms(programs),
+          "app_version"     => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        serializer = Serializer.new(response)
+        return serializer.parseDeleteProgram
       end
 
+      ##
+      # Synchronizes programs queue
+      #   programs  = {
+      #     Type1 => Amount1,
+      #     Type2 => Amount2,
+      #     Type3 => Amount3,
+      #     ...
+      #   }
+      #   seq       = Sequence
+      #
+      # Returns Serializer#parseQueueSync
       def cmdQueueSync(programs, seq = @syncSeq)
-        url = URI.encode_www_form(
-          {
-            "queue_sync_new" => 1,
-            "id_player" => @config["id"],
-            "data" => generatePrograms(programs),
-            "seq" => seq,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "queue_sync_new"  => 1,
+          "id_player"       => @config["id"],
+          "data"            => Serializer.generatePrograms(programs),
+          "seq"             => seq,
+          "app_version"     => @config["version"],
+        }
+        response = @client.request(params, @sid)
         @syncSeq += 1
-        fields = parseData(response)
-
-        data = Hash.new
-        data["programs"] = parsePrograms(fields[0])
-        data["queue"] = parseQueue(fields[1])
-        data["bitcoins"] = fields[2][0][0].to_i
-        return data
+        serializer = Serializer.new(response)
+        return serializer.parseQueueSync
       end
 
+      ##
+      # Finishes programs queue synchronization immediately
+      #   programs  = {
+      #     Type1 => Amount1,
+      #     Type2 => Amount2,
+      #     Type3 => Amount3,
+      #     ...
+      #   }
+      #
+      # Returns Serializer#parseQueueSync
       def cmdQueueSyncFinish(programs)
-        url = URI.encode_www_form(
-          {
-            "queue_sync_and_finish_new" => 1,
-            "id_player" => @config["id"],
-            "data" => generatePrograms(programs),
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        fields = parseData(response)
-
-        data = Hash.new
-        data["programs"] = parsePrograms(fields[0])
-        data["queue"] = parseQueue(fields[1])
-        data["bitcoins"] = fields[2][0][0].to_i
-        return data
+        params = {
+          "queue_sync_and_finish_new" => 1,
+          "id_player"                 => @config["id"],
+          "data"                      => Serializer.generatePrograms(programs),
+          "app_version"               => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        serializer = Serializer.parseData(response)
+        return serializer.parseQueueSync
       end
       
       ##
       # Gets world data:
       #   country = Country ID
       #
-      # Returns hash:
-      #   {
-      #     "targets"   => Targets,
-      #     "bonuses"   => Bonuses,
-      #     "money"     => Money,
-      #     "goals"     => Goals,
-      #     "best"      => [
-      #       "id"          => ID,
-      #       "name"        => Name,
-      #       "experience"  => Experience,
-      #       "country"     => Country,
-      #       "rank"        => Rank,
-      #     ],
-      #     "map"       => Fight map,
-      #     "players"   => [
-      #       "profile"   => Profile,
-      #       "nodes"     => Nodes,
-      #     ]
-      #   }
+      # Returns #Serialize#parsePlayerWorld
       def cmdPlayerWorld(country)
-        url = URI.encode_www_form(
-          {
-            "player_get_world"  => 1,
-            "id"                => @config["id"],
-            "id_country"        => country,
-            "app_version"       => @config["version"],
-          }
-        )
-        response = request(url, true, true)
-        fields = parseData(response)
-
-        data = Hash.new
-        data["targets"] = parseTargets(fields[0])
-        data["bonuses"] = parseBonuses(fields[1])
-        data["money"] = fields.dig(2, 0, 0).to_i
-        data["goals"] = parseGoals(fields[4])
-
-        data["best"] = {
-          "id"          => fields[6][0][0].to_i,
-          "name"        => fields[6][0][1],
-          "experience"  => fields[6][0][2].to_i,
-          "country"     => fields[6][0][3].to_i,
-          "rank"        => fields[6][0][4].to_i,
+        params = {
+          "player_get_world"  => 1,
+          "id"                => @config["id"],
+          "id_country"        => country,
+          "app_version"       => @config["version"],
         }
-
-        data["map"] = parseFightMap(fields[9])
-
-        data["players"] = Array.new
-        data["targets"].length.times do |i|
-          data["players"] << {
-            "profile"   => parseProfile(fields[10 + i][0]),
-            "nodes"     => parseNodes(fields[10 + i + 1]),
-          }
-        end
-        
-        return data
+        response = @client.request(params, @sid, true, true)
+        serializer = Serializer.new(response)
+        return serializer.parsePlayerWorld
       end
 
       ##
       # Gets new targets
       #
-      # Returns hash:
-      #   {
-      #     "targets"   => Targets,
-      #     "bonuses"   => Bonuses,
-      #     "money"     => Money,
-      #     "goals"     => Goals,
-      #   }
+      # Returns Serializer#parseGetNewTargets
       def cmdGetNewTargets
-        url = URI.encode_www_form(
-          {
-            "player_get_new_targets"  => 1,
-            "id"                      => @config["id"],
-            "app_version"             => @config["version"],
-          }
-        )
-        response = request(url)
-        fields = parseData(response)
-
-        data = Hash.new
-        data["targets"] = parseTargets(fields[0])
-        data["bonuses"] = parseBonuses(fields[1])
-        data["money"] = fields.dig(2, 0, 0)
-        data["goals"] = parseGoals(fields[4])
-
-        return data
+        params = {
+          "player_get_new_targets"  => 1,
+          "id"                      => @config["id"],
+          "app_version"             => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        serializer = Serializer.new(response)
+        return serializer.parseGetNewTargets
       end
 
       ##
@@ -1305,14 +533,12 @@ module Trickster
       #
       # Returns the string "ok" if the request is successful
       def cmdBonusCollect(id)
-        url = URI.encode_www_form(
-          {
-            "bonus_collect" => 1,
-            "id"            => id,
-            "app_version"   => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "bonus_collect" => 1,
+          "id"            => id,
+          "app_version"   => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
@@ -1321,28 +547,17 @@ module Trickster
       #   id     = Goal ID
       #   record = New record
       #
-      # Returns hash:
-      #   {
-      #     "status"   => Status,
-      #     "credits"  => Credits,
-      #   }
+      # Returns Serializer#parseGoalUpdate
       def cmdGoalUpdate(id, record)
-        url = URI.encode_www_form(
-          {
-            "goal_update" => "",
-            "id"          => id,
-            "record"      => record,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        fields = parseData(response)
-
-        data = {
-          "status"   => fields[0][0][0],
-          "credits"  => fields[0][0][1],
+        params = {
+          "goal_update" => "",
+          "id"          => id,
+          "record"      => record,
+          "app_version" => @config["version"],
         }
-        return data
+        response = @client.request(params, @sid)
+        serializer = Serializer.new(response)
+        return serializer.parseGoalUpdate
       end
 
       ##
@@ -1351,228 +566,225 @@ module Trickster
       #
       # Returns the string "ok" if the request is successful
       def cmdGoalReject(id)
-        url = URI.encode_www_form(
-          {
-            "goal_reject" => "",
-            "id"          => id,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "goal_reject" => "",
+          "id"          => id,
+          "app_version" => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
       
+      ##
+      # Reads the chat:
+      #   room = Room ID
+      #   last = Read from the datetime
+      #
+      # Returns Serializer#parseChat
       def cmdChatDisplay(room, last = "")
-        url = URI.encode_www_form(
-          {
-            "chat_display" => "",
-            "room" => room,
-            "last_message" => last,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        fields = parseData(response)
-        data = Array.new
-        unless fields.empty?
-          fields[0].each_index do |i|
-            data.append({
-                          "datetime" => fields[0][i][0],
-                          "nick" => fields[0][i][1],
-                          "message" => normalizeData(fields[0][i][2]),
-                          "id" => fields[0][i][3].to_i,
-                        })
-          end
-        end
-        return data.reverse
-      end
-
-      def cmdChatSend(room, message, last = "")
-        message = normalizeData(message, false)
-        url = URI.encode_www_form(
-          {
-            "chat_send" => "",
-            "room" => room,
-            "last_message" => last,
-            "message" => message,
-            "id_player" => @config["id"],
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        fields = parseData(response)
-        data = Array.new
-        unless fields.empty?
-          fields[0].each_index do |i|
-            data.append({
-                          "datetime" => fields[0][i][0],
-                          "nick" => fields[0][i][1],
-                          "message" => normalizeData(fields[0][i][2]),
-                          "id" => fields[0][i][3].to_i,
-                        })
-          end
-        end
-        return data.reverse
-      end
-
-      def cmdNetGetForAttack(target)
-        url = URI.encode_www_form(
-          {
-            "net_get_for_attack" => 1,
-            "id_target" => target,
-            "id_attacker" => @config["id"],
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        fields = parseData(response)
-        data = Hash.new
-        data["nodes"] = parseNodes(fields[0])
-        data["net"] = parseNetwork(fields[1][0][1])
-        data["profile"] = parseProfile(fields[2][0])
-        data["readme"] = parseReadme(fields.dig(4, 0, 0))
-        return data
-      end
-
-      def cmdNetLeave(target)
-        url = URI.encode_www_form(
-          {
-            "net_leave" => 1,
-            "id_attacker" => @config["id"],
-            "id_target" => target,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        return response
-      end
-
-      def cmdFightUpdate(target, data)
-        url = URI.encode_www_form(
-          {
-            "fight_update_running" => 1,
-            "attackerID" => @config["id"],
-            "targetID" => target,
-            "goldMainLoot" => data[:money],
-            "bcMainLoot" => data[:bitcoin],
-            "nodeIDsList" => data[:nodes],
-            "nodeLootValues" => data[:loots],
-            "attackSuccess" => data[:success],
-            "usedProgramsList" => data[:programs],
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        return response
-      end
-
-      def cmdFight(target, data)
-        url = URI.encode_www_form(
-          {
-            "fight" => 1,
-            "attackerID" => @config["id"],
-            "targetID" => target,
-            "goldMainLoot" => data[:money],
-            "bcMainLoot" => data[:bitcoin],
-            "nodeIDsList" => data[:nodes],
-            "nodeLootValues" => data[:loots],
-            "attackSuccess" => data[:success],
-            "usedProgramsList" => data[:programs],
-            "summaryString" => data[:summary],
-            "replayVersion" => data[:version],
-            "keepLock" => 1,
-            "app_version" => @config["version"],
-          }
-        )
-        data = URI.encode_www_form(
-          {
-            "replayString" => data[:replay],
-          }
-        )
-        response = request(url, true, true, data)
-        return response
-      end
-
-      def cmdTutorialPlayerMissionUpdate(mission, data, id = @config["id"])
-        url = URI.encode_www_form(
-          {
-            "tutorial_player_mission_update" => 1,
-            "id_player" => id,
-            "id_mission" => mission,
-            "money_looted" => data[:money],
-            "bcoins_looted" => data[:bitcoins],
-            "finished" => data[:finished],
-            "nodes_currencies" => generateMissionCurrencies(data[:currencies]),
-            "programs_data" => generateMissionPrograms(data[:programs]),
-            "tutorial" => data[:tutorial],
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        return response
-      end
-
-      def cmdFightGetReplay(id)
-        url = URI.encode_www_form(
-          {
-            "fight_get_replay" => 1,
-            "id" => id,
-            "app_version" => @config["version"],
-          }
-        )
-        fields = parseData(request(url))
-        fields = parseData(fields[0][0][0], "\x03", "\x02", "\x01")
-        replay = {
-          "nodes" => parseNodes(fields[0]),
-          "net" => parseNetwork(fields[1][0][1]),
-          "profiles" => {
-            "target" => parseProfile(fields[2][0]),
-            "attacker" => parseProfile(fields[4][0]),
-          },
-          "programs" => parseReplayPrograms(fields[3]),
-          "trace" => parseReplayTrace(fields[5]),
+        params = {
+          "chat_display"  => "",
+          "room"          => room,
+          "last_message"  => last,
+          "app_version"   => @config["version"],
         }
-        return replay
+        response = @client.request(params, @sid)
+        serializer = Serializer.new(response)
+        return serializer.parseChat
       end
 
-      def cmdGetMissionFight(mission)
-        url = URI.encode_www_form(
-          {
-            "get_mission_fight" => 1,
-            "id_mission" => mission,
-            "id_attacker" => @config["id"],
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        fields = parseData(response)
+      ##
+      # Sends message to chat:
+      #   room    = Room ID
+      #   message = Message
+      #   last    = Read from the datetime
+      #
+      # Returns Serializer#parseChat
+      def cmdChatSend(room, message, last = "")
+        message = Serializer.normalizeData(message, false)
+        params = {
+          "chat_send"     => "",
+          "room"          => room,
+          "last_message"  => last,
+          "message"       => message,
+          "id_player"     => @config["id"],
+          "app_version"   => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        serializer = Serializer.new(response)
+        return serializer.parseChat
+      end
 
-        data = Hash.new
-        data["nodes"] = parseNodes(parseData(normalizeData(fields[0][0][0]))[0])
-        data["net"] = parseNetwork(fields[1][0][0])
-        data["programs"] = parsePrograms(fields[3])
-        data["profile"] = parseProfile(fields[4][0])
-        return data
+      ##
+      # Gets network for attack:
+      #   target = Target ID
+      #
+      # Returns Serializer#parseNetGetForAttack
+      def cmdNetGetForAttack(target)
+        params = {
+          "net_get_for_attack"  => 1,
+          "id_target"           => target,
+          "id_attacker"         => @config["id"],
+          "app_version"         => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        serializer = Serializer.new(response)
+        return serializer.parseNetGetForAttack
+      end
+
+      ##
+      # Leaves network after attack:
+      #   target = Target ID
+      def cmdNetLeave(target)
+        params = {
+          "net_leave"   => 1,
+          "id_attacker" => @config["id"],
+          "id_target"   => target,
+          "app_version" => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        return response
+      end
+
+      ##
+      # Updates fight:
+      #   target = Target ID
+      #   date   = {
+      #     :money    => Money,
+      #     :bitcoin  => Bitcoins,
+      #     :nodes    => Nodes,
+      #     :loots    => Loots,
+      #     :success  => Success,
+      #     :programs => Programs,
+      #   }
+      def cmdFightUpdate(target, data)
+        params = {
+          "fight_update_running"  => 1,
+          "attackerID"            => @config["id"],
+          "targetID"              => target,
+          "goldMainLoot"          => data[:money],
+          "bcMainLoot"            => data[:bitcoin],
+          "nodeIDsList"           => data[:nodes],
+          "nodeLootValues"        => data[:loots],
+          "attackSuccess"         => data[:success],
+          "usedProgramsList"      => data[:programs],
+          "app_version"           => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        return response
+      end
+
+      ##
+      # Finishes fight:
+      #   target = Target ID
+      #   date   = {
+      #     :money    => Money,
+      #     :bitcoin  => Bitcoins,
+      #     :nodes    => Nodes,
+      #     :loots    => Loots,
+      #     :success  => Success,
+      #     :programs => Programs,
+      #     :replay   => Replay data,
+      #   }
+      def cmdFight(target, data)
+        params = {
+          "fight"             => 1,
+          "attackerID"        => @config["id"],
+          "targetID"          => target,
+          "goldMainLoot"      => data[:money],
+          "bcMainLoot"        => data[:bitcoin],
+          "nodeIDsList"       => data[:nodes],
+          "nodeLootValues"    => data[:loots],
+          "attackSuccess"     => data[:success],
+          "usedProgramsList"  => data[:programs],
+          "summaryString"     => data[:summary],
+          "replayVersion"     => data[:version],
+          "keepLock"          => 1,
+          "app_version"       => @config["version"],
+        }
+        data = {
+          "replayString" => data[:replay],
+        }
+        response = @client.request(params, @sid, true, true, data)
+        return response
+      end
+
+      ##
+      # Updates mission in tutorial mode:
+      #   mission = Mission ID
+      #   data    = {
+      #     :money       => Money,
+      #     :bitcoins    => Bitcoins,
+      #     :finished    => Finished,
+      #     :currencies  => Nodes currencies,
+      #     :programs    => Programs,
+      #     :tutorial    => Tutorial ID,
+      #   }
+      #   id = Player ID
+      def cmdTutorialPlayerMissionUpdate(mission, data, id = @config["id"])
+        params = {
+          "tutorial_player_mission_update"  => 1,
+          "id_player"                       => id,
+          "id_mission"                      => mission,
+          "money_looted"                    => data[:money],
+          "bcoins_looted"                   => data[:bitcoins],
+          "finished"                        => data[:finished],
+          "nodes_currencies"                => Serializer.generateMissionCurrencies(data[:currencies]),
+          "programs_data"                   => Serializer.generateMissionPrograms(data[:programs]),
+          "tutorial"                        => data[:tutorial],
+          "app_version"                     => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        return response
+      end
+
+      ##
+      # Gets replay:
+      #   id = Replay ID
+      #
+      # Returns Serializer#parseReplay
+      def cmdFightGetReplay(id)
+        params = {
+          "fight_get_replay" => 1,
+          "id"               => id,
+          "app_version"      => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        serializer = Serializer.new(response)
+        return serializer.parseReplay(0, 0, 0)
+      end
+
+      ##
+      # Gets mission fight:
+      #   mission = Mission ID
+      #
+      # Returns Serializer#parseGetMissionFight
+      def cmdGetMissionFight(mission)
+        params = {
+          "get_mission_fight" => 1,
+          "id_mission"        => mission,
+          "id_attacker"       => @config["id"],
+          "app_version"       => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        serializer = Serializer.new(response)
+        return serializer.parseGetMissionFight
       end
 
       ##
       # Gets player info:
       #   id = Player ID
       #
-      # Returns profile
+      # Returns Serializer#parseProfile
       def cmdPlayerGetInfo(id)
-        url = URI.encode_www_form(
-          {
-            "player_get_info"   => "",
-            "id"                => id,
-            "app_version"       => @config["version"],
-          }
-        )
-        response = request(url)
-        fields = parseData(response)
-
-        profile = parseProfile(fields[0][0])
-        return profile
+        params = {
+          "player_get_info"   => "",
+          "id"                => id,
+          "app_version"       => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        serializer = Serializer.new(response)
+        return serializer.parseProfile(0, 0)
       end
 
       ##
@@ -1581,592 +793,553 @@ module Trickster
       #
       # Returns hash:
       #   {
-      #     "profile" => Profile,
-      #     "nodes"   => Nodes,
+      #     "profile" => Serializer#parseProfile,
+      #     "nodes"   => Serializer#parseNodes,
       #   }
       def cmdGetNetDetailsWorld(id)
-        url = URI.encode_www_form(
-          {
-            "get_net_details_world" => 1,
-            "id_player"             => id,
-            "app_version"           => @config["version"],
-          }
-        )
-        response = request(url)
-        fields = parseData(response)
-
-        data = Hash.new
-        data["profile"] = parseProfile(fields[0][0])
-        data["nodes"] = parseNodes(fields[1])
+        params = {
+          "get_net_details_world" => 1,
+          "id_player"             => id,
+          "app_version"           => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        serializer = Serializer.parseData(response)
+        data = {
+          "profile"  => serializer.parseProfile(0, 0),
+          "nodes"    => serializer.parseNodes(1),
+        }
         return data
       end
 
+      ##
+      # Sets player HQ and country:
+      #   id       = Player ID
+      #   x        = X
+      #   y        = y
+      #   country  = Country ID
+      #
+      # Returns the string "ok" if the request is successful
       def cmdSetPlayerHqCountry(id, x, y, country)
-        url = URI.encode_www_form(
-          {
-            "set_player_hq_and_country" => 1,
-            "id_player" => id,
-            "hq_location_x" => x,
-            "hq_location_y" => y,
-            "id_country" => country,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "set_player_hq_and_country" => 1,
+          "id_player"                 => id,
+          "hq_location_x"             => x,
+          "hq_location_y"             => y,
+          "id_country"                => country,
+          "app_version"               => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
       
+      ##
+      # Moves player HQ:
+      #   x        = X
+      #   y        = y
+      #   country  = Country ID
+      #
+      # Returns the string "ok" if the request is successful
       def cmdPlayerHqMove(x, y, country)
-        url = URI.encode_www_form(
-          {
-            "player_hq_move" => 1,
-            "id" => @config["id"],
-            "hq_location_x" => x,
-            "hq_location_y" => y,
-            "country" => country,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "player_hq_move"  => 1,
+          "id"              => @config["id"],
+          "hq_location_x"   => x,
+          "hq_location_y"   => y,
+          "country"         => country,
+          "app_version"     => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
+      ##
+      # Gets HQ move price:
+      #
+      # Returns the price
       def cmdHqMoveGetPrice
-        url = URI.encode_www_form(
-          {
-            "hq_move_get_price" => "",
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        return response
+        params = {
+          "hq_move_get_price" => "",
+          "app_version"       => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        return response.to_i
       end
 
+      ##
+      # Sets player skin:
+      #   skin = Skin ID
       def cmdPlayerSetSkin(skin)
-        url = URI.encode_www_form(
-          {
-            "player_set_skin" => "",
-            "id" => @config["id"],
-            "skin" => skin,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "player_set_skin" => "",
+          "id"              => @config["id"],
+          "skin"            => skin,
+          "app_version"     => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
+      ##
+      # Buys player skin:
+      #   skin = Skin ID
       def cmdPlayerBuySkin(skin)
-        url = URI.encode_www_form(
-          {
-            "player_buy_skin" => "",
-            "id" => @config["id"],
-            "id_skin" => skin,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "player_buy_skin" => "",
+          "id"              => @config["id"],
+          "id_skin"         => skin,
+          "app_version"     => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
     
+      ##
+      # Gets skin types list
+      #
+      # Returns Serializer#parseSkinTypes
       def cmdSkinTypesGetList
-        url = URI.encode_www_form(
-          {
-            "skin_types_get_list" => "",
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url, true, false)
-        fields = parseData(response)
-        data = Hash.new
-        fields[0].each do |field|
-          data[field[0]] = {
-            "name" => field[1],
-            "price" => field[2].to_i,
-            "rank" => field[3].to_i,
-          }
-        end
-        return data
+        params = {
+          "skin_types_get_list" => "",
+          "app_version"         => @config["version"],
+        }
+        response = @client.request(params, @sid, true, false)
+        serializer = Serializer.new(response)
+        return serializer.parseSkinTypes
       end
       
+      ##
+      # Buys shield:
+      #   shield = Shield ID
       def cmdShieldBuy(shield)
-        url = URI.encode_www_form(
-          {
-            "shield_buy" => "",
-            "id_player" => @config["id"],
-            "id_shield_type" => shield,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        return response
-      end
-
-      def cmdPlayerBuyCurrencyPerc(currency, perc)
-        url = URI.encode_www_form(
-          {
-            "player_buy_currency_percentage" => 1,
-            "id" => @config["id"],
-            "currency" => currency,
-            "max_storage_percentage" => perc,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        return response
-      end
-
-      def cmdRankingGetAll(country)
-        url = URI.encode_www_form(
-          {
-            "ranking_get_all" => "",
-            "id_player" => @config["id"],
-            "id_country" => country,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        fields = parseData(response)
-        data = {
-          "nearby" => [],
-          "country" => [],
-          "world" => [],
-          "countries" => [],
+        params = {
+          "shield_buy"      => "",
+          "id_player"       => @config["id"],
+          "id_shield_type"  => shield,
+          "app_version"     => @config["version"],
         }
-
-        for i in 0..2 do
-          case i
-          when 0
-            type = "nearby"
-          when 1
-            type = "country"
-          when 2
-            type = "world"
-          end
-          
-          fields[i].each do |field|
-            data[type].push({
-              "id" => field[0],
-              "name" => field[1],
-              "experience" => field[2],
-              "country" => field[3],
-              "rank" => field[4],
-            })
-          end
-        end
-
-        fields[3].each do |field|
-            data["countries"].push({
-              "country" => field[0],
-              "rank" => field[1],
-            })
-          end
-                
-        return data
+        response = @client.request(params, @sid)
+        return response
       end
 
+      ##
+      # Buys currency:
+      #   currency  = Currency
+      #   perc      = Percent
+      def cmdPlayerBuyCurrencyPerc(currency, perc)
+        params = {
+            "player_buy_currency_percentage" => 1,
+            "id"                             => @config["id"],
+            "currency"                       => currency,
+            "max_storage_percentage"         => perc,
+            "app_version"                    => @config["version"],
+          }
+        response = @client.request(params, @sid)
+        return response
+      end
+
+      ##
+      # Gets ranking:
+      #   country = Country ID
+      #
+      # Returns Serializer#parseRankingGetAll
+      def cmdRankingGetAll(country)
+        params = {
+          "ranking_get_all" => "",
+          "id_player"       => @config["id"],
+          "id_country"      => country,
+          "app_version"     => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        serializer = Serializer.new(response)
+        return serializer.parseRankingGetAll
+      end
+
+      ##
+      # Gets missions log:
+      #   id = Player ID
+      #
+      # Returns Serializer#parseMissionsLog
       def cmdPlayerMissionsGetLog(id = @config["id"])
-        url = URI.encode_www_form(
-          {
-            "player_missions_get_log" => "",
-            "id" => id,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        fields = parseData(response)
-
-        data = parseMissionsLog(fields[0])
-        return data
+        params = {
+          "player_missions_get_log"  => "",
+          "id"                       => id,
+          "app_version"              => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        serializer = Serializer.new(response)
+        return serializer.parseMissionsLog(0)
       end
 
+      ##
+      # Sets player readme:
+      #   text = Text
       def cmdPlayerSetReadme(text)
-        readme = normalizeData(text.join("\x04"), false)
-        url = URI.encode_www_form(
-          {
-            "player_set_readme" => "",
-            "id" => @config["id"],
-            "text" => readme,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        readme = Serializer.normalizeData(text.join("\x04"), false)
+        params = {
+          "player_set_readme"  => "",
+          "id"                 => @config["id"],
+          "text"               => readme,
+          "app_version"        => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
+      ##
+      # Sets the readme after attack:
+      #   target  = Target ID
+      #   text    = Text
       def cmdPlayerSetReadmeFight(target, text)
-        readme = normalizeData(text.join("\x04"), false)
-        url = URI.encode_www_form(
-          {
-            "player_set_readme_fight" => "",
-            "id_attacker" => @config["id"],
-            "id_target" => target,
-            "text" => readme,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        readme = Serializer.normalizeData(text.join("\x04"), false)
+        params = {
+          "player_set_readme_fight"  => "",
+          "id_attacker"              => @config["id"],
+          "id_target"                => target,
+          "text"                     => readme,
+          "app_version"              => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
+      ##
+      # Gets player goals
       def cmdGoalByPlayer
-        url = URI.encode_www_form(
-          {
-            "goal_by_player" => "",
-            "id_player" => @config["id"],
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "goal_by_player"  => "",
+          "id_player"       => @config["id"],
+          "app_version"     => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
+      ##
+      # Gets news list
+      #
+      # Returns Serializer#parseNewsList
       def cmdNewsGetList
-        url = URI.encode_www_form(
-          {
-            "news_get_list" => 1,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url, true, false)
-        fields = parseData(response)
-        data = Hash.new
-        fields[0].each do |field|
-          data[field[0]] = {
-            "date" => field[1],
-            "title" => normalizeData(field[2]),
-            "body" => normalizeData(field[3]),
-          }
-        end
-        return data
+        params = {
+          "news_get_list" => 1,
+          "app_version"   => @config["version"],
+        }
+        response = @client.request(params, @sid, true, false)
+        serializer = Serializer.new(response)
+        return serializer.parseNewsList
       end
 
+      ##
+      # Gets hints list
+      #
+      # Returns Serializer#parseHintsList
       def cmdHintsGetList
-        url = URI.encode_www_form(
-          {
-            "hints_get_list" => 1,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url, true, false)
-        fields = parseData(response)
-        data = Hash.new
-        fields[0].each do |field|
-          data[field[0].to_i] = {
-              "description" => field[1],
-            }
-        end
-        return data
+        params = {
+          "hints_get_list"  => 1,
+          "app_version"     => @config["version"],
+        }
+        response = @client.request(params, @sid, true, false)
+        serializer = Serializer.new(response)
+        return serializer.parseHintsList
       end
 
+      ##
+      # Gets world news list
       def cmdWorldNewsGetList
-        url = URI.encode_www_form(
-          {
-            "world_news_get_list" => 1,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url, true, false)
+        params = {
+          "world_news_get_list" => 1,
+          "app_version"         => @config["version"],
+        }
+        response = @client.request(params, @sid, true, false)
         return response
       end
 
+      ##
+      # Gets experience list
+      #
+      # Returns Serializer#parseExperienceList
       def cmdGetExperienceList
-        url = URI.encode_www_form(
-          {
-            "get_experience_list" => 1,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url, true, false)
-        fields = parseData(response)
-        data = Hash.new
-        fields[0].each do |field|
-          data[field[0].to_i] = {
-            "level" => field[1].to_i,
-            "experience" => field[2].to_i,
-          }
-        end
-        return data
+        params = {
+          "get_experience_list" => 1,
+          "app_version"         => @config["version"],
+        }
+        response = @client.request(params, @sid, true, false)
+        serializer = Serializer.new(response)
+        return serializer.parseExperienceList
       end
 
+      ##
+      # Gets builders list
+      #
+      # Returns Serializer#parseBuildersList
       def cmdBuildersCountGetList
-        url = URI.encode_www_form(
-          {
-            "builders_count_get_list" => 1,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url, true, false)
-        fields = parseData(response)
-        data = Hash.new
-        fields[0].each do |field|
-          data[field[0].to_i] = {
-              "amount" => field[0].to_i,
-              "price" => field[1].to_i,
-            }
-        end
-        return data
+        params = {
+          "builders_count_get_list" => 1,
+          "app_version"             => @config["version"],
+        }
+        response = @client.request(params, @sid, true, false)
+        serializer = Serializer.new(response)
+        return serializer.parseBuildersList
       end
 
+      ##
+      # Gets goals types list
+      #
+      # Returns Serializer#parseGoalsTypes
       def cmdGoalTypesGetList
-        url = URI.encode_www_form(
-          {
+        params = {
             "goal_types_get_list" => 1,
-            "app_version" => @config["version"],
+            "app_version"         => @config["version"],
           }
-        )
-        response = request(url, true, false)
-        fields = parseData(response)
-        data = Hash.new
-        fields[0].each do |field|
-          data[field[1]] = {
-            "amount" => field[2].to_i,
-            "name" => field[7],
-            "description" => field[8],
-          }
-        end
-        return data
+        response = @client.request(params, @sid, true, false)
+        serializer = Serializer.new(response)
+        return serializer.parseGoalsTypes
       end
 
+      ##
+      # Gets shield types list
+      #
+      # Returns Serializer#parseShieldTypes
       def cmdShieldTypesGetList
-        url = URI.encode_www_form(
-          {
+        params = {
             "shield_types_get_list" => 1,
-            "app_version" => @config["version"],
+            "app_version"           => @config["version"],
           }
-        )
-        response = request(url, true, false)
-        fields = parseData(response)
-        data = Hash.new
-        fields[0].each do |field|
-          data[field[0].to_i] = {
-              "price" => field[3].to_i,
-              "name" => field[4],
-              "description" => field[5],
-            }
-        end
-        return data
+        response = @client.request(params, @sid, true, false)
+        serializer = Serializer.new(response)
+        return serializer.parseShieldTypes
       end
 
+      ##
+      # Gets rank list
+      #
+      # Returns Serializer#parseRankList
       def cmdRankGetList
-        url = URI.encode_www_form(
-          {
-            "rank_get_list" => 1,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url, true, false)
-        fields = parseData(response)
-        data = Hash.new
-        fields[0].each do |field|
-          data[field[0].to_i] = {
-            "rank" => field[1].to_i,
-          }
-        end
-        return data
+        params = {
+          "rank_get_list" => 1,
+          "app_version"   => @config["version"],
+        }
+        response = @client.request(params, @sid, true, false)
+        serializer = Serializer.new(response)
+        return serializer.parseRankList
       end
 
       ##
       # Gets fight map
       #
-      # Returns hash fight map
+      # Returns Serializer#parseFightMap
       def cmdFightGetMap
-        url = URI.encode_www_form(
-          {
-            "fight_get_map"   => "",
-            "app_version"     => @config["version"],
-          }
-        )
-        response = request(url)
-        fields = parseData(response)
-
-        data = parseFightMap(fields[0])
-        return data
-      end
-
-      def cmdCreateException(name, exception, version)
-        url = URI.encode_www_form(
-          {
-            "exception_create" => 1,
-            "player_name" => name,
-            "app_version_number" => version,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        return response
-      end
-
-      def cmdCreateReport(repoter, reported, message)
-        url = URI.encode_www_form(
-          {
-            "report_create" => "",
-            "id_reporter" => reporter,
-            "id_reported" => reported,
-            "message" => message,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        return response
-      end
-
-      def cmdPlayerSetTutorial(id, tutorial)
-        url = URI.encode_www_form(
-          {
-            "player_set_tutorial" => "",
-            "id" => id,
-            "tutorial" => tutorial,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        return response
-      end
-
-      def cmdPlayerBuyBuilder(id)
-        url = URI.encode_www_form(
-          {
-            "player_buy_builder" => "",
-            "id" => id,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        return response
-      end
-
-      def cmdTutorialPlayerBuyBuilder(id, tutorial)
-        url = URI.encode_www_form(
-          {
-            "tutorial_player_buy_builder" => "",
-            "id_player" => id,
-            "tutorial" => tutorial,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        return response
-      end
-
-      def cmdCpUseCode(id, code, platform)
-        url = URI.encode_www_form(
-          {
-            "cp_use_code" => "",
-            "id_player" => id,
-            "code" => code,
-            "platform" => platform,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        data = parseData(response)
-        return {
-          "id" => data[0][0][0],
-          "password" => data[0][0][1],
+        params = {
+          "fight_get_map"   => "",
+          "app_version"     => @config["version"],
         }
+        response = @client.request(params, @sid)
+        serializer = Serializer.new(response)
+        return serializer.parseFightMap(0)
       end
 
+      ##
+      # Creates exception:
+      #   name        = Player name
+      #   exception   = Exception
+      #   version     = Version
+      def cmdCreateException(name, exception, version)
+        params = {
+          "exception_create"    => 1,
+          "player_name"         => name,
+          "app_version_number"  => version,
+          "app_version"         => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        return response
+      end
+
+      ##
+      # Creates report:
+      #   reporter    = Reporter
+      #   reported    = Reported
+      #   message     = Message
+      def cmdCreateReport(repoter, reported, message)
+        params = {
+          "report_create" => "",
+          "id_reporter"   => reporter,
+          "id_reported"   => reported,
+          "message"       => message,
+          "app_version"   => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        return response
+      end
+
+      ##
+      # Sets tutorial:
+      #   id        = Player ID
+      #   tutorial  = Tutorial ID
+      def cmdPlayerSetTutorial(id, tutorial)
+        params = {
+          "player_set_tutorial"  => "",
+          "id"                   => id,
+          "tutorial"             => tutorial,
+          "app_version"          => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        return response
+      end
+
+      ##
+      # Buys builder:
+      #   id = Builder ID
+      def cmdPlayerBuyBuilder(id)
+        params = {
+          "player_buy_builder"  => "",
+          "id"                  => id,
+          "app_version"         => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        return response
+      end
+
+      ##
+      # Buys builder in tutorial mode:
+      #   id        = Builder ID
+      #   tutorial  = Tutorial ID
+      def cmdTutorialPlayerBuyBuilder(id, tutorial)
+        params = {
+          "tutorial_player_buy_builder"  => "",
+          "id_player"                    => id,
+          "tutorial"                     => tutorial,
+          "app_version"                  => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        return response
+      end
+
+      ##
+      # Uses CP (change platform) code:
+      #   id        = Player ID
+      #   code      = Code
+      #   platform  = Platform
+      #
+      # Returns Serializer#parseCpUseCode
+      def cmdCpUseCode(id, code, platform)
+        params = {
+          "cp_use_code" => "",
+          "id_player"   => id,
+          "code"        => code,
+          "platform"    => platform,
+          "app_version" => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        serializer = Serializer.new(response)
+        return serializer.parseCpUseCode
+      end
+
+      ##
+      # Generates CP (change platform) code
+      #
+      # Returns Serializer#parseCpGenerateCode
       def cmdCpGenerateCode(id, platform)
-        url = URI.encode_www_form(
-          {
-            "cp_generate_code" => "",
-            "id_player" => id,
-            "platform" => platform,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
-        data = parseData(response)
-        return data[0][0][0]
+        params = {
+          "cp_generate_code"  => "",
+          "id_player"         => id,
+          "platform"          => platform,
+          "app_version"       => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        serializer = Serializer.new(response)
+        return serializer.parseCpGenerateCode
       end
 
       def cmdRedeemPromoCode(id, code)
-        url = URI.encode_www_form(
-          {
-            "redeem_promo_code" => 1,
-            "id_player" => id,
-            "code" => code,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "redeem_promo_code" => 1,
+          "id_player"         => id,
+          "code"              => code,
+          "app_version"       => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
       def cmdPaymentPayGoogle(id, receipt, signature)
-        url = URI.encode_www_form(
-          {
-            "payment_pay_google" => "",
-            "id_player" => id,
-            "receipt" => receipt,
-            "signature" => signature,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "payment_pay_google"  => "",
+          "id_player"           => id,
+          "receipt"             => receipt,
+          "signature"           => signature,
+          "app_version"         => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
       def cmdAuthByName(name, password)
-        url = URI.encode_www_form(
-          {
-            "auth" => 1,
-            "name" => name,
-            "password" => password,
-            "app_version" => @config["version"],
+        params = {
+            "auth"         => 1,
+            "name"         => name,
+            "password"     => password,
+            "app_version"  => @config["version"],
           }
-        )
-        response = request(url, true, false)
+        response = @client.request(params, @sid, true, false)
         return response
       end
 
+      ##
+      # Starts mission:
+      #   mission = Mission ID
+      #   id      = Player ID
+      #
+      # Returns the string "ok" if the request is successful
       def cmdPlayerMissionMessageDelivered(mission, id = @config["id"])
-        url = URI.encode_www_form(
-          {
-            "player_mission_message_delivered" => "",
-            "id_player" => id,
-            "id_mission" => mission,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "player_mission_message_delivered"  => "",
+          "id_player"                         => id,
+          "id_mission"                        => mission,
+          "app_version"                       => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
+      ##
+      # Gets friend logs:
+      #   id = Player ID
+      #
+      # Returns Serializer#parseLogs
       def cmdFightByFBFriend(id)
-        url = URI.encode_www_form(
-          {
-            "fight_by_fb_friend" => "",
-            "id_player" => id,
-            "app_version" => @config["version"],
-          }
-        )
-        fields = parseData(request(url))
-        return parseLogs(fields[0])
+        params = {
+          "fight_by_fb_friend"  => "",
+          "id_player"           => id,
+          "app_version"         => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        serializer = Serializer.new(response)
+        return serializer.parseLogs(0)
       end
 
+      ##
+      # Sets new player name once:
+      #   id    = Player ID
+      #   name  = Player name
+      #
+      # Returns the string "ok" if the request is successful
       def cmdPlayerSetNameOnce(id, name)
-        url = URI.encode_www_form(
-          {
-            "player_set_name_once" => "",
-            "id" => id,
-            "name" => name,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "player_set_name_once"  => "",
+          "id"                    => id,
+          "name"                  => name,
+          "app_version"           => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
       def cmdAuthFB(token)
-        url = URI.encode_www_form(
-          {
-            "auth_fb" => "",
-            "token" => token,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url, true, false)
+        params = {
+          "auth_fb"     => "",
+          "token"       => token,
+          "app_version" => @config["version"],
+        }
+        response = @client.request(params, @sid, true, false)
         return response
       end
 
@@ -2177,254 +1350,224 @@ module Trickster
       #
       # Returns hash:
       #   {
-      #     "nodes"     => Nodes,
-      #     "net"       => Network structure,
-      #     "profile"   => Target profile,
-      #     "programs"  => Programs list,
-      #     "readme"    => Readme,
+      #     "nodes"     => Serializer#parseNodes,
+      #     "net"       => Serializer#parseNetwork,
+      #     "profile"   => Serializer#parseProfile,
+      #     "programs"  => Serializer#parsePrograms,
+      #     "readme"    => Serializer#parseReadme,
       #   }
       def cmdTestFightPrepare(target, attacker = @config["id"])
-        url = URI.encode_www_form(
-          {
-            "testfight_prepare" => "",
-            "id_target"         => target,
-            "id_attacker"       => attacker,
-            "app_version"       => @config["version"],
-          }
-        )
-        response = request(url)
-        fields = parseData(response)
-
-        data = Hash.new
-        data["nodes"] = parseNodes(fields[0])
-        data["net"] = parseNetwork(fields[1][0][1])
-        data["profile"] = parseProfile(fields[2][0])
-        data["programs"] = parsePrograms(fields[3])
-        data["readme"] = parseReadme(fields.dig(5, 0, 0))
+        params = {
+          "testfight_prepare" => "",
+          "id_target"         => target,
+          "id_attacker"       => attacker,
+          "app_version"       => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        serializer = Serializer.new(response)
+        data = {
+          "nodes"     => serializer.parseNodes(0),
+          "net"       => serializer.parseNetwork(1, 0, 1),
+          "profile"   => serializer.parseProfile(2, 0),
+          "programs"  => serializer.parsePrograms(3),
+          "readme"    => serializer.parseReadme(5, 0, 0),
+        }
         return data
       end
 
       def cmdTestFightWrite(target, attacker, data)
-        url = URI.encode_www_form(
-          {
-            "testfight_write" => 1,
-            "finished" => "true",
-            "id_attacker" => attacker,
-            "id_target" => target,
-            "gold_main_loot" => data[:moneyMain],
-            "gold_total_loot" => data[:moneyTotal],
-            "bc_main_loot" => data[:bitcoinMain],
-            "bc_total_loot" => data[:bitcoinTotal],
-            "node_ids_list" => data[:nodes],
-            "node_loot_values" => data[:loots],
-            "attack_success" => data[:success],
-            "used_programs_list" => data[:programs],
-            "replay_version" => data[:version],
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "testfight_write"     => 1,
+          "finished"            => "true",
+          "id_attacker"         => attacker,
+          "id_target"           => target,
+          "gold_main_loot"      => data[:moneyMain],
+          "gold_total_loot"     => data[:moneyTotal],
+          "bc_main_loot"        => data[:bitcoinMain],
+          "bc_total_loot"       => data[:bitcoinTotal],
+          "node_ids_list"       => data[:nodes],
+          "node_loot_values"    => data[:loots],
+          "attack_success"      => data[:success],
+          "used_programs_list"  => data[:programs],
+          "replay_version"      => data[:version],
+          "app_version"         => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
       def cmdPlayerGetFBFriends(id, token)
-        url = URI.encode_www_form(
-          {
-            "player_get_fb_friends" => "",
-            "id" => id,
-            "token" => token,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "player_get_fb_friends" => "",
+          "id"                    => id,
+          "token"                 => token,
+          "app_version"           => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
       def cmdPlayerGetStats(id)
-        url = URI.encode_www_form(
-          {
-            "player_get_stats" => "",
-            "id" => id,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "player_get_stats"  => "",
+          "id"                => id,
+          "app_version"       => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
       def cmdTutorialNetUpdate(id, net, tutorial)
-        url = URI.encode_www_form(
-          {
-            "tutorial_net_update" => 1,
-            "id_player" => id,
-            "net" => net,
-            "tutorial" => tutorial,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "tutorial_net_update" => 1,
+          "id_player"           => id,
+          "net"                 => net,
+          "tutorial"            => tutorial,
+          "app_version"         => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
       def cmdShieldRemove(id)
-        url = URI.encode_www_form(
-          {
-            "shield_remove" => "",
-            "id_player" => id,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "shield_remove" => "",
+          "id_player"     => id,
+          "app_version"   => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
       def cmdPlayerMissionReject(mission)
-        url = URI.encode_www_form(
-          {
-            "player_mission_reject" => 1,
-            "id_player" => @config["id"],
-            "id_mission" => mission,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "player_mission_reject" => 1,
+          "id_player"             => @config["id"],
+          "id_mission"            => mission,
+          "app_version"           => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
       def cmdFightByPlayer(id)
-        url = URI.encode_www_form(
-          {
-            "fight_by_player" => 1,
-            "player_id" => id,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "fight_by_player" => 1,
+          "player_id"       => id,
+          "app_version"     => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
       def cmdProgramCreateFinish(type)
-        url = URI.encode_www_form(
-          {
-            "program_create_and_finish" => 1,
-            "id_player" => @config["id"],
-            "id_program" => type,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "program_create_and_finish" => 1,
+          "id_player"                 => @config["id"],
+          "id_program"                => type,
+          "app_version"               => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
       def cmdAuthPairFB(id, token)
-        url = URI.encode_www_form(
-          {
-            "auth_pair_fb" => "",
-            "id_player" => id,
-            "token" => token,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "auth_pair_fb"  => "",
+          "id_player"     => id,
+          "token"         => token,
+          "app_version"   => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
       def cmdAuthUnpairFB(id)
-        url = URI.encode_www_form(
-          {
-            "auth_unpair_fb" => "",
-            "id_player" => id,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "auth_unpair_fb"  => "",
+          "id_player"       => id,
+          "app_version"     => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
       def cmdAuthPairGoogleNew(id, code)
-        url = URI.encode_www_form(
-          {
-            "auth_pair_google_new" => "",
-            "id_player" => id,
-            "authCode" => code,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "auth_pair_google_new"  => "",
+          "id_player"             => id,
+          "authCode"              => code,
+          "app_version"           => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
       def cmdProgramUpgradeFinish(id)
-        url = URI.encode_www_form(
-          {
-            "program_upgrade_and_finish" => 1,
-            "id" => id,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "program_upgrade_and_finish"  => 1,
+          "id"                          => id,
+          "app_version"                 => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
       def cmdIssueCreate(name, issue)
-        url = URI.encode_www_form(
-          {
-            "issue_create" => 1,
-            "player_name" => name,
-            "issue" => issue,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "issue_create"  => 1,
+          "player_name"   => name,
+          "issue"         => issue,
+          "app_version"   => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
       def cmdAIProgramRevive(id)
-        url = URI.encode_www_form(
-          {
-            "ai_program_revive" => 1,
-            "id" => id,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "ai_program_revive" => 1,
+          "id"                => id,
+          "app_version"       => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
       def cmdAIProgramReviveFinish(id)
-        url = URI.encode_www_form(
-          {
-            "ai_program_revive_and_finish" => 1,
-            "id" => id,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "ai_program_revive_and_finish"  => 1,
+          "id"                            => id,
+          "app_version"                   => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
       def cmdAIProgramFinishRevive(id)
-        url = URI.encode_www_form(
-          {
-            "ai_program_finish_revive" => 1,
-            "id" => id,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "ai_program_finish_revive"  => 1,
+          "id"                        => id,
+          "app_version"               => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
+      ##
+      # Gets player readme:
+      #   id = Player ID
+      #
+      # Returns Serializer#parseReadme
       def cmdPlayerGetReadme(id)
-        url = URI.encode_www_form(
-          {
-            "player_get_readme" => "",
-            "id" => id,
-            "app_version" => @config["version"],
-          }
-        )
-        fields = parseData(request(url))
-        return parseReadme(fields.dig(0, 0, 0))
+        params = {
+          "player_get_readme" => "",
+          "id"                => id,
+          "app_version"       => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        serializer = Serializer.new(response)
+        return serializer.parseReadme(0, 0, 0)
       end
 
       ##
@@ -2433,32 +1576,28 @@ module Trickster
       #
       # Returns the string "ok" if the request is successful
       def cmdNodeUpgradeFinish(id)
-        url = URI.encode_www_form(
-          {
-            "node_upgrade_and_finish"   => 1,
-            "id"                        => id,
-            "app_version"               => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "node_upgrade_and_finish"   => 1,
+          "id"                        => id,
+          "app_version"               => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
       def cmdPlayerMissionUpdate(mission, data, id = @config["id"])
-        url = URI.encode_www_form(
-          {
-            "player_mission_update" => 1,
-            "id_player" => id,
-            "id_mission" => mission,
-            "money_looted" => data[:money],
-            "bcoins_looted" => data[:bitcoins],
-            "finished" => data[:finished],
-            "nodes_currencies" => generateMissionCurrencies(data[:currencies]),
-            "programs_data" => generateMissionPrograms(data[:programs]),
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "player_mission_update" => 1,
+          "id_player"             => id,
+          "id_mission"            => mission,
+          "money_looted"          => data[:money],
+          "bcoins_looted"         => data[:bitcoins],
+          "finished"              => data[:finished],
+          "nodes_currencies"      => Serializer.generateMissionCurrencies(data[:currencies]),
+          "programs_data"         => Serializer.generateMissionPrograms(data[:programs]),
+          "app_version"           => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
 
@@ -2468,16 +1607,15 @@ module Trickster
       #
       # Returns the string "ok" if the request is successful
       def cmdNodeCancel(id)
-        url = URI.encode_www_form(
-          {
-            "node_cancel" => 1,
-            "id"          => id,
-            "app_version" => @config["version"],
-          }
-        )
-        response = request(url)
+        params = {
+          "node_cancel" => 1,
+          "id"          => id,
+          "app_version" => @config["version"],
+        }
+        response = @client.request(params, @sid)
         return response
       end
     end
   end
 end
+

@@ -64,10 +64,10 @@ class Chatbot < Sandbox::Script
     def watch
     end
 
-    def http(host, port, url, params = {})
+    def http(host, port, uri, params = {})
       client = Net::HTTP.new(host, port)
       client.use_ssl = true if port == 443
-      uri = params.empty? ? url : "#{url}?#{@script.game.encodeUrl(params)}"
+      uri = params.empty? ? uri : "#{uri}?#{@script.game.client.encodeURI(params)}"
       response = client.get(uri)
       return false if response.code != "200"
       return response.body
@@ -76,8 +76,8 @@ class Chatbot < Sandbox::Script
       return false
     end
 
-    def rss(host, port, url, params = {})
-      return false unless response = http(host, port, url, params)
+    def rss(host, port, uri, params = {})
+      return false unless response = http(host, port, uri, params)
       return RSS::Parser.parse(response, false)
     rescue => e
       @script.logger.error("RSS parse error (#{e})")
