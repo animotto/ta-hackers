@@ -18,7 +18,7 @@ class Network < Sandbox::Script
       return
     end
 
-    @shell.puts("\u2022 Network structure for #{net["profile"]["name"]}")
+    @shell.puts("\u2022 Network structure for #{net["profile"].name}")
     @shell.puts(
       "  %-5s %-12s %-12s %-5s %-4s %-4s %-4s %s" % [
         "Index",

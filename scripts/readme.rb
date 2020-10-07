@@ -15,8 +15,8 @@ class Readme < Sandbox::Script
       return
     end
 
-    readme.each do |line|
-      @logger.log(line)
+    readme.each do |message|
+      @logger.log(message)
     end
   end
 end

@@ -44,8 +44,8 @@ class Autohack < Sandbox::Script
           ].join(",")
           success = Trickster::Hackers::Game::SUCCESS_CORE | Trickster::Hackers::Game::SUCCESS_RESOURCES | Trickster::Hackers::Game::SUCCESS_CONTROL
           fight = @game.cmdFight(k, {
-                                   money: net["profile"]["money"],
-                                   bitcoin: net["profile"]["bitcoins"],
+                                   money: net["profile"].money,
+                                   bitcoin: net["profile"].bitcoins,
                                    nodes: "",
                                    loots: "",
                                    success: success,

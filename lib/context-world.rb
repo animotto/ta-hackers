@@ -34,7 +34,7 @@ module Sandbox
         
         msg = "World"
         begin
-          world = @game.cmdPlayerWorld(net["profile"]["country"])
+          world = @game.cmdPlayerWorld(net["profile"].country)
         rescue Trickster::Hackers::RequestError => e
           @shell.logger.error("#{msg} (#{e})")
           return

@@ -6,8 +6,8 @@ module Sandbox
         "profile"  => ["profile", "Show profile"],
         "logs"     => ["logs", "Show logs"],
         "readme"   => ["readme", "Show readme"],
-        "write"    => ["write <text>", "Write text to readme"],
-        "remove"   => ["remove <id>", "Remove text from readme"],
+        "write"    => ["write <message>", "Write message to readme"],
+        "remove"   => ["remove <id>", "Remove message from readme"],
         "clear"    => ["clear", "Clear readme"],
         "nodes"    => ["nodes", "Show nodes"],
         "create"   => ["create <type>", "Create node"],
@@ -37,7 +37,6 @@ module Sandbox
         msg = "Network maintenance"
         begin
           net = @game.cmdNetGetForMaint
-          net["profile"]["level"] = @game.getLevelByExp(net["profile"]["experience"])
         rescue Trickster::Hackers::RequestError => e
           @shell.logger.error("#{msg} (#{e})")
           return
@@ -50,31 +49,31 @@ module Sandbox
           builders = 0
           net["nodes"].each {|k, v| builders += v["builders"] if v["timer"].negative?}
           @shell.puts("\e[1;35m\u2022 Profile\e[0m")
-          @shell.puts("  %-15s %d" % ["ID", net["profile"]["id"]])
-          @shell.puts("  %-15s %s" % ["Name", net["profile"]["name"]])
-          @shell.puts("  %-15s \e[33m$ %d\e[0m" % ["Money", net["profile"]["money"]])
-          @shell.puts("  %-15s \e[31m\u20bf %d\e[0m" % ["Bitcoins", net["profile"]["bitcoins"]])
-          @shell.puts("  %-15s %d" % ["Credits", net["profile"]["credits"]])
-          @shell.puts("  %-15s %d" % ["Experience", net["profile"]["experience"]])
-          @shell.puts("  %-15s %d" % ["Rank", net["profile"]["rank"]])
-          @shell.puts("  %-15s %s" % ["Builders", "\e[32m" + "\u25b0" * builders + "\e[37m" + "\u25b1" * (net["profile"]["builders"] - builders) + "\e[0m"])
-          @shell.puts("  %-15s %d" % ["X", net["profile"]["x"]])
-          @shell.puts("  %-15s %d" % ["Y", net["profile"]["y"]])
-          @shell.puts("  %-15s %d" % ["Country", net["profile"]["country"]])
-          @shell.puts("  %-15s %d" % ["Skin", net["profile"]["skin"]])
-          @shell.puts("  %-15s %d" % ["Level", net["profile"]["level"]])
+          @shell.puts("  %-15s %d" % ["ID", net["profile"].id])
+          @shell.puts("  %-15s %s" % ["Name", net["profile"].name])
+          @shell.puts("  %-15s \e[33m$ %d\e[0m" % ["Money", net["profile"].money])
+          @shell.puts("  %-15s \e[31m\u20bf %d\e[0m" % ["Bitcoins", net["profile"].bitcoins])
+          @shell.puts("  %-15s %d" % ["Credits", net["profile"].credits])
+          @shell.puts("  %-15s %d" % ["Experience", net["profile"].experience])
+          @shell.puts("  %-15s %d" % ["Rank", net["profile"].rank])
+          @shell.puts("  %-15s %s" % ["Builders", "\e[32m" + "\u25b0" * builders + "\e[37m" + "\u25b1" * (net["profile"].builders - builders) + "\e[0m"])
+          @shell.puts("  %-15s %d" % ["X", net["profile"].x])
+          @shell.puts("  %-15s %d" % ["Y", net["profile"].y])
+          @shell.puts("  %-15s %d" % ["Country", net["profile"].country])
+          @shell.puts("  %-15s %d" % ["Skin", net["profile"].skin])
+          @shell.puts("  %-15s %d" % ["Level", @game.getLevelByExp(net["profile"].experience)])
           return
 
         when "readme"
           @shell.puts("\e[1;35m\u2022 Readme\e[0m")
-          net["readme"].each_with_index do |item, i|
-            @shell.puts("  [#{i}] #{item}")
+          net["readme"].each_with_index do |message, i|
+            @shell.puts("  [#{i}] #{message}")
           end
           return
 
         when "write"
           if words[1].nil?
-            @shell.puts("#{cmd}: Specify text")
+            @shell.puts("#{cmd}: Specify message")
             return
           end
 
@@ -85,7 +84,7 @@ module Sandbox
 
           msg = "Set readme"
           begin
-            net["readme"].push(words[1])
+            net["readme"].write(words[1])
             @game.cmdPlayerSetReadme(net["readme"])
           rescue
             @shell.logger.error("#{msg} (#{e})")
@@ -94,20 +93,20 @@ module Sandbox
 
           @shell.logger.log(msg)
           @shell.puts("\e[1;35m\u2022 Readme\e[0m")
-          net["readme"].each_with_index do |item, i|
-            @shell.puts("  [#{i}] #{item}")
+          net["readme"].each_with_index do |message, i|
+            @shell.puts("  [#{i}] #{message}")
           end
           return
 
         when "remove"
           if words[1].nil?
-            @shell.puts("#{cmd}: Specify text ID")
+            @shell.puts("#{cmd}: Specify message ID")
             return
           end
 
           id = words[1].to_i
-          if net["readme"][id].nil?
-            @shell.puts("#{cmd}: No such text ID")
+          if net["readme"].id?(id)
+            @shell.puts("#{cmd}: No such message ID")
             return
           end
 
@@ -118,7 +117,7 @@ module Sandbox
 
           msg = "Set readme"
           begin
-            net["readme"].delete_at(id)
+            net["readme"].remove(id)
             @game.cmdPlayerSetReadme(net["readme"])
           rescue
             @shell.logger.error("#{msg} (#{e})")
@@ -127,8 +126,8 @@ module Sandbox
 
           @shell.logger.log(msg)
           @shell.puts("\e[1;35m\u2022 Readme\e[0m")
-          net["readme"].each_with_index do |item, i|
-            @shell.puts("  [#{i}] #{item}")
+          net["readme"].each_with_index do |message, i|
+            @shell.puts("  [#{i}] #{message}")
           end
           return
 
@@ -148,7 +147,7 @@ module Sandbox
           net["nodes"].each do |k, v|
             timer = String.new
             if v["timer"].negative?
-              timer += "\e[32m" + "\u25b0" * v["builders"] + "\e[37m" + "\u25b1" * (net["profile"]["builders"] - v["builders"]) + "\e[0m " unless v["builders"].nil?
+              timer += "\e[32m" + "\u25b0" * v["builders"] + "\e[37m" + "\u25b1" * (net["profile"].builders - v["builders"]) + "\e[0m " unless v["builders"].nil?
               timer += @game.timerToDHMS(v["timer"] * -1)
             else
               if production.key?(v["type"])
@@ -285,7 +284,8 @@ module Sandbox
 
         msg = "Set readme"
         begin
-          @game.cmdPlayerSetReadme([])
+          readme = Trickster::Hackers::Readme.new
+          @game.cmdPlayerSetReadme(readme)
         rescue Trickster::Hackers::RequestError => e
           @shell.logger.error("#{msg} (#{e})")
           return

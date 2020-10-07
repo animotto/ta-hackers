@@ -14,7 +14,7 @@ class Replay < Sandbox::Script
     end
 
     @logger.log("\u25cf Profiles")
-    @logger.log("#{replay["profiles"]["attacker"]["id"]} (#{replay["profiles"]["attacker"]["name"]}) -> #{replay["profiles"]["target"]["id"]} (#{replay["profiles"]["target"]["name"]})")
+    @logger.log("#{replay["profiles"]["attacker"].id} (#{replay["profiles"]["attacker"].name}) -> #{replay["profiles"]["target"].id} (#{replay["profiles"]["target"].name})")
 
     @logger.log("\u25cf Programs")
     replay["programs"].each do |program|

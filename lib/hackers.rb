@@ -2,6 +2,7 @@ module Trickster
   module Hackers
     require "hackers-client"
     require "hackers-serializer"
+    require "hackers-objects"
 
     ##
     # Game API implementation
@@ -775,7 +776,7 @@ module Trickster
       # Gets player info:
       #   id = Player ID
       #
-      # Returns Serializer#parseProfile
+      # Returns *Profile*
       def cmdPlayerGetInfo(id)
         params = {
           "player_get_info"   => "",
@@ -793,7 +794,7 @@ module Trickster
       #
       # Returns hash:
       #   {
-      #     "profile" => Serializer#parseProfile,
+      #     "profile" => *Profile*,
       #     "nodes"   => Serializer#parseNodes,
       #   }
       def cmdGetNetDetailsWorld(id)
@@ -803,7 +804,7 @@ module Trickster
           "app_version"           => @config["version"],
         }
         response = @client.request(params, @sid)
-        serializer = Serializer.parseData(response)
+        serializer = Serializer.new(response)
         data = {
           "profile"  => serializer.parseProfile(0, 0),
           "nodes"    => serializer.parseNodes(1),
@@ -972,13 +973,14 @@ module Trickster
 
       ##
       # Sets player readme:
-      #   text = Text
-      def cmdPlayerSetReadme(text)
-        readme = Serializer.normalizeData(text.join("\x04"), false)
+      #   readme = *Readme*
+      #
+      # Returns the string "ok" if the request is successful
+      def cmdPlayerSetReadme(readme)
         params = {
           "player_set_readme"  => "",
           "id"                 => @config["id"],
-          "text"               => readme,
+          "text"               => Serializer.generateReadme(readme),
           "app_version"        => @config["version"],
         }
         response = @client.request(params, @sid)
@@ -988,14 +990,15 @@ module Trickster
       ##
       # Sets the readme after attack:
       #   target  = Target ID
-      #   text    = Text
-      def cmdPlayerSetReadmeFight(target, text)
-        readme = Serializer.normalizeData(text.join("\x04"), false)
+      #   readme  = *Readme*
+      #
+      # Returns the string "ok" if the request is successful
+      def cmdPlayerSetReadmeFight(target, readme)
         params = {
           "player_set_readme_fight"  => "",
           "id_attacker"              => @config["id"],
           "id_target"                => target,
-          "text"                     => readme,
+          "text"                     => Serializer.generateReadme(readme),
           "app_version"              => @config["version"],
         }
         response = @client.request(params, @sid)
@@ -1352,9 +1355,9 @@ module Trickster
       #   {
       #     "nodes"     => Serializer#parseNodes,
       #     "net"       => Serializer#parseNetwork,
-      #     "profile"   => Serializer#parseProfile,
+      #     "profile"   => *Profile*,
       #     "programs"  => Serializer#parsePrograms,
-      #     "readme"    => Serializer#parseReadme,
+      #     "readme"    => *Readme*,
       #   }
       def cmdTestFightPrepare(target, attacker = @config["id"])
         params = {
@@ -1558,7 +1561,7 @@ module Trickster
       # Gets player readme:
       #   id = Player ID
       #
-      # Returns Serializer#parseReadme
+      # Returns *Readme*
       def cmdPlayerGetReadme(id)
         params = {
           "player_get_readme" => "",

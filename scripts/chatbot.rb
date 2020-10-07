@@ -1468,7 +1468,7 @@ class Chatbot < Sandbox::Script
       return
     end
     roomLastTime = messages.last["datetime"] unless messages.empty?
-    @config["name"] = net["profile"]["name"]
+    @config["name"] = net["profile"].name
 
     loop do
       sleep(SLEEP_TIME)

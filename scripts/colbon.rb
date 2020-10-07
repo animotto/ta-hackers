@@ -10,7 +10,7 @@ class Colbon < Sandbox::Script
 
     loop do
       net = @game.cmdNetGetForMaint
-      world = @game.cmdPlayerWorld(net["profile"]["country"])
+      world = @game.cmdPlayerWorld(net["profile"].country)
       world["bonuses"].each do |k, v|
         @game.cmdBonusCollect(k)
         @logger.log("Bonus #{k} collected with #{v["amount"]} credits")

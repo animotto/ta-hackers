@@ -5,15 +5,22 @@ module Trickster
     class Serializer
       ##
       # Default delimeter for sections
-      DELIM_SECTION = "@"
+      DELIM_SECTION       = "@"
+      DELIM_NORM_SECTION  = "\x03"
 
       ##
       # Default delimeter for records
-      DELIM_RECORD  = ";"
+      DELIM_RECORD        = ";"
+      DELIM_NORM_RECORD   = "\x02"
 
       ##
       # Default delimeter for fields
-      DELIM_FIELD   = ","
+      DELIM_FIELD         = ","
+      DELIM_NORM_FIELD    = "\x01"
+
+      ##
+      # Delimiter for readme messages
+      DELIM_README  = "\x04"
 
       ##
       # Raw data parsed into fields
@@ -34,13 +41,13 @@ module Trickster
       # Returns a normalized string
       def self.normalizeData(data, dir = true)
         if dir
-          data.gsub!("\x01", ",")
-          data.gsub!("\x02", ";")
-          data.gsub!("\x03", "@")
+          data.gsub!(DELIM_NORM_FIELD, DELIM_FIELD)
+          data.gsub!(DELIM_NORM_RECORD, DELIM_RECORD)
+          data.gsub!(DELIM_NORM_SECTION, DELIM_SECTION)
         else
-          data.gsub!(",", "\x01")
-          data.gsub!(";", "\x02")
-          data.gsub!("@", "\x03")
+          data.gsub!(DELIM_FIELD, DELIM_NORM_FIELD)
+          data.gsub!(DELIM_RECORD, DELIM_NORM_RECORD)
+          data.gsub!(DELIM_SECTION, DELIM_NORM_SECTION)
         end
         return data
       end
@@ -410,36 +417,22 @@ module Trickster
       #   Fields in format:
       #     ID,Name,Money,Bitcoins,Credits,Experience,Unknown,Unknown,Unknown,Rank,Builders,X,Y,Country,Skin;
       #
-      # Returns hash:
-      #   {
-      #     "id"          => ID,
-      #     "name"        => Name,
-      #     "money"       => Money,
-      #     "bitcoins"    => Bitcoins,
-      #     "credits"     => Credits,
-      #     "experience"  => Experience,
-      #     "rank"i       => Rank,
-      #     "builders"    => Builders,
-      #     "x"           => X,
-      #     "y"           => Y,
-      #     "country"     => Country,
-      #     "skin"        => Skin,
-      #   }
+      # Returns *Profile*
       def parseProfile(section, record)
-        profile = {
-          "id"          => @fields[section][record][0].to_i,
-          "name"        => @fields[section][record][1],
-          "money"       => @fields[section][record][2].to_i,
-          "bitcoins"    => @fields[section][record][3].to_i,
-          "credits"     => @fields[section][record][4].to_i,
-          "experience"  => @fields[section][record][5].to_i,
-          "rank"        => @fields[section][record][9].to_i,
-          "builders"    => @fields[section][record][10].to_i,
-          "x"           => @fields[section][record][11].to_i,
-          "y"           => @fields[section][record][12].to_i,
-          "country"     => @fields[section][record][13].to_i,
-          "skin"        => @fields[section][record][14].to_i,
-        }
+        profile = Profile.new(
+          @fields[section][record][0].to_i,
+          @fields[section][record][1],
+          @fields[section][record][2].to_i,
+          @fields[section][record][3].to_i,
+          @fields[section][record][4].to_i,
+          @fields[section][record][5].to_i,
+          @fields[section][record][9].to_i,
+          @fields[section][record][10].to_i,
+          @fields[section][record][11].to_i,
+          @fields[section][record][12].to_i,
+          @fields[section][record][13].to_i,
+          @fields[section][record][14].to_i,
+        )
         return profile
       end
       
@@ -480,20 +473,24 @@ module Trickster
       #   field   = Field index
       #
       #   Fields in format:
-      #     Text1\x04Text2\x04Text3
+      #     Message1\x04Message2\x04Message3
       #
-      # Returns array:
-      #   [
-      #     Text1,
-      #     Text2,
-      #     Text3,
-      #     ...
-      #   ]
+      # Returns *Readme*
       def parseReadme(section, record, field)
         readme = Array.new
-        readme = @fields[section][record][field].split("\x04") unless @fields.dig(section, record, field).nil?
+        readme = @fields[section][record][field].split(DELIM_README) unless @fields.dig(section, record, field).nil?
         readme.map! {|line| self.class.normalizeData(line)}
-        return readme
+        return Readme.new(readme)
+      end
+
+      ##
+      # Generates readme raw data:
+      #   readme = *Readme*
+      #
+      # Returns raw data as a string in format:
+      #   Message1\x04Message2\x04Message3
+      def self.generateReadme(readme)
+        Serializer.normalizeData(readme.messages.join(DELIM_README), false)
       end
 
       ##
@@ -933,13 +930,13 @@ module Trickster
       #   {
       #     "nodes"     => Serializer#parseNodes,
       #     "net"       => Serializer#parseNetwork,
-      #     "profile"   => Serializer#parseProfile,
+      #     "profile"   => *Profile*,
       #     "programs"  => Serializer#parsePrograms,
       #     "queue"     => Serializer#parseQueue,
       #     "rank"      => Rank,
       #     "logs"      => Serializer#parseLogs,
       #     "time"      => Time,
-      #     "readme"     => Serializer#parseReadme,
+      #     "readme"    => *Readme*,
       #   }
       def parseNetGetForMaint
         data = Hash.new
@@ -1026,7 +1023,7 @@ module Trickster
       #     ],
       #     "map"       => Fight map,
       #     "players"   => [
-      #       "profile"   => Profile,
+      #       "profile"   => *Profile*,
       #       "nodes"     => Nodes,
       #     ]
       #   }
@@ -1128,10 +1125,10 @@ module Trickster
       #
       # Returns hash:
       #   {
-      #     "nodes"    => Serializer#parseNodes
-      #     "net"      => Serializer#parseNetwork
-      #     "profile"  => Serializer#parseProfile
-      #     "readme"   => Serializer#parseReadme
+      #     "nodes"    => Serializer#parseNodes,
+      #     "net"      => Serializer#parseNetwork,
+      #     "profile"  => *Profile*,
+      #     "readme"   => *Readme*,
       #   }
       def parseNetGetForAttack
         data = {
@@ -1149,9 +1146,19 @@ module Trickster
       #   record  = Record index
       #   field   = Field index
       #
-      # Returns
+      # Returns hash:
+      #   {
+      #     "nodes"     => Serializer#parseNodes,
+      #     "net"       => Serializer#parseNetwork,
+      #     "profiles"  => {
+      #       "target"    => *Profile*,
+      #       "attacker"  => *Profile*,
+      #     },
+      #     "programs"  => Serializer#parseReplayPrograms,
+      #     "trace"  => Serializer#parseReplayTrace,
+      #   }
       def parseReplay(section, record, field)
-        serializer = Serializer.new(@fields[section][record][field], "\x03", "\x02", "\x01")
+        serializer = Serializer.new(@fields[section][record][field], DELIM_NORM_SECTION, DELIM_NORM_RECORD, DELIM_NORM_FIELD)
         replay = {
           "nodes"     => serializer.parseNodes(0),
           "net"       => serializer.parseNetwork(1, 0, 1),

@@ -538,8 +538,7 @@ module Sandbox
         
         msg = "Player get info"
         begin
-          info = @game.cmdPlayerGetInfo(id)
-          info["level"] = @game.getLevelByExp(info["experience"])
+          profile = @game.cmdPlayerGetInfo(id)
         rescue Trickster::Hackers::RequestError => e
           @shell.logger.error("#{msg} (#{e})")
           return
@@ -547,9 +546,19 @@ module Sandbox
         @shell.logger.log(msg)
 
         @shell.puts("\e[1;35m\u2022 Player info\e[0m")
-        info.each do |k, v|
-          @shell.puts("  %s: %s" % [k.capitalize, v])
-        end
+        @shell.puts("  %-15s %d" % ["ID", profile.id])
+        @shell.puts("  %-15s %s" % ["Name", profile.name])
+        @shell.puts("  %-15s \e[33m$ %d\e[0m" % ["Money", profile.money])
+        @shell.puts("  %-15s \e[31m\u20bf %d\e[0m" % ["Bitcoins", profile.bitcoins])
+        @shell.puts("  %-15s %d" % ["Credits", profile.credits])
+        @shell.puts("  %-15s %d" % ["Experience", profile.experience])
+        @shell.puts("  %-15s %d" % ["Rank", profile.rank])
+        @shell.puts("  %-15s %s" % ["Builders", "\e[37m" + "\u25b0" * profile.builders + "\e[0m"])
+        @shell.puts("  %-15s %d" % ["X", profile.x])
+        @shell.puts("  %-15s %d" % ["Y", profile.y])
+        @shell.puts("  %-15s %d" % ["Country", profile.country])
+        @shell.puts("  %-15s %d" % ["Skin", profile.skin])
+        @shell.puts("  %-15s %d" % ["Level", @game.getLevelByExp(profile.experience)])
         return
 
       when "detail"
@@ -567,7 +576,6 @@ module Sandbox
         msg = "Get net details world"
         begin
           detail = @game.cmdGetNetDetailsWorld(id)
-          detail["profile"]["level"] = @game.getLevelByExp(detail["profile"]["experience"])
         rescue Trickster::Hackers::RequestError => e
           @shell.logger.error("#{msg} (#{e})")
           return
@@ -575,9 +583,20 @@ module Sandbox
         @shell.logger.log(msg)
 
         @shell.puts("\e[1;35m\u2022 Detail player network\e[0m")
-        detail["profile"].each do |k, v|
-          @shell.puts("  %s: %s" % [k.capitalize, v])
-        end
+        @shell.puts("  %-15s %d" % ["ID", detail["profile"].id])
+        @shell.puts("  %-15s %s" % ["Name", detail["profile"].name])
+        @shell.puts("  %-15s \e[33m$ %d\e[0m" % ["Money", detail["profile"].money])
+        @shell.puts("  %-15s \e[31m\u20bf %d\e[0m" % ["Bitcoins", detail["profile"].bitcoins])
+        @shell.puts("  %-15s %d" % ["Credits", detail["profile"].credits])
+        @shell.puts("  %-15s %d" % ["Experience", detail["profile"].experience])
+        @shell.puts("  %-15s %d" % ["Rank", detail["profile"].rank])
+        @shell.puts("  %-15s %s" % ["Builders", "\e[37m" + "\u25b0" * detail["profile"].builders + "\e[0m"])
+        @shell.puts("  %-15s %d" % ["X", detail["profile"].x])
+        @shell.puts("  %-15s %d" % ["Y", detail["profile"].y])
+        @shell.puts("  %-15s %d" % ["Country", detail["profile"].country])
+        @shell.puts("  %-15s %d" % ["Skin", detail["profile"].skin])
+        @shell.puts("  %-15s %d" % ["Level", @game.getLevelByExp(detail["profile"].experience)])
+
         @shell.puts
         @shell.puts(
           "  \e[35m%-12s %-4s %-5s %-12s %-12s\e[0m" % [
