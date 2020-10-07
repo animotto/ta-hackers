@@ -500,7 +500,7 @@ class Chatbot < Sandbox::Script
         @script.logger.error("Get player info error (#{e})")
         return
       end
-      msg = "[b][ffa62b]ЗАПУСКАЕМ ГУСЯ! ГУСЬ ДЕЛАЕТ КУСЬ [568eff]#{info["name"]}[ffa62b]! В ЕГО КАРМАНАХ НАШЛОСЬ [ff2a16]#{info["money"]} денег[ffa62b], [ff2a16]#{info["bitcoins"]} биткойнов[ffa62b], [ff2a16]#{info["credits"]} кредитов"
+      msg = "[b][ffa62b]ЗАПУСКАЕМ ГУСЯ! ГУСЬ ДЕЛАЕТ КУСЬ [568eff]#{info.name}[ffa62b]! В ЕГО КАРМАНАХ НАШЛОСЬ [ff2a16]#{info.money} денег[ffa62b], [ff2a16]#{info.bitcoins} биткойнов[ffa62b], [ff2a16]#{info.credits} кредитов"
       @config["counter"] += 1
       if @config["users"][id].nil?
         @config["users"][id] = {
