@@ -497,7 +497,7 @@ module Trickster
       # Parses attack logs:
       #   section = Section index
       #
-      # Return hash:
+      # Returns hash:
       #   {
       #     ID => {
       #       "date"      => Datetime,

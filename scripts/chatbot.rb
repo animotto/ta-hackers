@@ -900,7 +900,7 @@ class Chatbot < Sandbox::Script
             @script.logger.error("Get logs error (#{e2})")
           end
           begin
-            logs.select! {|k, v| v["target"]["id"] == id.to_i && Time.parse(v["date"] + " UTC").localtime >= @config["active"][id]["startTime"]}
+            logs.select! {|k, v| v["target"]["id"] == id.to_i && Time.parse(v["date"] + " UTC").localtime >= @config["active"][id]["startTime"] && !v["test"]}
           rescue ArgumentError => e2
             @script.logger.error("Time parse error (#{e2})")
           end
