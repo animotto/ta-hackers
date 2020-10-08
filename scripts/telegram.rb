@@ -167,48 +167,40 @@ class Telegram < Sandbox::Script
     end
 
     return unless load
-    relays = Hash.new
+    chat = Hash.new
 
     @config["relays"].each do |room, relay|
-      relays[room] = {
-        "last" => String.new,
-      }
+      chat[room] = @game.getChat(room)
       begin
-        messages = @game.cmdChatDisplay(room, relays[room]["last"])
+        chat[room].read
       rescue Trickster::Hackers::RequestError => e
-        @logger.error("Chat display error (#{e})")
+        @logger.error("Chat read (#{e})")
         return
       end
-      relays[room]["last"] = messages.last["datetime"] unless messages.empty?
       @logger.log("Relay chat room #{room} to channel #{relay["channel"]}")
     end
 
     loop do
       sleep(SLEEP_TIME)
 
-      @config["relays"].clone.each do |room, relay|
-        relays[room] = {
-          "last" => String.new,
-        } unless relays.key?(room)
+      @config["relays"].each do |room, relay|
         begin
-          messages = @game.cmdChatDisplay(room, relays[room]["last"])
+          messages = chat[room].read
         rescue Trickster::Hackers::RequestError => e
-          @logger.error("Chat display error (#{e})")
+          @logger.error("Chat read (#{e})")
           next
         end
 
         messages.each do |message|
-          msg = message["message"].clone
+          msg = message.message.clone
           msg.gsub!(/\[([biusc]|sup|sub|[\da-f]{6})\]/i, "")
-          msg = "<b>#{message["nick"]}:</b> #{msg}"
+          msg = "<b>#{message.nick}:</b> #{msg}"
           begin
             @api.sendMessage(relay["channel"], msg)
           rescue APIError => e
             @logger.error("Send message error, from chat room #{room} to channel #{relay["channel"]} (#{e})")
           end
         end
-
-        relays[room]["last"] = messages.last["datetime"] unless messages.empty?
       end
     end
   end

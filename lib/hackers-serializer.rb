@@ -1096,28 +1096,27 @@ module Trickster
       #
       # Returns array:
       #   [
-      #     {
-      #       "datetime"  => Datetime,
-      #       "nick"      => Nickname,
-      #       "message"   => Message,
-      #       "id"        => ID,
-      #     }
+      #     *ChatMessage*,
+      #     *ChatMessage*,
+      #     *ChatMessage*,
+      #     ...
       #   ]
       def parseChat
-        data = Array.new
+        messages = Array.new
         unless @fields.empty?
           @fields[0].each do |message|
-            data.append(
-              {
-                "datetime" => message[0],
-                "nick"     => message[1],
-                "message"  => self.class.normalizeData(message[2]),
-                "id"       => message[3].to_i,
-              }
+            messages << ChatMessage.new(
+              message[0],
+              message[1],
+              self.class.normalizeData(message[2]),
+              message[3].to_i,
+              message[4].to_i,
+              message[5].to_i,
+              message[6].to_i,
             )
           end
         end
-        return data.reverse
+        return messages.reverse
       end
 
       ##

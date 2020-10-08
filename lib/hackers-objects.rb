@@ -12,18 +12,19 @@ module Trickster
                   :country, :skin
       ##
       # Creates new Profile:
-      #   ID,
-      #   Name,
-      #   Money,
-      #   Bitcoins,
-      #   Credits,
-      #   Experience,
-      #   Rank,
-      #   Builders,
-      #   X,
-      #   Y,
-      #   Country,
-      #   Skin,
+      #   *args = 
+      #     ID,
+      #     Name,
+      #     Money,
+      #     Bitcoins,
+      #     Credits,
+      #     Experience,
+      #     Rank,
+      #     Builders,
+      #     X,
+      #     Y,
+      #     Country,
+      #     Skin
       def initialize(*args)
         @id, @name, @money,
         @bitcoins, @credits,
@@ -95,6 +96,81 @@ module Trickster
       # Returns true or false
       def id?(index)
         @messages[index].nil?
+      end
+    end
+
+    ##
+    # Chat message object
+    class ChatMessage
+      ##
+      # Message attributes
+      attr_reader :datetime, :nick,
+                  :message, :id,
+                  :experience, :rank,
+                  :country
+
+      ##
+      # Creates new chat message:
+      #   *args =
+      #     Dateime,
+      #     Nick,
+      #     Message,
+      #     ID,
+      #     Experience,
+      #     Rank,
+      #     Country
+      def initialize(*args)
+        @datetime, @nick,
+        @message, @id,
+        @experience, @rank,
+        @country = args
+      end
+    end
+
+    ##
+    # Chat object
+    class Chat
+      ##
+      # Creates new Chat:
+      #   game  = Game API
+      #   room  = Room ID
+      def initialize(game, room)
+        @game = game
+        @room = room
+        @last = String.new
+      end
+
+      ##
+      # Reads messages
+      #
+      # Returns array:
+      #   [
+      #     *ChatMessage*,
+      #     *ChatMessage*,
+      #     *ChatMessage*,
+      #     ...
+      #   ]
+      def read
+        messages = @game.cmdChatDisplay(@room, @last)
+        @last = messages.last.datetime unless messages.empty?
+        return messages
+      end
+
+      ##
+      # Writes a message to the chat and reads messages:
+      #   message = Message
+      #
+      # Returns array:
+      #   [
+      #     *ChatMessage*,
+      #     *ChatMessage*,
+      #     *ChatMessage*,
+      #     ...
+      #   ]
+      def write(message)
+        messages = @game.cmdChatSend(@room, message, @last)
+        @last = messages.last.datetime unless messages.empty?
+        return messages
       end
     end
   end

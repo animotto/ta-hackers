@@ -4,17 +4,14 @@ module Sandbox
       @rooms = Hash.new
       super(game, shell)
       @commands.merge!({
-                         "open" => ["open <room>", "Open room"],
-                         "close" => ["close <room>", "Close room"],
-                         "list" => ["list", "List opened rooms"],
-                         "say" => ["say <room> <text>", "Say to the room"],
-                         "talk" => ["talk <room>", "Talk in the room"],
-                         "users" => ["users <room>", "Show users list in the room"],
-                       })
+        "open"  => ["open <room>", "Open room"],
+        "close" => ["close <room>", "Close room"],
+        "list"  => ["list", "List opened rooms"],
+        "say"   => ["say <room> <text>", "Say to the room"],
+        "talk"  => ["talk <room>", "Talk in the room"],
+        "users" => ["users <room>", "Show users list in the room"],
+       })
       @mutex = Mutex.new
-      @logger = Logger.new(@shell)
-      @logger.logPrefix = "\e[1;33m\u2764\e[22;33m "
-      @logger.logSuffix = "\e[0m"
     end
 
     def exec(words)
@@ -38,10 +35,10 @@ module Sandbox
           return
         end
         
-        @rooms[room] = [
-          Thread.new {chat(room)},
-          String.new,
-        ]
+        @rooms[room] = {
+          "chat"    => @game.getChat(room),
+          "thread"  => Thread.new {read(room)},
+        }
         return
 
       when "list"
@@ -52,7 +49,7 @@ module Sandbox
         
         @shell.puts "Opened rooms:"
         @rooms.each_key do |k|
-          @shell.puts " \e[1;33m\u2022\e[0m %d" % k
+          @shell.puts " \e[1;33m\u2022\e[0m %-4d (%s)" % [k, @game.countriesList.fetch(k.to_s, "Unknown")]
         end
         return
         
@@ -68,7 +65,7 @@ module Sandbox
           return
         end
 
-        @rooms[room][0].kill
+        @rooms[room]["thread"].kill
         @rooms.delete(room)
         return
 
@@ -89,20 +86,14 @@ module Sandbox
           return
         end
 
-        response = nil
+        messages = Array.new
         @mutex.synchronize do
-          begin
-            response = @game.cmdChatSend(
-              room,
-              words[2..-1].join(" "),
-              @rooms[room][1],
-            )
-          rescue Trickster::Hackers::RequestError => e
-            @shell.logger.error("Chat send (#{e})")
-            return
-          end
-          logMessages(room, response)
+          messages = @rooms[room]["chat"].write(words[2..-1].join(" "))
+        rescue Trickster::Hackers::RequestError => e
+          @shell.logger.error("Chat write (#{e})")
+          return
         end
+        log(room, messages)
         return
 
       when "talk"
@@ -127,20 +118,14 @@ module Sandbox
           Readline::HISTORY.pop if message.empty?
           next if message.empty?
           break if message == "!"
-          response = nil
+          messages = Array.new
           @mutex.synchronize do
-            begin
-              response = @game.cmdChatSend(
-                room,
-                message,
-                @rooms[room][1],
-              )
-            rescue Trickster::Hackers::RequestError => e
-              @shell.logger.error("Chat send (#{e})")
-              next
-            end
-            logMessages(room, response)
+            messages = @rooms[room]["chat"].write(message)
+          rescue Trickster::Hackers::RequestError => e
+            @shell.logger.error("Chat write (#{e})")
+            next
           end
+          log(room, messages)
         end
         return
         
@@ -154,24 +139,25 @@ module Sandbox
         @shell.puts("#{cmd}: Specify room ID")
         return
       end
+      room = words[1].to_i
 
-      messages = nil
-      @mutex.synchronize do
-        messages = @game.cmdChatDisplay(words[1])
+      chat = @game.getChat(room)
+      begin
+        messages = chat.read
       rescue Trickster::Hackers::RequestError => e
-        @shell.logger.error("Chat display (#{e})")
+        @shell.logger.error("Chat read (#{e})")
         return
       end
 
       if messages.empty?
-        @shell.puts "No users in room #{words[1]}"
+        @shell.puts "No users in room #{room}"
         return
       end
 
-      messages.uniq! {|m| m["id"]}
-      @shell.puts "Users:"
+      messages.uniq! {|m| m.id}
+      @shell.puts "Users in room %d (%s)" % [room, @game.countriesList.fetch(room.to_s, "Unknown")]
       messages.each do |message|
-        @shell.puts " %-30s .. %d" % [message["nick"], message["id"]]
+        @shell.puts " %-30s .. %d" % [message.nick, message.id]
       end
       return
 
@@ -180,27 +166,27 @@ module Sandbox
       super(words)
     end
 
-    def logMessages(room, messages)
+    def log(room, messages)
       messages.each do |message|
-        @logger.log(
-          "(%d) %s: %s" % [
+        @shell.puts(
+          "\e[1;33m\u2764 \e[22;34m[%s:%d] \e[1;35m%s \e[22;33m%s\e[0m" % [
+            @game.countriesList.fetch(room.to_s, "Unknown"),
             room,
-            message["nick"],
-            message["message"],
+            message.nick,
+            message.message,
           ],
         )
-        @rooms[room][1] = message["datetime"]
       end
     end
     
-    def chat(room)
+    def read(room)
       loop do
         @mutex.synchronize do
-          messages = @game.cmdChatDisplay(room, @rooms[room][1])
+          messages = @rooms[room]["chat"].read
         rescue Trickster::Hackers::RequestError => e
-          @shell.logger.error("Chat display (#{e})")
+          @shell.logger.error("Chat read (#{e})")
         else
-          logMessages(room, messages)
+          log(room, messages)
         end
         
         sleep(@game.appSettings["chat_refresh_interval"].to_i)

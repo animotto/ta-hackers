@@ -71,6 +71,13 @@ module Trickster
       end
 
       ##
+      # Gets chat instance
+      #   room = Room ID
+      def getChat(room)
+        Chat.new(self, room)
+      end
+
+      ##
       # Gets translations by specified language
       #
       # Returns Serializer#parseTransLang
@@ -581,7 +588,13 @@ module Trickster
       #   room = Room ID
       #   last = Read from the datetime
       #
-      # Returns Serializer#parseChat
+      # Returns array:
+      #   [
+      #     *ChatMessage*,
+      #     *ChatMessage*,
+      #     *ChatMessage*,
+      #     ...
+      #   ]
       def cmdChatDisplay(room, last = "")
         params = {
           "chat_display"  => "",
@@ -600,7 +613,13 @@ module Trickster
       #   message = Message
       #   last    = Read from the datetime
       #
-      # Returns Serializer#parseChat
+      # Returns array:
+      #   [
+      #     *ChatMessage*,
+      #     *ChatMessage*,
+      #     *ChatMessage*,
+      #     ...
+      #   ]
       def cmdChatSend(room, message, last = "")
         message = Serializer.normalizeData(message, false)
         params = {
