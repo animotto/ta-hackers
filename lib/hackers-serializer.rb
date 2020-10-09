@@ -933,7 +933,9 @@ module Trickster
       #     "profile"   => *Profile*,
       #     "programs"  => Serializer#parsePrograms,
       #     "queue"     => Serializer#parseQueue,
+      #     "skins"     => Serializer#parseSkins,
       #     "rank"      => Rank,
+      #     "shield"    => Serializer#parseShield,
       #     "logs"      => Serializer#parseLogs,
       #     "time"      => Time,
       #     "readme"    => *Readme*,
@@ -945,7 +947,9 @@ module Trickster
         data["profile"] = parseProfile(2, 0)
         data["programs"] = parsePrograms(3)
         data["queue"] = parseQueue(4)
+        data["skins"] = parseSkins(6)
         data["rank"] = @fields.dig(7, 0, 0).to_i
+        data["shield"] = parseShield(8)
         data["logs"] = parseLogs(9)
         data["time"] = @fields.dig(10, 0, 0)
         data["readme"] = parseReadme(11, 0, 0)
@@ -1205,7 +1209,7 @@ module Trickster
       def parseSkinTypes
         data = Hash.new
         @fields[0].each do |field|
-          data[field[0]] = {
+          data[field[0].to_i] = {
             "name"  => field[1],
             "price" => field[2].to_i,
             "rank"  => field[3].to_i,
@@ -1495,6 +1499,58 @@ module Trickster
           },
         }
         return stats
+      end
+
+      ##
+      # Parses shield
+      #   section = Section index
+      #
+      # Returns hash:
+      #   {
+      #     "type"   => Type,
+      #     "timer"  => Timer,
+      #   }
+      def parseShield(section)
+        shield = {
+          "type"    => @fields[section][0][0].to_i,
+          "timer"   => @fields[section][0][1].to_i,
+        }
+        return shield
+      end
+
+      ##
+      # Parses skins
+      #   section = Section index
+      #
+      # Returns array:
+      #   [
+      #     Skin1,
+      #     Skin2,
+      #     Skin3,
+      #     ...
+      #   ]
+      def parseSkins(section)
+        skins = Array.new
+        @fields[section].each do |skin|
+          skins << skin[0].to_i
+        end
+        return skins
+      end
+
+      ##
+      # Parses buy currency
+      #
+      # Returns hash:
+      #   {
+      #     "credits"   => Credits,
+      #     "amount"    => Amount,
+      #   }
+      def parsePlayerBuyCurrencyPerc
+        data = {
+          "credits"   => @fields[0][0][0],
+          "amount"    => @fields[0][0][1],
+        }
+        return data
       end
     end
   end

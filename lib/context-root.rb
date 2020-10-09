@@ -10,6 +10,7 @@ module Sandbox
         "world"       => ["[world]", "World"],
         "script"      => ["[script]", "Scripts"],
         "chat"        => ["[chat]", "Internal chat"],
+        "buy"         => ["[buy]", "The buys"],
         "connect"     => ["connect", "Connect to the server"],
         "sid"         => ["sid", "Show session ID"],
         "trans"       => ["trans", "Language translations"],
@@ -45,7 +46,7 @@ module Sandbox
 
       when "query", "net", "prog", 
            "mission", "world", "script", 
-           "chat"
+           "chat", "buy"
         @shell.context = "/#{cmd}"
         return
 

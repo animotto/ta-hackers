@@ -902,6 +902,8 @@ module Trickster
       ##
       # Buys player skin:
       #   skin = Skin ID
+      #
+      # Returns the string "ok" if the request is successful
       def cmdPlayerBuySkin(skin)
         params = {
           "player_buy_skin" => "",
@@ -930,6 +932,8 @@ module Trickster
       ##
       # Buys shield:
       #   shield = Shield ID
+      #
+      # Returns an empty string if the request is successful
       def cmdShieldBuy(shield)
         params = {
           "shield_buy"      => "",
@@ -945,6 +949,8 @@ module Trickster
       # Buys currency:
       #   currency  = Currency
       #   perc      = Percent
+      #
+      # Returns Serializer#parsePlayerBuyCurrencyPerc
       def cmdPlayerBuyCurrencyPerc(currency, perc)
         params = {
             "player_buy_currency_percentage" => 1,
@@ -954,7 +960,8 @@ module Trickster
             "app_version"                    => @config["version"],
           }
         response = @client.request(params, @sid)
-        return response
+        serializer = Serializer.new(response)
+        return serializer.parsePlayerBuyCurrencyPerc
       end
 
       ##
@@ -1210,7 +1217,9 @@ module Trickster
       ##
       # Buys builder:
       #   id = Builder ID
-      def cmdPlayerBuyBuilder(id)
+      #
+      # Returns the string "ok" if the request is successful
+      def cmdPlayerBuyBuilder(id = @config["id"])
         params = {
           "player_buy_builder"  => "",
           "id"                  => id,
@@ -1224,7 +1233,9 @@ module Trickster
       # Buys builder in tutorial mode:
       #   id        = Builder ID
       #   tutorial  = Tutorial ID
-      def cmdTutorialPlayerBuyBuilder(id, tutorial)
+      #
+      # Returns the string "ok" if the request is successful
+      def cmdTutorialPlayerBuyBuilder(id = @config["id"], tutorial)
         params = {
           "tutorial_player_buy_builder"  => "",
           "id_player"                    => id,
