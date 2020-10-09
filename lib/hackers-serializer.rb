@@ -1466,11 +1466,11 @@ module Trickster
       #     },
       #     "loot"          => {
       #       "money"     => Money,
-      #       "bitcoins"  => Failed,
+      #       "bitcoins"  => Bitcoins,
       #     },
       #     "collect"       => {
       #       "money"     => Money,
-      #       "bitcoins"  => Failed,
+      #       "bitcoins"  => Bitcoins,
       #     },
       #   }
       def parsePlayerGetStats
