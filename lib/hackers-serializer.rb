@@ -1448,6 +1448,54 @@ module Trickster
       def parseCpGenerateCode
         return @fields[0][0][0]
       end
+
+      ##
+      # Parses player statistics
+      #
+      # Returns hash:
+      #   {
+      #     "rank"          => Rank,
+      #     "experience"    => Experience,
+      #     "hacks"         => {
+      #       "success" => Successful,
+      #       "fail"    => Failed,
+      #     },
+      #     "defense"       => {
+      #       "success" => Successful,
+      #       "fail"    => Failed,
+      #     },
+      #     "loot"          => {
+      #       "money"     => Money,
+      #       "bitcoins"  => Failed,
+      #     },
+      #     "collect"       => {
+      #       "money"     => Money,
+      #       "bitcoins"  => Failed,
+      #     },
+      #   }
+      def parsePlayerGetStats
+        stats = {
+          "rank"          => @fields[0][0][0].to_i,
+          "experience"    => @fields[0][0][1].to_i,
+          "hacks"         => {
+            "success"  => @fields[0][0][2].to_i,
+            "fail"     => @fields[0][0][3].to_i,
+          },
+          "defense"       => {
+            "success"  => @fields[0][0][4].to_i,
+            "fail"     => @fields[0][0][5].to_i,
+          },
+          "loot"          => {
+            "money"     => @fields[0][0][7].to_i,
+            "bitcoins"  => @fields[0][0][9].to_i,
+          },
+          "collect"       => {
+            "money"     => @fields[0][0][6].to_i,
+            "bitcoins"  => @fields[0][0][8].to_i,
+          },
+        }
+        return stats
+      end
     end
   end
 end

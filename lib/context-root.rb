@@ -35,6 +35,7 @@ module Sandbox
         "top"         => ["top <country>", "Show top ranking"],
         "cpgen"       => ["cpgen", "Cp generate code"],
         "cpuse"       => ["cpuse <code>", "Cp use code"],
+        "stats"       => ["stats", "Show player statistics"],
       })
     end
     
@@ -778,6 +779,41 @@ module Sandbox
         @shell.puts("\e[1;35m\u2022 Account credentials\e[0m")
         @shell.puts("  ID: #{data["id"]}")
         @shell.puts("  Password: #{data["password"]}")
+        return
+
+      when "stats"
+        if @game.sid.empty?
+          @shell.puts("#{cmd}: No session ID")
+          return
+        end
+
+        msg = "Player stats"
+        begin
+          stats = @game.cmdPlayerGetStats
+        rescue Trickster::Hackers::RequestError => e
+          @shell.logger.error("#{msg} (#{e})")
+          return
+        end
+        @shell.logger.log(msg)
+
+        @shell.puts("\e[1;35m\u2022 Player statistics\e[0m")
+        @shell.puts("  Rank: #{stats["rank"]}")
+        @shell.puts("  Experience: #{stats["experience"]}")
+        @shell.puts("  Level: #{@game.getLevelByExp(stats["experience"])}")
+        @shell.puts("  Hacks:")
+        @shell.puts("   Successful: #{stats["hacks"]["success"]}")
+        @shell.puts("   Failed: #{stats["hacks"]["fail"]}")
+        @shell.puts("   Win rate: #{(stats["hacks"]["success"].to_f / (stats["hacks"]["success"] + stats["hacks"]["fail"]) * 100).to_i}%")
+        @shell.puts("  Defenses:")
+        @shell.puts("   Successful: #{stats["defense"]["success"]}")
+        @shell.puts("   Failed: #{stats["defense"]["fail"]}")
+        @shell.puts("   Win rate: #{(stats["defense"]["success"].to_f / (stats["defense"]["success"] + stats["defense"]["fail"]) * 100).to_i}%")
+        @shell.puts("  Looted:")
+        @shell.puts("   Money: #{stats["loot"]["money"]}")
+        @shell.puts("   Bitcoins: #{stats["loot"]["bitcoins"]}")
+        @shell.puts("  Collected:")
+        @shell.puts("   Money: #{stats["collect"]["money"]}")
+        @shell.puts("   Bitcoins: #{stats["collect"]["bitcoins"]}")
         return
         
       end

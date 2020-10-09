@@ -1429,14 +1429,19 @@ module Trickster
         return response
       end
 
-      def cmdPlayerGetStats(id)
+      ##
+      # Gets player statistics
+      #
+      # Returns Serializer#parsePlayerGetStats
+      def cmdPlayerGetStats
         params = {
           "player_get_stats"  => "",
-          "id"                => id,
+          "id"                => @config["id"],
           "app_version"       => @config["version"],
         }
         response = @client.request(params, @sid)
-        return response
+        serializer = Serializer.new(response)
+        return serializer.parsePlayerGetStats
       end
 
       def cmdTutorialNetUpdate(id, net, tutorial)
