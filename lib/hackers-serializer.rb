@@ -388,7 +388,7 @@ module Trickster
 
       ##
       # Generates network structure:
-      #   data = Serialize#parseNetwork
+      #   data = Serializer#parseNetwork
       #
       # Returns the string in format:
       #   X1*Y1*Z1_X2*Y2*Z2_X3*Y3*Z3_|I1*R1_I2*R2_I3*R3_|ID1_ID2_ID3_
@@ -446,7 +446,7 @@ module Trickster
       # Returns hash:
       #   {
       #     ID => {
-      #       "type"       => Type,
+      #       "type"      => Type,
       #       "level"     => Level,
       #       "Timer"     => Timer,
       #       "Builders"  => Builders,
