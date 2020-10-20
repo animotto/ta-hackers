@@ -1653,6 +1653,25 @@ module Trickster
         response = @client.request(params, @sid)
         return response
       end
+
+      ##
+      # Subscribes player email:
+      #   email     = Email
+      #   language  = Language
+      #   id        = Player ID
+      #
+      # Returns the string "ok" if the request is successful
+      def cmdEmailSubscribe(email, language = @config["language"], id = @config["id"])
+        params = {
+          "email_subscribe" => "",
+          "player_id"       => id,
+          "email"           => email,
+          "language"        => language,
+          "app_version"     => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        return response
+      end
     end
   end
 end
