@@ -62,6 +62,7 @@ module Sandbox
           @shell.puts("  %-15s %d" % ["Country", net["profile"].country])
           @shell.puts("  %-15s %d" % ["Skin", net["profile"].skin])
           @shell.puts("  %-15s %d" % ["Level", @game.getLevelByExp(net["profile"].experience)])
+          @shell.puts("  %-15s %d" % ["Tutorial", net["tutorial"]])
           unless net["shield"]["type"].zero?
             @shell.puts("  %-15s %s (%d)" % ["Shield", @game.shieldTypes[net["shield"]["type"]]["name"], net["shield"]["timer"]])
           end

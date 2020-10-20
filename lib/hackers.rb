@@ -1203,7 +1203,7 @@ module Trickster
       # Sets tutorial:
       #   id        = Player ID
       #   tutorial  = Tutorial ID
-      def cmdPlayerSetTutorial(id, tutorial)
+      def cmdPlayerSetTutorial(tutorial, id = @config["id"])
         params = {
           "player_set_tutorial"  => "",
           "id"                   => id,

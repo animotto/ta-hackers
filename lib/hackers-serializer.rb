@@ -889,6 +889,7 @@ module Trickster
       #   {
       #     "id"          => ID,
       #     "password"    => Password,
+      #     "tutorial"    => Tutorial,
       #     "sid"         => Session ID,
       #     "experience"  => Experience,
       #     "goals"       => Goals,
@@ -898,6 +899,7 @@ module Trickster
         data = {
           "id"          => @fields[0][0][0].to_i,
           "password"    => @fields[0][0][1],
+          "tutorial"    => @fields[0][0][2].to_i,
           "sid"         => @fields[0][0][3],
           "experience"  => @fields[0][0][5].to_i,
           "goals"       => parseGoals(1),
@@ -933,6 +935,7 @@ module Trickster
       #     "profile"   => *Profile*,
       #     "programs"  => Serializer#parsePrograms,
       #     "queue"     => Serializer#parseQueue,
+      #     "tutorial"  => Tutorial,
       #     "skins"     => Serializer#parseSkins,
       #     "rank"      => Rank,
       #     "shield"    => Serializer#parseShield,
@@ -947,6 +950,7 @@ module Trickster
         data["profile"] = parseProfile(2, 0)
         data["programs"] = parsePrograms(3)
         data["queue"] = parseQueue(4)
+        data["tutorial"] = @fields.dig(5, 0, 0).to_i
         data["skins"] = parseSkins(6)
         data["rank"] = @fields.dig(7, 0, 0).to_i
         data["shield"] = parseShield(8)

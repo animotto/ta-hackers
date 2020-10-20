@@ -33,6 +33,7 @@ module Sandbox
         "detail"      => ["detail <id>", "Get detail player network"],
         "hq"          => ["hq <x> <y> <country>", "Set player HQ"],
         "skin"        => ["skin <skin>", "Set player skin"],
+        "tutorial"    => ["tutorial <id>", "Set tutorial"],
         "top"         => ["top <country>", "Show top ranking"],
         "cpgen"       => ["cpgen", "Cp generate code"],
         "cpuse"       => ["cpuse <code>", "Cp use code"],
@@ -661,6 +662,28 @@ module Sandbox
         msg = "Player set skin"
         begin
           response = @game.cmdPlayerSetSkin(skin)
+        rescue Trickster::Hackers::RequestError => e
+          @shell.logger.error("#{msg} (#{e})")
+          return
+        end
+        @shell.logger.log(msg)
+        return
+
+      when "tutorial"
+        tutorial = words[1]
+        if tutorial.nil?
+          @shell.puts("#{cmd}: Specify tutorial")
+          return
+        end
+
+        if @game.sid.empty?
+          @shell.puts("#{cmd}: No session ID")
+          return
+        end
+
+        msg = "Player set tutorial"
+        begin
+          response = @game.cmdPlayerSetTutorial(tutorial)
         rescue Trickster::Hackers::RequestError => e
           @shell.logger.error("#{msg} (#{e})")
           return
