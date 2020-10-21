@@ -8,6 +8,8 @@ require "json"
 require "hackers"
 require "sandbox"
 
+Signal.trap("INT") {exit}
+
 Dir.chdir(__dir__)
 CONFIGS_DIR = "configs"
 DEFAULT_CONFIG = "default"
