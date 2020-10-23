@@ -778,12 +778,12 @@ module Trickster
       #   ]
       def parseQueue(section)
         queue = Array.new
-        @fields[section].each do |q|
+        @fields[section]&.each do |q|
           queue.push(
             {
-              "type" => q[0].to_i,
-              "amount" => q[1].to_i,
-              "timer" => q[2].to_i,
+              "type"    => q[0].to_i,
+              "amount"  => q[1].to_i,
+              "timer"   => q[2].to_i,
             }
           )
         end
