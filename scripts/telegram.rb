@@ -1,3 +1,5 @@
+require "cgi"
+
 class Telegram < Sandbox::Script
   DATA_DIR = "#{Sandbox::ContextScript::SCRIPTS_DIR}/telegram"
   TOKEN_VAR = "telegram-token"
@@ -11,19 +13,22 @@ class Telegram < Sandbox::Script
       @token = token
       @client = Net::HTTP.new(HOST, PORT)
       @client.use_ssl = (PORT == 443)
+      @updateId = 0
     end
 
     def getMe
       request("getMe")
     end
 
-    def getUpdates(offset = 0)
-      request(
+    def getUpdates
+      updates = request(
         "getUpdates",
         {
-          "offset" => offset,
+          "offset" => @updateId,
         }
       )
+      @updateId = updates.last["update_id"].to_i + 1 unless updates.empty?
+      return updates
     end
 
     def sendMessage(chatId, text, parseMode = "HTML")
@@ -47,12 +52,13 @@ class Telegram < Sandbox::Script
       rescue => e
         raise APIError.new("HTTP request", e.message)
       end
-      raise APIError.new("HTTP request", "#{response.code} #{response.message}") unless response.instance_of?(Net::HTTPOK)
+
       begin
         data = JSON.parse(response.body)
       rescue JSON::ParserError => e
         raise APIError.new("API parse", e.message)
       end
+
       raise APIError.new("API", data["description"]) unless data["ok"]
       raise APIError.new("API", "No result") if data["result"].nil?
       return data["result"]
@@ -123,7 +129,11 @@ class Telegram < Sandbox::Script
         return "Commands: me | relay <add|del> <room> <channel>"
 
       when "me"
-        return "Me: " + @api.getMe.map {|k, v| "#{k}: #{v}"}.join(", ")
+        me = "Me:\n"
+        @api.getMe.each do |k, v|
+          me << " #{k}: #{v}\n"
+        end
+        return me
 
       when "relay"
         case words[1]
@@ -135,7 +145,7 @@ class Telegram < Sandbox::Script
             @config["relays"][room] = {
               "channel" => channel,
             }
-            @config.save
+            save
             return "Relay for room #{room} added"
 
           when "del"
@@ -143,16 +153,16 @@ class Telegram < Sandbox::Script
             return "Specify room ID" if room.nil?
             return "Relay for room #{room} doesn't exist" unless @config["relays"].key?(room)
             @config["relays"].delete(room)
-            @config.save
+            save
             return "Relay for room #{room} deleted"
 
           else
             return "No relays" if @config["relays"].empty?
-            relays = Array.new
+            relays = "Relays:\n"
             @config["relays"].each do |room, relay|
-              relays.push("#{room} -> #{relay["channel"]}")
+              relays << " #{room} -> #{relay["channel"]}\n"
             end
-            return "Relays: " + relays.join(", ")
+            return relays
         end
 
       else
@@ -183,6 +193,18 @@ class Telegram < Sandbox::Script
     loop do
       sleep(SLEEP_TIME)
 
+      begin
+        @api.getUpdates.each do |update|
+          @logger.log("%d (%s): %s" % [
+            update["message"]["from"]["id"],
+            update["message"]["from"]["username"],
+            update["message"]["text"],
+          ])
+        end
+      rescue APIError => e
+        @logger.error("Get updates error (#{e})")
+      end
+
       @config["relays"].each do |room, relay|
         begin
           messages = chat[room].read
@@ -194,11 +216,15 @@ class Telegram < Sandbox::Script
         messages.each do |message|
           msg = message.message.clone
           msg.gsub!(/\[([biusc]|sup|sub|[\da-f]{6})\]/i, "")
-          msg = "<b>#{message.nick}:</b> #{msg}"
+          msg = "<b>%s: </b>%s" % [
+            CGI.escape_html(message.nick),
+            CGI.escape_html(msg),
+          ]
           begin
             @api.sendMessage(relay["channel"], msg)
           rescue APIError => e
             @logger.error("Send message error, from chat room #{room} to channel #{relay["channel"]} (#{e})")
+            @logger.error(msg)
           end
         end
       end
