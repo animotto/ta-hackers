@@ -3,14 +3,15 @@ module Sandbox
     def initialize(game, shell)
       super(game, shell)
       @commands.merge!({
-                         "list" => ["list", "Show programs list"],
-                         "create" => ["create <type>", "Create program"],
-                         "upgrade" => ["upgrade <id>", "Upgrade program"],
-                         "finish" => ["finish <id>", "Finish program"],
-                         "edit" => ["edit <type,amount>", "Edit programs"],
-                         "queue" => ["queue", "Show programs queue"],
-                         "sync" => ["sync <type,amount>", "Set programs queue"],
-                       })
+        "list"    => ["list", "Show programs list"],
+        "create"  => ["create <type>", "Create program"],
+        "upgrade" => ["upgrade <id>", "Upgrade program"],
+        "finish"  => ["finish <id>", "Finish program"],
+        "edit"    => ["edit <type,amount>", "Edit programs"],
+        "queue"   => ["queue", "Show programs queue"],
+        "sync"    => ["sync <type,amount>", "Set programs queue"],
+        "revive"  => ["revive <id>", "Revive AI program"],
+      })
     end
 
     def exec(words)
@@ -273,6 +274,28 @@ module Sandbox
             ]
           )
         end
+        return
+
+      when "revive"
+        if @game.sid.empty?
+          @shell.puts("#{cmd}: No session ID")
+          return
+        end
+
+        if words[1].nil?
+          @shell.puts("#{cmd}: Specify AI program ID")
+          return
+        end
+
+        id = words[1].to_i
+        msg = "AI program revive"
+        begin
+          id = @game.cmdAIProgramRevive(id)
+        rescue Trickster::Hackers::RequestError => e
+          @shell.logger.error("#{msg} (#{e})")
+          return
+        end
+        @shell.logger.log(msg)
         return
 
       end

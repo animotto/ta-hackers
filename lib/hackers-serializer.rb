@@ -1556,6 +1556,22 @@ module Trickster
         }
         return data
       end
+
+      ##
+      # Parses revive AI program
+      #
+      # Returns hash:
+      #   {
+      #     "programs"  => Programs,
+      #     "queue"     => Queue,
+      #   }
+      def parseAIProgramRevive
+        data = {
+          "programs"  => parsePrograms(0),
+          "queue"     => parseQueue(1),
+        }
+        return data
+      end
     end
   end
 end

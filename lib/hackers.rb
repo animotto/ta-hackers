@@ -71,7 +71,7 @@ module Trickster
       end
 
       ##
-      # Gets chat instance
+      # Gets chat instance:
       #   room = Room ID
       def getChat(room)
         Chat.new(self, room)
@@ -475,8 +475,8 @@ module Trickster
           "seq"             => seq,
           "app_version"     => @config["version"],
         }
-        response = @client.request(params, @sid)
         @syncSeq += 1
+        response = @client.request(params, @sid)
         serializer = Serializer.new(response)
         return serializer.parseQueueSync
       end
@@ -1562,6 +1562,11 @@ module Trickster
         return response
       end
 
+      ##
+      # Revives AI program:
+      #   id = Program ID
+      #
+      # Returns Serializer#parseAIProgramRevive
       def cmdAIProgramRevive(id)
         params = {
           "ai_program_revive" => 1,
@@ -1569,9 +1574,15 @@ module Trickster
           "app_version"       => @config["version"],
         }
         response = @client.request(params, @sid)
-        return response
+        serializer = Serializer.new(response)
+        return serializer.parseAIProgramRevive
       end
 
+      ##
+      # Revives and finishes AI program:
+      #   id = Program ID
+      #
+      # Returns Serializer#parseAIProgramRevive
       def cmdAIProgramReviveFinish(id)
         params = {
           "ai_program_revive_and_finish"  => 1,
@@ -1579,9 +1590,15 @@ module Trickster
           "app_version"                   => @config["version"],
         }
         response = @client.request(params, @sid)
-        return response
+        serializer = Serializer.new(response)
+        return serializer.parseAIProgramRevive
       end
 
+      ##
+      # Finishes reviving AI program:
+      #   id = Program ID
+      #
+      # Returns Serializer#parseAIProgramRevive
       def cmdAIProgramFinishRevive(id)
         params = {
           "ai_program_finish_revive"  => 1,
@@ -1589,7 +1606,8 @@ module Trickster
           "app_version"               => @config["version"],
         }
         response = @client.request(params, @sid)
-        return response
+        serializer = Serializer.new(response)
+        return serializer.parseAIProgramRevive
       end
 
       ##
