@@ -710,9 +710,9 @@ module Trickster
       #   }
       def parseGoals(section)
         goals = Hash.new
-        @fields[section].each do |goal|
+        @fields[section]&.each do |goal|
           goals[goal[0].to_i] = {
-            "type"      => goal[1],
+            "type"      => goal[1].to_s,
             "credits"   => goal[2].to_i,
             "finished"  => goal[3].to_i,
           }
@@ -779,13 +779,11 @@ module Trickster
       def parseQueue(section)
         queue = Array.new
         @fields[section]&.each do |q|
-          queue.push(
-            {
-              "type"    => q[0].to_i,
-              "amount"  => q[1].to_i,
-              "timer"   => q[2].to_i,
-            }
-          )
+          queue << {
+            "type"    => q[0].to_i,
+            "amount"  => q[1].to_i,
+            "timer"   => q[2].to_i,
+          }
         end
         return queue
       end
