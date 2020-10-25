@@ -20,6 +20,20 @@ module Sandbox
       @logger.errorSuffix = "\e[0m"
     end
 
+    def completion(text)
+      case Readline.line_buffer.lstrip
+        when /^run\s+/
+          files = Dir.children(SCRIPTS_DIR).sort.grep(/\.rb$/)
+          files.map! {|file| file.delete_suffix!(".rb")}
+          return files.grep(/^#{Regexp.escape(text)}/)
+
+        when /^(admin|kill)\s+/
+          jobs = @jobs.keys.map(&:to_s)
+          return jobs.grep(/^#{Regexp.escape(text)}/)
+      end
+      super
+    end
+
     def exec(words)
       cmd = words[0].downcase
       case cmd

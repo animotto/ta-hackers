@@ -45,7 +45,7 @@ module Sandbox
       @logger.infoSuffix = "\e[0m"
 
       Readline.completion_proc = Proc.new do |text|
-        @contexts[@context].commands.keys.grep(/^#{Regexp.escape(text)}/)
+        @contexts[@context].completion(text)
       end
 
       @game.countriesList = Config.new("#{DATA_DIR}/countries.conf")
@@ -125,7 +125,15 @@ module Sandbox
     end
   end
 
+  ##
+  # Parent class for scripts
   class Script
+    ##
+    # Creates new script:
+    #   game    = Game
+    #   shell   = Shell
+    #   logger  = Logger
+    #   args    = Arguments
     def initialize(game, shell, logger, args)
       @game = game
       @shell = shell
@@ -133,7 +141,15 @@ module Sandbox
       @args = args
     end
 
+    ##
+    # Script entry point
     def main
+    end
+
+    ##
+    # Executes after the script finished
+    def finish
     end
   end
 end
+

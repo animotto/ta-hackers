@@ -6,13 +6,22 @@ module Sandbox
       @game = game
       @shell = shell
       @commands = {
-        ".." => ["..", "Return to previous context"],
-        "path" => ["path", "Current context path"],
-        "set" => ["set [var] [val]", "Set configuration variables"],
-        "unset" => ["unset <var>", "Unset configuration variables"],
-        "save" => ["save", "Save configuration"],
-        "quit" => ["quit", "Quit"],
+        ".."      => ["..", "Return to previous context"],
+        "path"    => ["path", "Current context path"],
+        "echo"    => ["echo <var>", "Print configuration variables"],
+        "set"     => ["set [var] [val]", "Set configuration variables"],
+        "unset"   => ["unset <var>", "Unset configuration variables"],
+        "save"    => ["save", "Save configuration"],
+        "quit"    => ["quit", "Quit"],
       }
+    end
+
+    def completion(text)
+      case Readline.line_buffer.lstrip
+        when /^(echo|set|unset)\s+/
+          return @game.config.keys.grep(/^#{Regexp.escape(text)}/)
+      end
+      @commands.keys.grep(/^#{Regexp.escape(text)}/)
     end
 
     def help(commands)
@@ -43,6 +52,20 @@ module Sandbox
       when "quit"
         exit
 
+      when "echo"
+        if words[1].nil?
+          @shell.puts "#{cmd}: Specify variable name"
+          return
+        end
+
+        unless @game.config.key?(words[1])
+          @shell.puts "No such variable"
+          return
+        end
+
+        @shell.puts @game.config[words[1]]
+        return
+
       when "set"
         if words[1].nil?
           @shell.puts "Configuration:"
@@ -63,6 +86,11 @@ module Sandbox
       when "unset"
         if words[1].nil?
           @shell.puts "#{cmd}: Specify variable name"
+          return
+        end
+
+        unless @game.config.key?(words[1])
+          @shell.puts "No such variable"
           return
         end
 
