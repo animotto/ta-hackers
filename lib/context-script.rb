@@ -5,12 +5,12 @@ module Sandbox
     def initialize(game, shell)
       super(game, shell)
       @commands.merge!({
-                         "run" => ["run <name>", "Run the script"],
-                         "list" => ["list", "List scripts"],
-                         "jobs" => ["jobs", "List active scripts"],
-                         "kill" => ["kill <id>", "Kill the script"],
-                         "admin" => ["admin <id>", "Administrate the script"],
-                       })
+        "run"     => ["run <name>", "Run the script"],
+        "list"    => ["list", "List scripts"],
+        "jobs"    => ["jobs", "List active scripts"],
+        "kill"    => ["kill <id>", "Kill the script"],
+        "admin"   => ["admin <id>", "Administrate the script"],
+      })
       @jobs = Hash.new
       @jobCounter = 0;
       @logger = Logger.new(@shell)
@@ -67,7 +67,7 @@ module Sandbox
 
         @shell.puts("Active jobs:")
         @jobs.each do |k, v|
-          @shell.puts(" [%d] %s" % [k, v["script"]])
+          @shell.puts(" [%d] %s" % [k, v[:script]])
         end
         return
 
@@ -83,12 +83,13 @@ module Sandbox
           return
         end
 
-        @logger.log("Killed: #{@jobs[job]["script"]} [#{job}]")
-        @jobs[job]["thread"].kill
-        script = @jobs[job]["script"]
+        @jobs[job][:instance].finish
+        @logger.log("Killed: #{@jobs[job][:script]} [#{job}]")
+        @jobs[job][:thread].kill
+        script = @jobs[job][:script]
         name = script.capitalize
         @jobs.delete(job)
-        Object.send(:remove_const, name) unless @jobs.each_value.detect {|j| j["script"] == script}
+        Object.send(:remove_const, name) unless @jobs.each_value.detect {|j| j[:script] == script}
         return
         
       when "admin"
@@ -103,14 +104,14 @@ module Sandbox
           return
         end
 
-        unless @jobs[job]["instance"].respond_to?("admin")
+        unless @jobs[job][:instance].respond_to?(:admin)
           @shell.puts("#{cmd}: Not implemented")
           return
         end
 
         @shell.puts("Enter ! to quit")
+        prompt = "\e[1;34m#{@jobs[job][:script]}:#{job} \u273f\e[0m "
         loop do
-          prompt = "\e[1;34m#{@jobs[job]["script"]}:#{job} \u273f\e[0m "
           @shell.reading = true
           line = Readline.readline(prompt, true)
           @shell.reading = false
@@ -119,7 +120,11 @@ module Sandbox
           Readline::HISTORY.pop if line.empty?
           next if line.empty?
           break if line == "!"
-          msg = @jobs[job]["instance"].admin(line)
+          unless @jobs.key?(job)
+            @logger.error("Job #{job} terminated")
+            break
+          end
+          msg = @jobs[job][:instance].admin(line)
           next if msg.nil? || msg.empty?
           @shell.puts(msg)
         end
@@ -133,8 +138,8 @@ module Sandbox
     def run(script, args)
       job = @jobCounter += 1
       @jobs[job] = {
-        "script" => script,
-        "thread" => Thread.current,
+        :script   => script,
+        :thread   => Thread.current,
       }
       fname = "#{SCRIPTS_DIR}/#{script}.rb"
       @logger.log("Run: #{script} [#{job}]")
@@ -150,8 +155,11 @@ module Sandbox
       begin
         name = script.capitalize
         load "#{fname}" unless Object.const_defined?(name)
-        eval(%Q[@jobs[#{job}]["instance"] = #{name}.new(@game, @shell, logger, args)])
-        @jobs[job]["instance"].main
+        unless Object.const_defined?(name)
+          raise "Class #{name} not found"
+        end
+        @jobs[job][:instance] = Object.const_get(name).new(@game, @shell, logger, args)
+        @jobs[job][:instance].main
       rescue => e
         msg = String.new
         (e.backtrace.length - 1).downto(0) do |i|
@@ -159,11 +167,12 @@ module Sandbox
         end
         @logger.error("Error: #{script} [#{job}]\n\n#{msg}\n=> #{e.message}")
       else
+        @jobs[job][:instance].finish
         @logger.log("Done: #{script} [#{job}]")
       end
 
       @jobs.delete(job)
-      Object.send(:remove_const, name) if !@jobs.each_value.detect {|j| j["script"] == script} && Object.const_defined?(name)
+      Object.send(:remove_const, name) if !@jobs.each_value.detect {|j| j[:script] == script} && Object.const_defined?(name)
     end
   end
 end
