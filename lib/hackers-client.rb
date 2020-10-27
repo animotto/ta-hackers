@@ -95,8 +95,8 @@ module Trickster
         header = {
           "Content-Type"    => "application/x-www-form-urlencoded",
           "Accept-Charset"  => "utf-8",
-          "Accept-Encoding" => "gzip",
-          "User-Agent"      => "UniWeb (http://www.differentmethods.com)",
+          "Accept-Encoding" => "gzip, identity",
+          "User-Agent"      => "BestHTTP/2 v2.2.0",
         }
         uri = URI.encode_www_form(params)
 
