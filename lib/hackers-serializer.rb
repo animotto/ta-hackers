@@ -420,18 +420,18 @@ module Trickster
       # Returns *Profile*
       def parseProfile(section, record)
         profile = Profile.new(
-          @fields[section][record][0].to_i,
-          @fields[section][record][1],
-          @fields[section][record][2].to_i,
-          @fields[section][record][3].to_i,
-          @fields[section][record][4].to_i,
-          @fields[section][record][5].to_i,
-          @fields[section][record][9].to_i,
-          @fields[section][record][10].to_i,
-          @fields[section][record][11].to_i,
-          @fields[section][record][12].to_i,
-          @fields[section][record][13].to_i,
-          @fields[section][record][14].to_i,
+          @fields.dig(section, record, 0).to_i,
+          @fields.dig(section, record, 1),
+          @fields.dig(section, record, 2).to_i,
+          @fields.dig(section, record, 3).to_i,
+          @fields.dig(section, record, 4).to_i,
+          @fields.dig(section, record, 5).to_i,
+          @fields.dig(section, record, 9).to_i,
+          @fields.dig(section, record, 10).to_i,
+          @fields.dig(section, record, 11).to_i,
+          @fields.dig(section, record, 12).to_i,
+          @fields.dig(section, record, 13).to_i,
+          @fields.dig(section, record, 14).to_i,
         )
         return profile
       end
@@ -567,7 +567,8 @@ module Trickster
       #   }
       def parseUsedPrograms(section, record, field)
         programs = Hash.new
-        fields = @fields[section][record][field].split(":")
+        fields = @fields.dig(section, record, field)&.split(":")
+        return programs if fields.nil?
         0.step(fields.length - 1, 2) do |i|
           programs[fields[i].to_i] = fields[i + 1].to_i
         end
@@ -590,7 +591,7 @@ module Trickster
       #   ]
       def parseReplayPrograms(section)
         programs = Array.new
-        @fields[section].each do |program|
+        @fields[section]&.each do |program|
           programs.push(
             {
               "id"      => program[0].to_i,
@@ -620,7 +621,7 @@ module Trickster
       #   ]
       def parseReplayTrace(section)
         trace = Array.new
-        @fields[section].each do |t|
+        @fields[section]&.each do |t|
           type = t[0][0]
           time = t[0][1..-1]
           i = {
@@ -1163,7 +1164,7 @@ module Trickster
       #     "trace"  => Serializer#parseReplayTrace,
       #   }
       def parseReplay(section, record, field)
-        serializer = Serializer.new(@fields[section][record][field], DELIM_NORM_SECTION, DELIM_NORM_RECORD, DELIM_NORM_FIELD)
+        serializer = Serializer.new(@fields.dig(section, record, field), DELIM_NORM_SECTION, DELIM_NORM_RECORD, DELIM_NORM_FIELD)
         replay = {
           "nodes"     => serializer.parseNodes(0),
           "net"       => serializer.parseNetwork(1, 0, 1),
@@ -1175,6 +1176,60 @@ module Trickster
           "trace"     => serializer.parseReplayTrace(5),
         }
         return replay
+      end
+
+      ##
+      # Parses replay info
+      #
+      # Returns hash:
+      #   {
+      #     "ok"            => Request successful,
+      #     "id"            => Replay ID,
+      #     "dateime"       => Datetime,
+      #     "Attacker"      => {
+      #       "id"        => Player ID,
+      #       "name"      => Player name,
+      #       "country"   => Player country,
+      #       "level"     => Player level,
+      #     },
+      #     "Target"        => {
+      #       "id"        => Player ID,
+      #       "name"      => Player name,
+      #       "country"   => Player country,
+      #       "level"     => Player level,
+      #     },
+      #     "money"         => Money looted,
+      #     "bitcoins"      => Bitcoins looted,
+      #     "success"       => Attack success,
+      #     "programs"      => Used programs,
+      #     "rank"          => Rank,
+      #     "test"          => Test attack,
+      #   }
+      def parseReplayInfo
+        info = {
+          "ok"         => @fields.dig(0, 0, 0).to_i == 1,
+          "id"         => @fields.dig(1, 0, 0).to_i,
+          "datetime"   => @fields.dig(1, 0, 1),
+          "attacker"   => {
+            "id"        => @fields.dig(1, 0, 2).to_i,
+            "name"      => @fields.dig(1, 0, 9),
+            "country"   => @fields.dig(1, 0, 11).to_i,
+            "level"     => @fields.dig(1, 0, 16).to_i,
+          },
+          "target"  => {
+            "id"        => @fields.dig(1, 0, 3).to_i,
+            "name"      => @fields.dig(1, 0, 10),
+            "country"   => @fields.dig(1, 0, 12).to_i,
+            "level"     => @fields.dig(1, 0, 17).to_i,
+          },
+          "money"      => @fields.dig(1, 0, 4).to_i,
+          "bitcoins"   => @fields.dig(1, 0, 5).to_i,
+          "success"    => @fields.dig(1, 0, 6).to_i,
+          "programs"   => parseUsedPrograms(1, 0, 7),
+          "rank"       => @fields.dig(1, 0, 13).to_i,
+          "test"       => @fields.dig(1, 0, 18).to_i == 1,
+        }
+        return info
       end
 
       ##

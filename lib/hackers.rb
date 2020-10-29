@@ -53,6 +53,11 @@ module Trickster
           )
       end
 
+      ##
+      # Gets level by experience:
+      #   experience = Experience
+      #
+      # Returns level as number
       def getLevelByExp(experience)
         level = 0
         @experienceList.each do |k, v|
@@ -61,6 +66,20 @@ module Trickster
         return level
       end
 
+      ##
+      # Gets country name by ID:
+      #   id = Country ID
+      #
+      # Returns country name as string
+      def getCountryNameByID(id)
+        @countriesList.fetch(id.to_s, "Unknown")
+      end
+
+      ##
+      # Converts a timer to human readable format:
+      #   timer = Timer in seconds
+      #
+      # Returns a string in the format Days:Hours:Minutes:Seconds
       def timerToDHMS(timer)
         dhms = Array.new
         dhms.push("%02d" % [timer / 60 / 60 / 24])
@@ -772,6 +791,22 @@ module Trickster
         response = @client.request(params, @sid)
         serializer = Serializer.new(response)
         return serializer.parseReplay(0, 0, 0)
+      end
+
+      ##
+      # Gets replay info:
+      #   id = Replay ID
+      #
+      # Returns Serializer#parseReplayInfo
+      def cmdFightGetReplayInfo(id)
+        params = {
+          "fight_get_replay_info"   => "",
+          "replay_id"               => id,
+          "app_version"             => @config["version"],
+        }
+        response = @client.request(params, @sid)
+        serializer = Serializer.new(response)
+        return serializer.parseReplayInfo
       end
 
       ##
