@@ -337,7 +337,7 @@ class Chatbot < Sandbox::Script
 
     def exec(message)
       words = message.message.split(/\s+/)
-      if words[0] == self.class::PATTERNS[0]
+      if words[0].downcase == self.class::PATTERNS[0]
         @config["counter"] += 1
         id = message.id.to_s
         @config["users"][id] = [message.nick, 0] unless @config["users"].key?(id)
@@ -1051,7 +1051,7 @@ class Chatbot < Sandbox::Script
       words = message.message.split(/\s+/)
       id = message.id.to_s
       msg = "[b][ff5e3a]"
-      if words[0] == self.class::PATTERNS[1]
+      if words[0].downcase == self.class::PATTERNS[1]
         if !@config["records"][id].nil? && Time.now - @config["records"][id]["time"] <= @config["recordtime"]
           msg += "[7aff9f]#{message.nick} [ff5e3a]ТЫ УЖЕ ОСТАВИЛ ЗАПИСЬ! ОСТАВИТЬ НОВУЮ ЗАПИСЬ МОЖНО БУДЕТ [7aff9f]#{(@config["records"][id]["time"] + @config["recordtime"]).strftime("%d.%m.%y %H:%M")}"
         else
