@@ -169,9 +169,10 @@ module Sandbox
     def log(room, messages)
       messages.each do |message|
         @shell.puts(
-          "\e[1;33m\u2764 \e[22;34m[%s:%d] \e[1;35m%s \e[22;33m%s\e[0m" % [
+          "\e[1;33m\u2764 \e[22;34m[%s:%d] \e[22;31m%d \e[1;35m%s \e[22;33m%s\e[0m" % [
             @game.countriesList.fetch(room.to_s, "Unknown"),
             room,
+            @game.getLevelByExp(message.experience),
             message.nick,
             message.message,
           ],
