@@ -3,14 +3,14 @@ module Sandbox
     def initialize(game, shell)
       super(game, shell)
       @commands.merge!({
-                         "targets" => ["targets", "Show targets"],
-                         "new" => ["new", "Get new targets"],
-                         "bonuses" => ["bonuses", "Show bonuses"],
-                         "collect" => ["collect <id>", "Collect bonus"],
-                         "goals" => ["goals", "Show goals"],
-                         "update" => ["update <id> <record>", "Update goal"],
-                         "reject" => ["reject <id>", "Reject goal"],
-                       })
+        "targets"   => ["targets", "Show targets"],
+        "new"       => ["new", "Get new targets"],
+        "bonuses"   => ["bonuses", "Show bonuses"],
+        "collect"   => ["collect <id>", "Collect bonus"],
+        "goals"     => ["goals", "Show goals"],
+        "update"    => ["update <id> <record>", "Update goal"],
+        "reject"    => ["reject <id>", "Reject goal"],
+      })
     end
 
     def exec(words)
@@ -82,18 +82,22 @@ module Sandbox
         when "goals"
           @shell.puts("\e[1;35m\u2022 Goals\e[0m")
           @shell.puts(
-            "  \e[35m%-12s %-8s %s\e[0m" % [
+            "  \e[35m%-12s %-7s %-8s %-4s %s\e[0m" % [
               "ID",
+              "Credits",
               "Finished",
               "Type",
+              "Title",
             ]
           )
-          world["goals"].each do |k, v|
+          world["goals"].each do |id, goal|
             @shell.puts(
-              "  %-12d %-8s %s" % [
-                k,
-                v["finished"],
-                v["type"],
+              "  %-12d %-7d %-8d %-4d %s" % [
+                id,
+                @game.goalsTypes[goal["type"]]["credits"],
+                goal["finished"],
+                goal["type"],
+                @game.goalsTypes[goal["type"]]["name"],
               ]
             )
           end

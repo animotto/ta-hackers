@@ -1068,6 +1068,8 @@ module Trickster
 
       ##
       # Gets player goals
+      #
+      # Returns Serializer#parseGoals
       def cmdGoalByPlayer
         params = {
           "goal_by_player"  => "",
@@ -1075,7 +1077,8 @@ module Trickster
           "app_version"     => @config["version"],
         }
         response = @client.request(params, @sid)
-        return response
+        serializer = Serializer.new(response)
+        return serializer.parseGoals(0)
       end
 
       ##

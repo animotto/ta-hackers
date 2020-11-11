@@ -312,13 +312,21 @@ module Sandbox
           return
         end
 
-        @game.goalsTypes.each do |k, v|
-          @shell.puts " %-20s .. %d, %s, %s" % [
-                        k,
-                        v["amount"],
-                        v["name"],
-                        v["description"],
-                      ]
+        @shell.puts " %-4s %-20s %-6s %-7s %s" % [
+          "Type",
+          "Name",
+          "Amount",
+          "Credits",
+          "Title",
+        ]
+        @game.goalsTypes.each do |type, goal|
+          @shell.puts " %-4d %-20s %-6d %-7d %s" % [
+            type,
+            goal["name"],
+            goal["amount"],
+            goal["credits"],
+            goal["title"],
+          ]
         end
         return
 

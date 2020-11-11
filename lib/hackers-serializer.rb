@@ -699,13 +699,13 @@ module Trickster
       #   section = Section index
       #
       #   Fields in format:
-      #     ID1,Type1,Credits1,Finished1;ID1,Type2,Credits2,Finished2;ID3,Type3,Credits3,Finished3;
+      #     ID1,Name1,Type1,Finished1;ID2,Name2,Type2,Finished2;ID3,Name3,Type3,Finished3;
       #
       # Returns hash:
       #   {
       #     ID => {
+      #       "name"      => Name,
       #       "type"      => Type,
-      #       "credits"   => Credits,
       #       "finished"  => Finished,
       #     }
       #   }
@@ -713,8 +713,8 @@ module Trickster
         goals = Hash.new
         @fields[section]&.each do |goal|
           goals[goal[0].to_i] = {
-            "type"      => goal[1].to_s,
-            "credits"   => goal[2].to_i,
+            "name"      => goal[1].to_s,
+            "type"      => goal[2].to_i,
             "finished"  => goal[3].to_i,
           }
         end
@@ -1426,18 +1426,22 @@ module Trickster
       #
       # Returns hash:
       #   {
-      #     ID => {
-      #       "amount"       => Amount,
+      #     Type => {
       #       "name"         => Name,
+      #       "amount"       => Amount,
+      #       "credits"      => Credits,
+      #       "title"        => Title,
       #       "description"  => Description,
       #     }
       #   }
       def parseGoalsTypes
         data = Hash.new
         @fields[0].each do |field|
-          data[field[1]] = {
+          data[field[0].to_i] = {
+            "name"         => field[1],
             "amount"       => field[2].to_i,
-            "name"         => field[7],
+            "credits"      => field[3].to_i,
+            "title"        => field[7],
             "description"  => field[8],
           }
         end
