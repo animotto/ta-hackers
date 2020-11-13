@@ -14,6 +14,17 @@ module Sandbox
       @mutex = Mutex.new
     end
 
+    def completion(text)
+      case Readline.line_buffer.lstrip
+        when /^(open|users)\s+/
+          return @game.countriesList.keys.grep(/^#{Regexp.escape(text)}/)
+
+        when /^(close|say|talk)\s+/
+          return @rooms.keys.map(&:to_s).grep(/^#{Regexp.escape(text)}/)
+      end
+      super
+    end
+
     def exec(words)
       cmd = words[0].downcase
       case cmd
