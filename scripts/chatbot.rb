@@ -2,16 +2,16 @@ require "time"
 require "rss"
 
 class Chatbot < Sandbox::Script
-  DATA_DIR = "#{Sandbox::ContextScript::SCRIPTS_DIR}/chatbot"
-  SLEEP_TIME = 10
-  SAVE_TIME = 60
+  DATA_DIR    = "#{Sandbox::ContextScript::SCRIPTS_DIR}/chatbot"
+  SLEEP_TIME  = 10
+  SAVE_TIME   = 60
 
   attr_reader :game, :shell, :logger,
               :room, :config, :commands
 
   class CmdBase
-    NAME = String.new
-    PATTERNS = Array.new
+    NAME      = String.new
+    PATTERNS  = Array.new
 
     attr_accessor :enabled, :visible
 
@@ -20,6 +20,7 @@ class Chatbot < Sandbox::Script
       @enabled = false
       @visible = true
       @config = Sandbox::Config.new("#{Chatbot::DATA_DIR}/cmd-#{self.class::NAME}.conf")
+      @data = Sandbox::Config.new("#{Chatbot::DATA_DIR}/data-#{self.class::NAME}.conf")
       load
     end
 
@@ -36,11 +37,22 @@ class Chatbot < Sandbox::Script
     end
 
     def load
-      return false if self.class::NAME.empty? || !File.file?(@config.file)
-      begin
-        @config.load
-      rescue JSON::ParserError => e
-        @script.logger.error("Config file #{@config.file} has invalid format (#{e})")
+      return false if self.class::NAME.empty?
+
+      if File.file?(@data.file)
+        begin
+          @data.load
+        rescue JSON::ParserError => e
+          @script.logger.error("Data file #{@data.file} has invalid format (#{e})")
+        end
+      end
+
+      if File.file?(@config.file)
+        begin
+          @config.load
+        rescue JSON::ParserError => e
+          @script.logger.error("Config file #{@config.file} has invalid format (#{e})")
+        end
       end
     end
 
@@ -86,8 +98,8 @@ class Chatbot < Sandbox::Script
   end
 
   class CmdAdmin < CmdBase
-    NAME = "admin"
-    PATTERNS = %w[!admin]
+    NAME      = "admin"
+    PATTERNS  = %w[!admin]
 
     def initialize(script)
       super(script)
@@ -110,8 +122,8 @@ class Chatbot < Sandbox::Script
   end
 
   class CmdHelp < CmdBase
-    NAME = "help"
-    PATTERNS = %w[!помощь]
+    NAME      = "help"
+    PATTERNS  = %w[!помощь]
 
     def exec(message)
       list = Array.new
@@ -132,8 +144,8 @@ class Chatbot < Sandbox::Script
   end
 
   class CmdStat < CmdBase
-    NAME = "stat"
-    PATTERNS = %w[!стат]
+    NAME      = "stat"
+    PATTERNS  = %w[!стат]
 
     def exec(message)
       stats = Array.new
@@ -150,16 +162,16 @@ class Chatbot < Sandbox::Script
   end
 
   class CmdHello < CmdBase
-    NAME = "hello"
-    PATTERNS = [
+    NAME      = "hello"
+    PATTERNS  = [
       /\bприв(ет)?\b/i,
       /\bхай\b/i,
       /\bздравствуй(те)?\b/i,
       /\bзд(о|а)рово\b/i,
     ]
 
-    FLOOD_TIME_MULTI = 8
-    GREETINGS = [
+    FLOOD_TIME_MULTI  = 8
+    GREETINGS         = [
       "ПРИВЕТ %!",
       "АЛОХА %!",
       "ЧО КАК %? КАК САМ?",
@@ -204,8 +216,8 @@ class Chatbot < Sandbox::Script
   end
 
   class CmdCounting < CmdBase
-    NAME = "counting"
-    PATTERNS = %w[!считалочка]
+    NAME      = "counting"
+    PATTERNS  = %w[!считалочка]
 
     COUNTINGS = [
       "ШИШЕЛ-МЫШЕЛ, СЕЛ НА КРЫШУ, ШИШЕЛ-МЫШЕЛ, ВЗЯЛ % И ВЫШЕЛ!",
@@ -226,16 +238,16 @@ class Chatbot < Sandbox::Script
   end
 
   class CmdRoulette < CmdBase
-    NAME = "roulette"
-    PATTERNS = %w[!рулетка]
+    NAME      = "roulette"
+    PATTERNS  = %w[!рулетка]
 
     def load
       super
       @config.merge!({
-        "counter" => 0,
-        "bullets" => 6,
-        "mutetime" => 60 * 60,
-        "users" => {},
+        "counter"   => 0,
+        "bullets"   => 6,
+        "mutetime"  => 60 * 60,
+        "users"     => {},
       }) if @config.empty?
     end
 
@@ -266,31 +278,34 @@ class Chatbot < Sandbox::Script
 
     def watch
       {
-        "counter" => @config["counter"],
-        "bullets" => @config["bullets"],
-        "mutetime" => @config["mutetime"],
-        "muted" => @script.config["users"].select {|k, v| !v["muteTime"].nil? && v["muteTime"] >= Time.now}.length
+        "counter"   => @config["counter"],
+        "bullets"   => @config["bullets"],
+        "mutetime"  => @config["mutetime"],
+        "muted"     => @script.config["users"].select {|k, v| !v["muteTime"].nil? && v["muteTime"] >= Time.now}.length
       }
     end
   end
 
   class CmdCookie < CmdBase
-    NAME = "cookie"
-    PATTERNS = %w[!печенька]
+    NAME      = "cookie"
+    PATTERNS  = %w[!печенька]
 
     def load
       super
       @config.merge!({
-        "counter" => 0,
-        "users" => {},
-        "fortune" => [],
+        "counter"  => 0,
+        "users"    => {},
       }) if @config.empty?
+      @data.merge!({
+        "fortune"  => [],
+      }) if @data.empty?
     end
 
     def exec(message)
+      return if @data["fortune"].empty?
       id = message.id.to_s
       if rand(0..1) == 1
-        msg = "[ffff00]#{message.nick} [00ff00]СЪЕДАЕТ ПЕЧЕНЬКУ И ЧИТАЕТ ПРЕДСКАЗАНИЕ: [60ffda]#{@config["fortune"].sample}"
+        msg = "[ffff00]#{message.nick} [00ff00]СЪЕДАЕТ ПЕЧЕНЬКУ И ЧИТАЕТ ПРЕДСКАЗАНИЕ: [60ffda]#{@data["fortune"].sample}"
         @config["counter"] += 1
         if @config["users"][id].nil?
           @config["users"][id] = {
@@ -312,16 +327,16 @@ class Chatbot < Sandbox::Script
 
     def watch
       {
-        "fortune" => @config["fortune"].length,
+        "fortune" => @data["fortune"].length,
       }
     end
   end
 
   class CmdClick < CmdBase
-    NAME = "click"
-    PATTERNS = %w[!бац !топ]
+    NAME      = "click"
+    PATTERNS  = %w[!бац !топ]
 
-    MESSAGES = [
+    MESSAGES  = [
       "ХАКЕРЮГИ СБАЦАЛИ УЖЕ % РАЗ!",
       "ХАКЕРЬЁ НЕ СПИТ! НАБАЦАЛИ % РАЗ!",
       "ЛАМЕРЮГИ НИКОГДА НЕ НАБАЦАЮТ % РАЗ!",
@@ -330,8 +345,8 @@ class Chatbot < Sandbox::Script
     def load
       super
       @config.merge!({
-        "counter" => 0,
-        "users" => {},
+        "counter"   => 0,
+        "users"     => {},
       }) if @config.empty?
     end
 
@@ -377,8 +392,8 @@ class Chatbot < Sandbox::Script
   end
   
   class CmdLenta < CmdBase
-    NAME = "lenta"
-    PATTERNS = %w[!лента]
+    NAME      = "lenta"
+    PATTERNS  = %w[!лента]
 
     def exec(message)
       return unless feed = rss("lenta.ru", 443, "/rss/news")
@@ -388,8 +403,8 @@ class Chatbot < Sandbox::Script
   end
 
   class CmdHabr < CmdBase
-    NAME = "habr"
-    PATTERNS = %w[!хабр]
+    NAME      = "habr"
+    PATTERNS  = %w[!хабр]
 
     def exec(message)
       return unless feed = rss("habr.com", 443, "/ru/rss/news/")
@@ -399,8 +414,8 @@ class Chatbot < Sandbox::Script
   end
 
   class CmdLor < CmdBase
-    NAME = "lor"
-    PATTERNS = %w[!лор]
+    NAME      = "lor"
+    PATTERNS  = %w[!лор]
 
     def exec(message)
       return unless feed = rss(
@@ -417,8 +432,8 @@ class Chatbot < Sandbox::Script
   end
 
   class CmdBash < CmdBase
-    NAME = "bash"
-    PATTERNS = %w[!баш]
+    NAME      = "bash"
+    PATTERNS  = %w[!баш]
 
     def exec(message)
       return unless feed = rss("bash.im", 443, "/rss/")
@@ -430,8 +445,8 @@ class Chatbot < Sandbox::Script
   end
 
   class CmdPhrase < CmdBase
-    NAME = "phrase"
-    PATTERNS = %w[!фраза]
+    NAME      = "phrase"
+    PATTERNS  = %w[!фраза]
 
     def exec(message)
       return unless feed = rss("www.aphorism.ru", 443, "/rss/aphorism-best-rand.rss")
@@ -441,8 +456,8 @@ class Chatbot < Sandbox::Script
   end
 
   class CmdJoke < CmdBase
-    NAME = "joke"
-    PATTERNS = %w[!анекдот]
+    NAME      = "joke"
+    PATTERNS  = %w[!анекдот]
 
     def exec(message)
       return unless feed = rss("www.anekdot.ru", 443, "/rss/export_j.xml")
@@ -454,8 +469,8 @@ class Chatbot < Sandbox::Script
   end
 
   class CmdCurrency < CmdBase
-    NAME = "currency"
-    PATTERNS = %w[!курс]
+    NAME      = "currency"
+    PATTERNS  = %w[!курс]
 
     def exec(message)
       return unless feed = rss("currr.ru", 80, "/rss/")
@@ -468,8 +483,8 @@ class Chatbot < Sandbox::Script
   end
 
   class CmdDay < CmdBase
-    NAME = "day"
-    PATTERNS = %w[!день]
+    NAME      = "day"
+    PATTERNS  = %w[!день]
 
     def exec(message)
       return unless feed = rss("www.calend.ru", 443, "/img/export/today-holidays.rss")
@@ -480,14 +495,14 @@ class Chatbot < Sandbox::Script
   end
 
   class CmdGoose < CmdBase
-    NAME = "goose"
-    PATTERNS = %w[!гусь]
+    NAME      = "goose"
+    PATTERNS  = %w[!гусь]
 
     def load
       super
       @config.merge!({
-        "counter" => 0,
-        "users" => {},
+        "counter"   => 0,
+        "users"     => {},
       }) if @config.empty?
     end
 
@@ -568,14 +583,14 @@ class Chatbot < Sandbox::Script
   end
 
   class CmdISS < CmdBase
-    NAME = "iss"
-    PATTERNS = %w[!мкс]
+    NAME      = "iss"
+    PATTERNS  = %w[!мкс]
 
     def load
       super
-      @config.merge!({
+      @data.merge!({
         "countries" => {},
-      }) if @config.empty?
+      }) if @data.empty?
     end
 
     def exec(message)
@@ -603,15 +618,15 @@ class Chatbot < Sandbox::Script
       astron = astros["people"].select {|a| a["craft"] == "ISS"}
       
       msg = "[b][4cffff]ПЩЩЩЬЬЬ! МЕЖДУНАРОДНАЯ КОСМИЧЕСКАЯ СТАНЦИЯ ВЫХОДИТ НА СВЯЗЬ! НАШИ КООРДИНАТЫ [b6ff00]#{coords["iss_position"]["longitude"]} / #{coords["iss_position"]["latitude"]}"
-      msg += "[4cffff], ПРОЛЕТАЕМ НАД [ff3aba]#{@config["countries"][geo["prov"]].upcase}" if geo["prov"]
+      msg += "[4cffff], ПРОЛЕТАЕМ НАД [ff3aba]#{@data["countries"][geo["prov"]].upcase}" if geo["prov"] && @data["countries"]&.key?(geo["prov"])
       msg += "[4cffff], НА БОРТУ [b6ff00]#{astron.length}[4cffff] ЧЕЛОВЕК"
       @script.say(msg)
     end
   end
   
   class CmdSpaceX < CmdBase
-    NAME = "spacex"
-    PATTERNS = %w[!spacex]
+    NAME      = "spacex"
+    PATTERNS  = %w[!spacex]
 
     def exec(message)
       begin
@@ -633,8 +648,8 @@ class Chatbot < Sandbox::Script
   end
 
   class CmdCOVID19 < CmdBase
-    NAME = "covid19"
-    PATTERNS = %w[!ковид]
+    NAME      = "covid19"
+    PATTERNS  = %w[!ковид]
 
     def exec(message)
       begin
@@ -651,8 +666,8 @@ class Chatbot < Sandbox::Script
   end
 
   class CmdWiki < CmdBase
-    NAME = "wiki"
-    PATTERNS = %w[!вики]
+    NAME      = "wiki"
+    PATTERNS  = %w[!вики]
 
     def exec(message)
       words = message.message.split(/\s+/)
@@ -709,8 +724,8 @@ class Chatbot < Sandbox::Script
   end
 
   class CmdCity < CmdBase
-    NAME = "city"
-    PATTERNS = %w[!город]
+    NAME      = "city"
+    PATTERNS  = %w[!город]
 
     HINT_TIME = 60
 
@@ -723,10 +738,12 @@ class Chatbot < Sandbox::Script
     def load
       super
       @config.merge!({
-        "counter" => 0,
-        "users" => {},
-        "cities" => [],
+        "counter"   => 0,
+        "users"     => {},
       }) if @config.empty?
+      @data.merge!({
+        "cities"   => [],
+      }) if @data.empty?
     end
 
     def matched?(message)
@@ -739,9 +756,8 @@ class Chatbot < Sandbox::Script
 
     def exec(message)
       id = message.id.to_s
-      if @city.empty?
-        return if @config["cities"].empty?
-        @city = @config["cities"].sample.strip.downcase
+      if @city.empty? && !@data["cities"].empty?
+        @city = @data["cities"].sample.strip.downcase
         @cityMasked = @city.clone
         return if @city.empty?
         positions = (0..(@city.length - 1)).to_a.shuffle[0..((@city.length - 1) / 2)]
@@ -794,23 +810,23 @@ class Chatbot < Sandbox::Script
 
     def watch
       {
-        "amount" => @config["cities"].length,
+        "amount" => @data["cities"].length,
       }
     end
   end
 
   class CmdTazik < CmdBase
-    NAME = "tazik"
-    PATTERNS = %w[!тазик]
+    NAME      = "tazik"
+    PATTERNS  = %w[!тазик]
 
     def load
       super
       @config.merge!({
-        "authtime" => 5 * 60,
-        "authtimerand" => 2 * 60,
-        "checktime" => 60,
-        "users" => {},
-        "active" => {},
+        "authtime"      => 5 * 60,
+        "authtimerand"  => 2 * 60,
+        "checktime"     => 60,
+        "users"         => {},
+        "active"        => {},
       }) if @config.empty?
 
       @config["active"].keys.each do |id|
@@ -924,17 +940,17 @@ class Chatbot < Sandbox::Script
 
     def watch
       {
-        "authtime" => @config["authtime"],
-        "authtimerand" => @config["authtimerand"],
-        "checktime" => @config["checktime"],
-        "amount" => @config["active"].length,
-        "users" => @config["active"].map {|k, v| v["nick"]}.join(", ").insert(0, "[").insert(-1, "]")
+        "authtime"      => @config["authtime"],
+        "authtimerand"  => @config["authtimerand"],
+        "checktime"     => @config["checktime"],
+        "amount"        => @config["active"].length,
+        "users"         => @config["active"].map {|k, v| v["nick"]}.join(", ").insert(0, "[").insert(-1, "]")
       }
     end
   end
 
   class CmdPerson < CmdBase
-    NAME = "person"
+    NAME    = "person"
 
     ANSWERS = [
       "ЧТО ТЕБЕ НУЖНО %?",
@@ -979,8 +995,8 @@ class Chatbot < Sandbox::Script
     def load
       super
       @config.merge!({
-        "checktime" => 15 * 60,
-        "topnum" => 20,
+        "checktime"   => 15 * 60,
+        "topnum"      => 20,
       }) if @config.empty?
     end
 
@@ -1025,21 +1041,21 @@ class Chatbot < Sandbox::Script
 
     def watch
       {
-        "checktime" => @config["checktime"],
-        "topnum" => @config["topnum"],
+        "checktime"   => @config["checktime"],
+        "topnum"      => @config["topnum"],
       }
     end
   end
   
   class CmdWall < CmdBase
-    NAME = "wall"
-    PATTERNS = %w[!стена !запись]
+    NAME      = "wall"
+    PATTERNS  = %w[!стена !запись]
 
     def load
       super
       @config.merge!({
-        "recordtime" => 60 * 60 * 24,
-        "records" => {},
+        "recordtime"  => 60 * 60 * 24,
+        "records"     => {},
       }) if @config.empty?
 
       @config["records"].keys.each do |id|
@@ -1063,9 +1079,9 @@ class Chatbot < Sandbox::Script
           end
           msg += "[7aff9f]#{message.nick} [ff5e3a]ОСТАВИЛ НА СТЕНЕ ЗАПИСЬ!"
           @config["records"][id] = {
-            "name" => message.nick,
-            "message" => record,
-            "time" => Time.now,
+            "name"      => message.nick,
+            "message"   => record,
+            "time"      => Time.now,
           }
           save
         end
@@ -1092,8 +1108,8 @@ class Chatbot < Sandbox::Script
 
     def watch
       {
-        "recordtime" => @config["recordtime"],
-        "records" => @config["records"].length,
+        "recordtime"  => @config["recordtime"],
+        "records"     => @config["records"].length,
       }
     end
   end
@@ -1127,10 +1143,10 @@ class Chatbot < Sandbox::Script
   end
 
   class CmdInfo < CmdBase
-    NAME = "info"
-    PATTERNS = %w[!инфо]
+    NAME      = "info"
+    PATTERNS  = %w[!инфо]
 
-    MESSAGES = [
+    MESSAGES  = [
       "И ВООБЩЕ ПРОСТО НЯШКА!",
       "ЖИВЕТ ТАКОЙ ЧЕЛОВЕК!",
       "НИ ДАТЬ НИ ВЗЯТЬ!",
@@ -1168,14 +1184,14 @@ class Chatbot < Sandbox::Script
   end
 
   class CmdReadme < CmdBase
-    NAME = "readme"
-    PATTERNS = %w[!нюхач]
+    NAME      = "readme"
+    PATTERNS  = %w[!нюхач]
 
     def load
       super
       @config.merge!({
-        "counter" => 0,
-        "users" => {},
+        "counter"   => 0,
+        "users"     => {},
       }) if @config.empty?
     end
 
@@ -1203,8 +1219,8 @@ class Chatbot < Sandbox::Script
         next if data[0] == "Admin" || data[0] == "Aдмин"
         records.push(
           {
-            "name" => data[0],
-            "message" => data[1],
+            "name"      => data[0],
+            "message"   => data[1],
           }
         )
       end
@@ -1257,14 +1273,16 @@ class Chatbot < Sandbox::Script
       return false
     rescue => e
       @config.merge!({
-        "config" => {
-          "flood" => "15",
-          "repeats" => "4",
-          "random" => "on",
+        "admins"    => [],
+        "users"     => {},
+        "config"    => {
+          "flood"     => "15",
+          "repeats"   => "5",
+          "random"    => "on",
           },
-        "admins" => [],
-        "enabled" => [],
-        "users" => {},
+        "startup"   => "",
+        "name"      => "",
+        "enabled"   => [],
       })
     end
 
@@ -1296,7 +1314,7 @@ class Chatbot < Sandbox::Script
 
     case words[0]
       when "help", "?"
-        return "Commands: <uptime> | <set> [var] [value] | <cmd> <on|of|watch> <names> | mute [add|del] <id>"
+        return "Commands: uptime | set [var] [value] | cmd <on|off|watch> <names> | mute [add|del] <id>"
 
       when "uptime"
         secs = (Time.now - @config["startup"]).to_i
@@ -1395,36 +1413,36 @@ class Chatbot < Sandbox::Script
     @config["startup"] = Time.now
 
     @commands = Hash.new
-    @commands[CmdAdmin::NAME] = CmdAdmin.new(self)
-    @commands[CmdHelp::NAME] = CmdHelp.new(self)
-    @commands[CmdStat::NAME] = CmdStat.new(self)
-    @commands[CmdHello::NAME] = CmdHello.new(self)
-    @commands[CmdCounting::NAME] = CmdCounting.new(self)
-    @commands[CmdRoulette::NAME] = CmdRoulette.new(self)
-    @commands[CmdCookie::NAME] = CmdCookie.new(self)
-    @commands[CmdClick::NAME] = CmdClick.new(self)
-    @commands[CmdLenta::NAME] = CmdLenta.new(self)
-    @commands[CmdHabr::NAME] = CmdHabr.new(self)
-    @commands[CmdLor::NAME] = CmdLor.new(self)
-    @commands[CmdBash::NAME] = CmdBash.new(self)
-    @commands[CmdPhrase::NAME] = CmdPhrase.new(self)
-    @commands[CmdJoke::NAME] = CmdJoke.new(self)
-    @commands[CmdCurrency::NAME] = CmdCurrency.new(self)
-    @commands[CmdDay::NAME] = CmdDay.new(self)
-    @commands[CmdGoose::NAME] = CmdGoose.new(self)
-    @commands[CmdHour::NAME] = CmdHour.new(self)
-    @commands[CmdISS::NAME] = CmdISS.new(self)
-    @commands[CmdSpaceX::NAME] = CmdSpaceX.new(self)
-    @commands[CmdCOVID19::NAME] = CmdCOVID19.new(self)
-    @commands[CmdWiki::NAME] = CmdWiki.new(self)
-    @commands[CmdCity::NAME] = CmdCity.new(self)
-    @commands[CmdTazik::NAME] = CmdTazik.new(self)
-    @commands[CmdPerson::NAME] = CmdPerson.new(self)
-    @commands[CmdRanking::NAME] = CmdRanking.new(self)
-    @commands[CmdWall::NAME] = CmdWall.new(self)
-    @commands[CmdMessage::NAME] = CmdMessage.new(self)
-    @commands[CmdInfo::NAME] = CmdInfo.new(self)
-    @commands[CmdReadme::NAME] = CmdReadme.new(self)
+    @commands[CmdAdmin::NAME]     = CmdAdmin.new(self)
+    @commands[CmdHelp::NAME]      = CmdHelp.new(self)
+    @commands[CmdStat::NAME]      = CmdStat.new(self)
+    @commands[CmdHello::NAME]     = CmdHello.new(self)
+    @commands[CmdCounting::NAME]  = CmdCounting.new(self)
+    @commands[CmdRoulette::NAME]  = CmdRoulette.new(self)
+    @commands[CmdCookie::NAME]    = CmdCookie.new(self)
+    @commands[CmdClick::NAME]     = CmdClick.new(self)
+    @commands[CmdLenta::NAME]     = CmdLenta.new(self)
+    @commands[CmdHabr::NAME]      = CmdHabr.new(self)
+    @commands[CmdLor::NAME]       = CmdLor.new(self)
+    @commands[CmdBash::NAME]      = CmdBash.new(self)
+    @commands[CmdPhrase::NAME]    = CmdPhrase.new(self)
+    @commands[CmdJoke::NAME]      = CmdJoke.new(self)
+    @commands[CmdCurrency::NAME]  = CmdCurrency.new(self)
+    @commands[CmdDay::NAME]       = CmdDay.new(self)
+    @commands[CmdGoose::NAME]     = CmdGoose.new(self)
+    @commands[CmdHour::NAME]      = CmdHour.new(self)
+    @commands[CmdISS::NAME]       = CmdISS.new(self)
+    @commands[CmdSpaceX::NAME]    = CmdSpaceX.new(self)
+    @commands[CmdCOVID19::NAME]   = CmdCOVID19.new(self)
+    @commands[CmdWiki::NAME]      = CmdWiki.new(self)
+    @commands[CmdCity::NAME]      = CmdCity.new(self)
+    @commands[CmdTazik::NAME]     = CmdTazik.new(self)
+    @commands[CmdPerson::NAME]    = CmdPerson.new(self)
+    @commands[CmdRanking::NAME]   = CmdRanking.new(self)
+    @commands[CmdWall::NAME]      = CmdWall.new(self)
+    @commands[CmdMessage::NAME]   = CmdMessage.new(self)
+    @commands[CmdInfo::NAME]      = CmdInfo.new(self)
+    @commands[CmdReadme::NAME]    = CmdReadme.new(self)
 
     @randomCommands = [
       CmdStat::NAME,
@@ -1504,8 +1522,8 @@ class Chatbot < Sandbox::Script
         if !executed
           if roomLastUser["id"].nil? || roomLastUser["id"] != message.id
             roomLastUser = {
-              "id" => message.id,
-              "counter" => 1,
+              "id"        => message.id,
+              "counter"   => 1,
             }
           else
             roomLastUser["counter"] += 1
