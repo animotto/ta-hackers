@@ -16,7 +16,7 @@ module Sandbox
         "cancel"   => ["cancel <id>", "Cancel node upgrade"],
         "delete"   => ["delete <id>", "Delete node"],
         "builders" => ["builders <id> <builders>", "Set node builders"],
-        "collect"  => ["collect <id>", "Collect node resources"],
+        "collect"  => ["collect [id]", "Collect node resources"],
         "net"      => ["net", "Show network structure"],
      })
     end
@@ -442,25 +442,34 @@ module Sandbox
         return
 
       when "collect"
-        if words[1].nil?
-          @shell.puts("#{cmd}: Specify node ID")
-          return
-        end
-        id = words[1].to_i
-        
         if @game.sid.empty?
           @shell.puts("#{cmd}: No session ID")
           return
         end
 
+        nodes = Array.new
+        if words[1].nil?
+          msg = "Network maintenance"
+          begin
+            net = @game.cmdNetGetForMaint
+          rescue Trickster::Hackers::RequestError => e
+            @shell.logger.error("#{msg} (#{e})")
+            return
+          end
+          @shell.logger.log(msg)
+          nodes = net["nodes"].select {|k, v| v["type"] == 11 || v["type"] == 13}.map {|k, v| k}
+        else
+          nodes << words[1].to_i
+        end
+
         msg = "Collect node"
-        begin
-          @game.cmdCollectNode(id)
+        nodes.each do |node|
+          @game.cmdCollectNode(node)
+          @shell.logger.log("#{msg} (#{node})")
         rescue Trickster::Hackers::RequestError => e
           @shell.logger.error("#{msg} (#{e})")
           return
         end
-        @shell.logger.log(msg)
         return
 
       end
