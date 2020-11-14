@@ -457,7 +457,7 @@ module Sandbox
             return
           end
           @shell.logger.log(msg)
-          nodes = net["nodes"].select {|k, v| v["type"] == 11 || v["type"] == 13}.map {|k, v| k}
+          nodes = net["nodes"].select {|k, v| (v["type"] == 11 || v["type"] == 13) && v["timer"] >= 0}.map {|k, v| k}
         else
           nodes << words[1].to_i
         end

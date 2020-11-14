@@ -448,8 +448,8 @@ module Trickster
       #     ID => {
       #       "type"      => Type,
       #       "level"     => Level,
-      #       "Timer"     => Timer,
-      #       "Builders"  => Builders,
+      #       "timer"     => Timer,
+      #       "builders"  => Builders,
       #     }
       #   }
       def parseNodes(section)
