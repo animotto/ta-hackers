@@ -12,6 +12,7 @@ class Chatbot < Sandbox::Script
   class CmdBase
     NAME      = String.new
     PATTERNS  = Array.new
+    HELP      = String.new
 
     attr_accessor :enabled, :visible
 
@@ -63,7 +64,7 @@ class Chatbot < Sandbox::Script
         @script.logger.error("Can't save config #{@config.file} (#{e})")
       end
     end
-    
+
     def exec(message)
     end
 
@@ -124,21 +125,37 @@ class Chatbot < Sandbox::Script
   class CmdHelp < CmdBase
     NAME      = "help"
     PATTERNS  = %w[!помощь]
+    HELP      = "Неотложная помощь!"
 
     def exec(message)
-      list = Array.new
-      @script.commands.each do |name, command|
-        next if command.class == self.class || !(command.enabled && command.visible)
-        list.concat(command.class::PATTERNS)
-        list.concat(command.config["patterns"].keys) if command.class::NAME == CmdMessage::NAME
+      words = message.message.split(/\s+/)
+      if words[1].nil?
+        list = Array.new
+        @script.commands.each do |name, command|
+          next if command.class == self.class || !(command.enabled && command.visible)
+          list.concat(command.class::PATTERNS)
+          list.concat(command.config["patterns"].keys) if command.class::NAME == CmdMessage::NAME
+        end
+        hex = (0..15).to_a
+        list.map! do |command|
+          color = String.new
+          6.times {color += hex.sample.to_s(16)}
+          "[#{color}]#{command}"
+        end
+        msg = "[b][77a9ff]ВОТ ЧТО Я УМЕЮ: " + list.join(" ")
+        @script.say(msg)
+        return
       end
-      hex = (0..15).to_a
-      list.map! do |command|
-        color = String.new
-        6.times {color += hex.sample.to_s(16)}
-        "[#{color}]#{command}"
+
+      help = words[1].downcase
+      help.prepend("!") unless help.start_with?("!")
+      command = @script.commands.detect {|k, v| v.class::PATTERNS.include?(help) && v.enabled && v.visible}
+      if command
+        cmd = command[1]
+        msg = "[b][77a9ff]#{cmd.class::PATTERNS.join(" ")}: [edc9ff]#{cmd.class::HELP}"
+      else
+        msg = "[b][77a9ff]#{help}: [edc9ff]Я такого не умею!"
       end
-      msg = "[b][77a9ff]ВОТ ЧТО Я УМЕЮ: " + list.join(" ")
       @script.say(msg)
     end
   end
@@ -146,6 +163,7 @@ class Chatbot < Sandbox::Script
   class CmdStat < CmdBase
     NAME      = "stat"
     PATTERNS  = %w[!стат]
+    HELP      = "Статистика использования команд"
 
     def exec(message)
       stats = Array.new
@@ -218,6 +236,7 @@ class Chatbot < Sandbox::Script
   class CmdCounting < CmdBase
     NAME      = "counting"
     PATTERNS  = %w[!считалочка]
+    HELP      = "Выбирает случайного игрока"
 
     COUNTINGS = [
       "ШИШЕЛ-МЫШЕЛ, СЕЛ НА КРЫШУ, ШИШЕЛ-МЫШЕЛ, ВЗЯЛ % И ВЫШЕЛ!",
@@ -240,6 +259,7 @@ class Chatbot < Sandbox::Script
   class CmdRoulette < CmdBase
     NAME      = "roulette"
     PATTERNS  = %w[!рулетка]
+    HELP      = "Русская рулетка! Удача сопутствует храбрым!"
 
     def load
       super
@@ -289,6 +309,7 @@ class Chatbot < Sandbox::Script
   class CmdCookie < CmdBase
     NAME      = "cookie"
     PATTERNS  = %w[!печенька]
+    HELP      = "Печеньки с предсказаниями"
 
     def load
       super
@@ -335,6 +356,7 @@ class Chatbot < Sandbox::Script
   class CmdClick < CmdBase
     NAME      = "click"
     PATTERNS  = %w[!бац !топ]
+    HELP      = "Соревнование настоящих хакерюг!"
 
     MESSAGES  = [
       "ХАКЕРЮГИ СБАЦАЛИ УЖЕ % РАЗ!",
@@ -394,6 +416,7 @@ class Chatbot < Sandbox::Script
   class CmdLenta < CmdBase
     NAME      = "lenta"
     PATTERNS  = %w[!лента]
+    HELP      = "Новости с сайта lenta.ru"
 
     def exec(message)
       return unless feed = rss("lenta.ru", 443, "/rss/news")
@@ -405,6 +428,7 @@ class Chatbot < Sandbox::Script
   class CmdHabr < CmdBase
     NAME      = "habr"
     PATTERNS  = %w[!хабр]
+    HELP      = "Новости с сайта habr.com"
 
     def exec(message)
       return unless feed = rss("habr.com", 443, "/ru/rss/news/")
@@ -416,6 +440,7 @@ class Chatbot < Sandbox::Script
   class CmdLor < CmdBase
     NAME      = "lor"
     PATTERNS  = %w[!лор]
+    HELP      = "Новости с сайта linux.org.ru"
 
     def exec(message)
       return unless feed = rss(
@@ -434,6 +459,7 @@ class Chatbot < Sandbox::Script
   class CmdBash < CmdBase
     NAME      = "bash"
     PATTERNS  = %w[!баш]
+    HELP      = "Случайная цитата с сайта bash.im"
 
     def exec(message)
       return unless feed = rss("bash.im", 443, "/rss/")
@@ -447,6 +473,7 @@ class Chatbot < Sandbox::Script
   class CmdPhrase < CmdBase
     NAME      = "phrase"
     PATTERNS  = %w[!фраза]
+    HELP      = "Случайная фраза с сайта aphorism.ru"
 
     def exec(message)
       return unless feed = rss("www.aphorism.ru", 443, "/rss/aphorism-best-rand.rss")
@@ -458,6 +485,7 @@ class Chatbot < Sandbox::Script
   class CmdJoke < CmdBase
     NAME      = "joke"
     PATTERNS  = %w[!анекдот]
+    HELP      = "Случайный анекдот с сайта anekdot.ru"
 
     def exec(message)
       return unless feed = rss("www.anekdot.ru", 443, "/rss/export_j.xml")
@@ -471,6 +499,7 @@ class Chatbot < Sandbox::Script
   class CmdCurrency < CmdBase
     NAME      = "currency"
     PATTERNS  = %w[!курс]
+    HELP      = "Курс валют"
 
     def exec(message)
       return unless feed = rss("currr.ru", 80, "/rss/")
@@ -485,6 +514,7 @@ class Chatbot < Sandbox::Script
   class CmdDay < CmdBase
     NAME      = "day"
     PATTERNS  = %w[!день]
+    HELP      = "Какой сегодня праздник?"
 
     def exec(message)
       return unless feed = rss("www.calend.ru", 443, "/img/export/today-holidays.rss")
@@ -497,6 +527,7 @@ class Chatbot < Sandbox::Script
   class CmdGoose < CmdBase
     NAME      = "goose"
     PATTERNS  = %w[!гусь]
+    HELP      = "Любопытный гусь делает кусь случайного игрока и сообщает о его ресурсах"
 
     def load
       super
@@ -585,6 +616,7 @@ class Chatbot < Sandbox::Script
   class CmdISS < CmdBase
     NAME      = "iss"
     PATTERNS  = %w[!мкс]
+    HELP      = "Кто сейчас на МКС и где она пролетает?"
 
     def load
       super
@@ -627,6 +659,7 @@ class Chatbot < Sandbox::Script
   class CmdSpaceX < CmdBase
     NAME      = "spacex"
     PATTERNS  = %w[!spacex]
+    HELP      = "Что Илон Маск задумал на этот раз?"
 
     def exec(message)
       begin
@@ -650,6 +683,7 @@ class Chatbot < Sandbox::Script
   class CmdCOVID19 < CmdBase
     NAME      = "covid19"
     PATTERNS  = %w[!ковид]
+    HELP      = "Статистика вируса COVID-19"
 
     def exec(message)
       begin
@@ -668,6 +702,7 @@ class Chatbot < Sandbox::Script
   class CmdWiki < CmdBase
     NAME      = "wiki"
     PATTERNS  = %w[!вики]
+    HELP      = "Поиск по Википедии"
 
     def exec(message)
       words = message.message.split(/\s+/)
@@ -726,6 +761,7 @@ class Chatbot < Sandbox::Script
   class CmdCity < CmdBase
     NAME      = "city"
     PATTERNS  = %w[!город]
+    HELP      = "Отгадай задуманный мной город"
 
     HINT_TIME = 60
 
@@ -818,6 +854,7 @@ class Chatbot < Sandbox::Script
   class CmdTazik < CmdBase
     NAME      = "tazik"
     PATTERNS  = %w[!тазик]
+    HELP      = "Так я тебе и рассказал для чего тазик!"
 
     def load
       super
@@ -1050,6 +1087,7 @@ class Chatbot < Sandbox::Script
   class CmdWall < CmdBase
     NAME      = "wall"
     PATTERNS  = %w[!стена !запись]
+    HELP      = "Публичная стена для записей"
 
     def load
       super
@@ -1145,6 +1183,7 @@ class Chatbot < Sandbox::Script
   class CmdInfo < CmdBase
     NAME      = "info"
     PATTERNS  = %w[!инфо]
+    HELP      = "Статистика использования команд игроком"
 
     MESSAGES  = [
       "И ВООБЩЕ ПРОСТО НЯШКА!",
@@ -1186,6 +1225,7 @@ class Chatbot < Sandbox::Script
   class CmdReadme < CmdBase
     NAME      = "readme"
     PATTERNS  = %w[!нюхач]
+    HELP      = "Читает readme случайного игрока"
 
     def load
       super
