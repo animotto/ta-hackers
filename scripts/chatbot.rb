@@ -501,12 +501,23 @@ class Chatbot < Sandbox::Script
     PATTERNS  = %w[!курс]
     HELP      = "Курс валют"
 
+    def load
+      super
+      @config.merge!({
+        "list"   => %w[USD EUR],
+      }) if @config.empty?
+    end
+
     def exec(message)
-      return unless feed = rss("currr.ru", 80, "/rss/")
-      data = feed.items.last.description
-      data.gsub!(/<.+?>/, " ")
-      data.gsub!(/\s+/, " ")
-      msg = "[b][8f4a6d]" + data
+      return if @config["list"].empty?
+      return unless data = http("www.cbr-xml-daily.ru", 443, "/daily_json.js")
+      begin
+        data = JSON.parse(data)
+      rescue JSON::ParserError => e
+        @script.logger.error("Currency JSON parser error (#{e})")
+        return
+      end
+      msg = "[b][8f4a6d]" + @config["list"].map {|c| "#{data["Valute"][c]["Name"]}: #{data["Valute"][c]["Value"]}"}.join(", ")
       @script.say(msg)
     end
   end
