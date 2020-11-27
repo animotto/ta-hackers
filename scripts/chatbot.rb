@@ -1209,7 +1209,7 @@ class Chatbot < Sandbox::Script
       id = message.id.to_s
       unless words[1].nil?
         nick = words[1].sub(/^@/, "")
-        user = @script.config["users"].detect {|k, v| v["nick"].include?(nick)}
+        user = @script.config["users"].detect {|k, v| v["nick"] == nick}
         if user.nil?
           msg = "[95ff93]Я НИЧЕГО НЕ ЗНАЮ О [fc7cff]#{nick}[95ff93]!"
           @script.say(msg)
