@@ -62,5 +62,16 @@ namespace :account do
     File.delete(file)
     puts "Config #{args[:name]} has been deleted"
   end
+
+  desc "List configs"
+  task :list do
+    files = Dir.entries(CONFIGS_DIR)
+    files.sort!
+    files.each do |file|
+      next if file =~ /^..?$/
+      name = file.split(".").first
+      puts name
+    end
+  end
 end
 
