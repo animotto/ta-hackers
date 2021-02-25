@@ -81,7 +81,7 @@ module Sandbox
   end
 
   class Config < Hash
-    attr_reader :file
+    attr_accessor :file
 
     def initialize(file)
       @file = file
