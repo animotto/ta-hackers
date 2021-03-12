@@ -5,8 +5,25 @@ require "hackers"
 
 CONFIGS_DIR     = "configs"
 DEFAULT_CONFIG  = "default.conf"
+SANDBOX_FILE    = "sandbox.rb"
 
 Dir.chdir(__dir__)
+
+desc "Run sandbox"
+task :run, [:config] do |task, args|
+  unless args[:config]
+    puts "Specify config name"
+    exit
+  end
+
+  file = "#{CONFIGS_DIR}/#{args[:config]}.conf"
+  unless File.exist?(file)
+    puts "Config #{args[:config]} doesn't exist"
+    exit
+  end
+
+  exec("./#{SANDBOX_FILE} -c #{args[:config]}")
+end
 
 desc "News list"
 task :news do
