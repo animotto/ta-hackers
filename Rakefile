@@ -90,5 +90,33 @@ namespace :account do
       puts name
     end
   end
+
+  desc "Show config"
+  task :show, [:name] do |task, args|
+    unless args[:name]
+      puts "Specify config name"
+      exit
+    end
+
+    file = "#{CONFIGS_DIR}/#{args[:name]}.conf"
+    unless File.exist?(file)
+      puts "Config #{args[:name]} doesn't exist"
+      exit
+    end
+
+    begin
+      config = JSON.parse(File.read(file))
+    rescue JSON::ParserError => e
+      puts "Config #{args[:name]} has invalid format"
+      puts
+      puts e
+      exit
+    end
+
+    puts "Configuration #{args[:name]}:"
+    config.each do |k, v|
+      puts " %-20s .. %s" % [k, v]
+    end
+  end
 end
 
