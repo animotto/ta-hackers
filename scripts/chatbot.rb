@@ -1022,7 +1022,7 @@ class Chatbot < Sandbox::Script
     end
 
     def exec(message)
-      msg = "[b][7fffa7]" + @config['answers'].sample
+      msg = "[b][7fffa7]" + @data['answers'].sample
       msg.gsub!("%", "[8ccbff]#{message.nick}[7fffa7]")
       msg.gsub!("@", "[ffe5af]#{Time.now.strftime("%H:%M")}[7fffa7]")
       @script.say(msg)
