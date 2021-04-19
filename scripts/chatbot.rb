@@ -538,7 +538,7 @@ class Chatbot < Sandbox::Script
   class CmdGoose < CmdBase
     NAME      = "goose"
     PATTERNS  = %w[!гусь]
-    HELP      = "Любопытный гусь делает кусь случайного игрока и сообщает о его ресурсах"
+    HELP      = "Любопытный гусь делает кусь случайного или указанного игрока и сообщает о его ресурсах"
 
     def load
       super
@@ -550,7 +550,20 @@ class Chatbot < Sandbox::Script
 
     def exec(message)
       id = message.id.to_s
-      user = @script.config["users"].keys.sample.to_i
+      words = message.message.split(/\s+/)
+      if words.length > 1
+        nick = words[1].delete_prefix('@')
+        user = @script.config['users'].detect { |_, v| v['nick'] == nick }
+        if user.nil?
+          msg = "[95ff93]ГУСЬ В ЗАМЕШАТЕЛЬСТВЕ! [fc7cff]#{nick}[95ff93] НИКОГДА ЗДЕСЬ НЕ ПРОБЕГАЛ!"
+          @script.say(msg)
+          return
+        end
+        user = user[0].to_i
+      else
+        user = @script.config["users"].keys.sample.to_i
+      end
+
       begin
         info = @script.game.cmdPlayerGetInfo(user)
       rescue Trickster::Hackers::RequestError => e
