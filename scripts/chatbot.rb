@@ -1213,7 +1213,7 @@ class Chatbot < Sandbox::Script
   class CmdReadme < CmdBase
     NAME      = "readme"
     PATTERNS  = %w[!нюхач]
-    HELP      = "Читает readme случайного игрока"
+    HELP      = "Читает readme случайного или указанного игрока"
 
     def load
       super
@@ -1225,7 +1225,20 @@ class Chatbot < Sandbox::Script
 
     def exec(message)
       id = message.id.to_s
-      user = @script.config["users"].keys.sample
+      words = message.message.split(/\s+/)
+      if words[1].empty?
+        user = @script.config["users"].keys.sample
+      else
+        nick = words[1].delete_prefix('@')
+        user = @script.config['users'].detect { |_, v| v['nick'] == nick }
+        if user.nil?
+          msg = "[b][ff4953]#{nick}[dfff6d] ЗДЕСЬ И НЕ ПАХНЕТ!"
+          @script.say(msg)
+          return
+        end
+        user = user[0]
+      end
+
       begin
         readme = @script.game.cmdPlayerGetReadme(user)
       rescue Trickster::Hackers::RequestError => e
