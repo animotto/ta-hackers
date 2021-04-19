@@ -189,21 +189,6 @@ class Chatbot < Sandbox::Script
     ]
 
     FLOOD_TIME_MULTI  = 8
-    GREETINGS         = [
-      "ПРИВЕТ %!",
-      "АЛОХА %!",
-      "ЧО КАК %? КАК САМ?",
-      "КАВАБАНГА %!",
-      "КАК НАМ ТЕБЯ НЕ ХВАТАЛО %!",
-      "ПРИВЕТСТВУЮ %!",
-      "ВИДЕЛИСЬ %!",
-      "ЗДРАВСТВУЙ %!",
-      "БОНСУАР %!",
-      "КОНИЧИВА %!",
-      "ГУТЕН ТАГ %!",
-      "ШАЛОМ %!",
-      "% А ТЫ ЗНАЕШЬ ЧТО ТАКОЕ БЕЗУМИЕ?",
-    ]
 
     def initialize(script)
       super(script)
@@ -221,7 +206,7 @@ class Chatbot < Sandbox::Script
 
     def exec(message)
       @lastTime = Time.now
-      msg = "[b][6aab7f]#{GREETINGS.sample} ЕСЛИ ТЕБЕ ИНТЕРЕСНО ЧТО Я УМЕЮ, ОТПРАВЬ В ЧАТ [ff35a0]!помощь"
+      msg = "[b][6aab7f]#{@data['greetings'].sample} ЕСЛИ ТЕБЕ ИНТЕРЕСНО ЧТО Я УМЕЮ, ОТПРАВЬ В ЧАТ [ff35a0]!помощь"
       msg.gsub!("%", "[ff35a0]#{message.nick}[6aab7f]")
       @script.say(msg)
     end
