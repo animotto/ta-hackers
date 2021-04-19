@@ -1013,27 +1013,6 @@ class Chatbot < Sandbox::Script
   class CmdPerson < CmdBase
     NAME    = "person"
 
-    ANSWERS = [
-      "ЧТО ТЕБЕ НУЖНО %?",
-      "ТЫ МЕНЯ ЗВАЛ %?",
-      "ВСЕГДА ГОТОВ %!",
-      "Я НИЧЕГО ОБ ЭТОМ НЕ ЗНАЮ %!",
-      "Я НЕ ВИНОВАТ %! ОНО САМО!",
-      "Я ПОДУМАЮ НАД ЭТИМ %!",
-      "ПОЛНОСТЬЮ С ТОБОЙ СОГЛАСЕН %!",
-      "НИЗАЧТО %!",
-      "% А ТЫ КОГДА-НИБУДЬ ПРОБОВАЛ ЛИЗНУТЬ ЛУНУ?",
-      "% КОНЕЧНО!",
-      "% НЕТ, А ТЫ?",
-      "ЛАДНО %!",
-      "ХОРОШО %!",
-      "ТАКОГО Я НЕ ОЖИДАЛ ОТ ТЕБЯ %!",
-      "% ЭТО ПРОСТО НЕ ПРИЛИЧНО!",
-      "% ТЫ ТАКОЙ КЛАССНЫЙ!",
-      "Я НЕ МОГУ %, У МЕНЯ ЛАПКИ!",
-      "% ЕСЛИ ТЕБЕ ИНТЕРЕСНО, ТОЧНОЕ ВРЕМЯ @!",
-    ]
-
     def matched?(message)
       id = message.id.to_s
       return false if !@script.config["users"][id]["lastTime"].nil? && @script.config["users"][id]["lastTime"] + @script.config["config"]["flood"].to_i > Time.now
@@ -1043,7 +1022,7 @@ class Chatbot < Sandbox::Script
     end
 
     def exec(message)
-      msg = "[b][7fffa7]" + ANSWERS.sample
+      msg = "[b][7fffa7]" + @config['answers'].sample
       msg.gsub!("%", "[8ccbff]#{message.nick}[7fffa7]")
       msg.gsub!("@", "[ffe5af]#{Time.now.strftime("%H:%M")}[7fffa7]")
       @script.say(msg)
