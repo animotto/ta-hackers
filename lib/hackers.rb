@@ -3,6 +3,7 @@ module Trickster
     require "hackers-client"
     require "hackers-serializer"
     require "hackers-objects"
+    require "hackers-simlink"
 
     ##
     # Game API implementation

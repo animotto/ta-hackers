@@ -1296,6 +1296,69 @@ class Chatbot < Sandbox::Script
     end
   end
 
+  class CmdLink < CmdBase
+    NAME      = "link"
+    PATTERNS  = %w[!линк]
+    HELP      = "Генерирует короткую ссылку на симуляцию"
+
+    HOST = 'api-ssl.bitly.com'
+    PORT = 443
+    PATH = '/v4/shorten'
+
+    def initialize(script)
+      super(script)
+      @client = Net::HTTP.new(HOST, PORT)
+      @client.use_ssl = PORT == 443
+    end
+
+    def exec(message)
+      words = message.message.split(/\s+/)
+      id = message.id.to_s
+      unless words[1].nil?
+        nick = words[1].sub(/^@/, "")
+        user = @script.config["users"].detect {|k, v| v["nick"] == nick}
+        if user.nil?
+          msg = "[95ff93]Я НИЧЕГО НЕ ЗНАЮ О [fc7cff]#{nick}[95ff93]!"
+          @script.say(msg)
+          return
+        end
+        id = user.first
+      end
+
+      link = Trickster::Hackers::Simlink.new(id.to_i)
+      header = {
+        'Authorization' => "Bearer #{@config['token']}",
+        'Content-Type'  => 'application/json'
+      }
+      data = {
+        'long_url'    => link.generate,
+        'domain'      => @config['domain'],
+        'group_guid'  => @config['group']
+      }
+      response = @client.post(
+        PATH,
+        JSON.generate(data),
+        header
+      )
+
+      unless response.kind_of?(Net::HTTPSuccess)
+        msg = "[b][95ff93]НЕ МОГУ СОЗДАТЬ ССЫЛКУ!"
+        @script.say(msg)
+        return
+      end
+
+      begin
+        short = JSON.parse(response.body)
+      rescue JSON::ParserError => e
+        @script.logger.error("URL shortener JSON parse error (#{e})")
+        return
+      end
+
+      msg = "[b][95ff93]СИМУЛЯЦИЯ ДЛЯ [fc7cff]#{@script.config["users"][id]["nick"]}[95ff93]: [66ff8e]#{short['id']}"
+      @script.say(msg)
+    end
+  end
+
   def initialize(game, shell, logger, args)
     super(game, shell, logger, args)
     Dir.mkdir(DATA_DIR) unless Dir.exist?(DATA_DIR)
@@ -1484,6 +1547,7 @@ class Chatbot < Sandbox::Script
     @commands[CmdMessage::NAME]   = CmdMessage.new(self)
     @commands[CmdInfo::NAME]      = CmdInfo.new(self)
     @commands[CmdReadme::NAME]    = CmdReadme.new(self)
+    @commands[CmdLink::NAME]    = CmdLink.new(self)
 
     @randomCommands = [
       CmdStat::NAME,
