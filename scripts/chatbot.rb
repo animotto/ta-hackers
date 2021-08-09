@@ -1226,7 +1226,7 @@ class Chatbot < Sandbox::Script
     def exec(message)
       id = message.id.to_s
       words = message.message.split(/\s+/)
-      if words[1].empty?
+      if words[1].nil?
         user = @script.config["users"].keys.sample
       else
         nick = words[1].delete_prefix('@')
