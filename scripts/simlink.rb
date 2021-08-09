@@ -7,7 +7,7 @@ class Simlink < Sandbox::Script
 
     id = @args[0].to_i
 
-    simlink = Trickster::Hackers::Simlink.new(id)
+    simlink = Trickster::Hackers::SimLink.new(id)
     @logger.log(simlink.generate)
   end
 end

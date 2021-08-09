@@ -1,16 +1,10 @@
 module Trickster
   module Hackers
     ##
-    # Simulation link generator
-    class Simlink
-      HOST                  = 'link.hackersthegame.com'
-      PORT                  = 443
-      URI_SIMLINK           = '/simlink.php'
-      URI_PARAM_PLAYER      = 'p'
-      URI_PARAM_TIMESTAMP   = 't'
-      URI_PARAM_COMMON      = 'c'
-      URI_PARAM_RANDOM      = 'q'
-      URI_PARAM_CHECKSUM    = 's'
+    # Base class link generator
+    class BaseLink
+      HOST = 'link.hackersthegame.com'
+      PORT = 443
 
       def initialize(id)
         @id = id
@@ -19,26 +13,6 @@ module Trickster
 
       def to_s
         @uri
-      end
-
-      ##
-      # Generates simulation link
-      def generate
-        time = Time.now.strftime('%s%L').to_i
-        data = encode(@id, time)
-        query = URI.encode_www_form(
-          URI_PARAM_PLAYER    => data[:value],
-          URI_PARAM_TIMESTAMP => data[:timestamp],
-          URI_PARAM_COMMON    => data[:common],
-          URI_PARAM_RANDOM    => data[:random],
-          URI_PARAM_CHECKSUM  => data[:checksum]
-        )
-        @uri = URI::HTTPS.build(
-          host: HOST,
-          port: PORT,
-          path: URI_SIMLINK,
-          query: query
-        )
       end
 
       private
@@ -77,6 +51,68 @@ module Trickster
         end
 
         sum = -acc * 7 + 700 - 7
+      end
+    end
+
+    ##
+    # Simulation link generator
+    class SimLink < BaseLink
+      URI_SIMLINK           = '/simlink.php'
+      URI_PARAM_PLAYER      = 'p'
+      URI_PARAM_TIMESTAMP   = 't'
+      URI_PARAM_COMMON      = 'c'
+      URI_PARAM_RANDOM      = 'q'
+      URI_PARAM_CHECKSUM    = 's'
+
+      ##
+      # Generates simulation link
+      def generate
+        time = Time.now.strftime('%s%L').to_i
+        data = encode(@id, time)
+        query = URI.encode_www_form(
+          URI_PARAM_PLAYER    => data[:value],
+          URI_PARAM_TIMESTAMP => data[:timestamp],
+          URI_PARAM_COMMON    => data[:common],
+          URI_PARAM_RANDOM    => data[:random],
+          URI_PARAM_CHECKSUM  => data[:checksum]
+        )
+        @uri = URI::HTTPS.build(
+          host: BaseLink::HOST,
+          port: BaseLink::PORT,
+          path: URI_SIMLINK,
+          query: query
+        )
+      end
+    end
+
+    ##
+    # Replay link generator
+    class ReplayLink < BaseLink
+      URI_REPLAYLINK        = '/view_replay.php'
+      URI_PARAM_REPLAY      = 'r'
+      URI_PARAM_TIMESTAMP   = 't'
+      URI_PARAM_COMMON      = 'c'
+      URI_PARAM_RANDOM      = 'q'
+      URI_PARAM_CHECKSUM    = 's'
+
+      ##
+      # Generates replay link
+      def generate
+        time = Time.now.strftime('%s%L').to_i
+        data = encode(@id, time)
+        query = URI.encode_www_form(
+          URI_PARAM_REPLAY    => data[:value],
+          URI_PARAM_TIMESTAMP => data[:timestamp],
+          URI_PARAM_COMMON    => data[:common],
+          URI_PARAM_RANDOM    => data[:random],
+          URI_PARAM_CHECKSUM  => data[:checksum]
+        )
+        @uri = URI::HTTPS.build(
+          host: BaseLink::HOST,
+          port: BaseLink::PORT,
+          path: URI_REPLAYLINK,
+          query: query
+        )
       end
     end
   end

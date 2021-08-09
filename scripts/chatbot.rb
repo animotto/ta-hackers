@@ -1325,7 +1325,7 @@ class Chatbot < Sandbox::Script
         id = user.first
       end
 
-      link = Trickster::Hackers::Simlink.new(id.to_i)
+      link = Trickster::Hackers::SimLink.new(id.to_i)
       header = {
         'Authorization' => "Bearer #{@config['token']}",
         'Content-Type'  => 'application/json'
