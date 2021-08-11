@@ -1298,8 +1298,8 @@ class Chatbot < Sandbox::Script
 
   class CmdLink < CmdBase
     NAME      = "link"
-    PATTERNS  = %w[!линк]
-    HELP      = "Генерирует короткую ссылку на симуляцию"
+    PATTERNS  = %w[!линк !повтор]
+    HELP      = "Генерирует короткую ссылку на симуляцию или повтор"
 
     HOST = 'api-ssl.bitly.com'
     PORT = 443
@@ -1325,7 +1325,27 @@ class Chatbot < Sandbox::Script
         id = user.first
       end
 
-      link = Trickster::Hackers::SimLink.new(id.to_i)
+      replay = nil
+      if words[0].downcase == self.class::PATTERNS[0]
+        link = Trickster::Hackers::SimLink.new(id.to_i)
+      else
+        begin
+          logs = @script.game.cmdFightByFBFriend(id.to_i)
+        rescue Trickster::Hackers::RequestError => e
+          @script.logger.error("Get logs error for #{id.to_i} (#{e})")
+          return
+        end
+
+        hacks = logs.select {|k, v| v['attacker']['id'] == id.to_i}
+        replay = hacks.sort_by {|k, v| k}.last
+        if replay.nil?
+          msg = "[b][fc7cff]#{@script.config["users"][id]["nick"]} [95ff93]В ПОСЛЕДНЕЕ ВРЕМЯ НИКОГО НЕ АТАКОВАЛ!"
+          @script.say(msg)
+          return
+        end
+        link = Trickster::Hackers::ReplayLink.new(replay[0])
+      end
+
       header = {
         'Authorization' => "Bearer #{@config['token']}",
         'Content-Type'  => 'application/json'
@@ -1354,7 +1374,11 @@ class Chatbot < Sandbox::Script
         return
       end
 
-      msg = "[b][95ff93]СИМУЛЯЦИЯ ДЛЯ [fc7cff]#{@script.config["users"][id]["nick"]}[95ff93]: [66ff8e]#{short['id']}"
+      if link.kind_of?(Trickster::Hackers::SimLink)
+        msg = "[b][95ff93]СИМУЛЯЦИЯ ДЛЯ [fc7cff]#{@script.config["users"][id]["nick"]}[95ff93]: [ff162e]#{short['id']}"
+      else
+        msg = "[b][95ff93]ПОВТОР АТАКИ [fc7cff]#{replay[1]['attacker']['name']} [95ff93]НА [fc7cff]#{replay[1]['target']['name']}[95ff93]: [ff162e]#{short['id']}"
+      end
       @script.say(msg)
     end
   end
