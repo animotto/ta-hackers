@@ -16,6 +16,8 @@ class Chatbot < Sandbox::Script
 
     attr_accessor :enabled, :visible
 
+    @@successors = []
+
     def initialize(script)
       @script = script
       @enabled = false
@@ -23,6 +25,16 @@ class Chatbot < Sandbox::Script
       @config = Sandbox::Config.new("#{Chatbot::DATA_DIR}/cmd-#{self.class::NAME}.conf")
       @data = Sandbox::Config.new("#{Chatbot::DATA_DIR}/data-#{self.class::NAME}.conf")
       load
+    end
+
+    class << self
+      def inherited(subclass)
+        @@successors << subclass
+      end
+
+      def successors
+        @@successors
+      end
     end
 
     def matched?(message)
@@ -1538,38 +1550,10 @@ class Chatbot < Sandbox::Script
     return unless load
     @config["startup"] = Time.now
 
-    @commands = Hash.new
-    @commands[CmdAdmin::NAME]     = CmdAdmin.new(self)
-    @commands[CmdHelp::NAME]      = CmdHelp.new(self)
-    @commands[CmdStat::NAME]      = CmdStat.new(self)
-    @commands[CmdHello::NAME]     = CmdHello.new(self)
-    @commands[CmdCounting::NAME]  = CmdCounting.new(self)
-    @commands[CmdRoulette::NAME]  = CmdRoulette.new(self)
-    @commands[CmdCookie::NAME]    = CmdCookie.new(self)
-    @commands[CmdClick::NAME]     = CmdClick.new(self)
-    @commands[CmdLenta::NAME]     = CmdLenta.new(self)
-    @commands[CmdHabr::NAME]      = CmdHabr.new(self)
-    @commands[CmdLor::NAME]       = CmdLor.new(self)
-    @commands[CmdBash::NAME]      = CmdBash.new(self)
-    @commands[CmdPhrase::NAME]    = CmdPhrase.new(self)
-    @commands[CmdJoke::NAME]      = CmdJoke.new(self)
-    @commands[CmdCurrency::NAME]  = CmdCurrency.new(self)
-    @commands[CmdDay::NAME]       = CmdDay.new(self)
-    @commands[CmdGoose::NAME]     = CmdGoose.new(self)
-    @commands[CmdHour::NAME]      = CmdHour.new(self)
-    @commands[CmdISS::NAME]       = CmdISS.new(self)
-    @commands[CmdSpaceX::NAME]    = CmdSpaceX.new(self)
-    @commands[CmdCOVID19::NAME]   = CmdCOVID19.new(self)
-    @commands[CmdWiki::NAME]      = CmdWiki.new(self)
-    @commands[CmdCity::NAME]      = CmdCity.new(self)
-    @commands[CmdTazik::NAME]     = CmdTazik.new(self)
-    @commands[CmdPerson::NAME]    = CmdPerson.new(self)
-    @commands[CmdRanking::NAME]   = CmdRanking.new(self)
-    @commands[CmdWall::NAME]      = CmdWall.new(self)
-    @commands[CmdMessage::NAME]   = CmdMessage.new(self)
-    @commands[CmdInfo::NAME]      = CmdInfo.new(self)
-    @commands[CmdReadme::NAME]    = CmdReadme.new(self)
-    @commands[CmdLink::NAME]    = CmdLink.new(self)
+    @commands = {}
+    CmdBase.successors.each do |successor|
+      @commands[successor::NAME] = successor.new(self)
+    end
 
     @config["enabled"].each do |name|
       next unless @commands.keys.include?(name)
