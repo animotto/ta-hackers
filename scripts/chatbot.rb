@@ -1323,6 +1323,34 @@ class Chatbot < Sandbox::Script
       @client.use_ssl = PORT == 443
     end
 
+    def shorten(uri)
+      header = {
+        'Authorization' => "Bearer #{@config['token']}",
+        'Content-Type'  => 'application/json'
+      }
+      data = {
+        'long_url'    => uri,
+        'domain'      => @config['domain'],
+        'group_guid'  => @config['group']
+      }
+      response = @client.post(
+        PATH,
+        JSON.generate(data),
+        header
+      )
+
+      return false unless response.kind_of?(Net::HTTPSuccess)
+
+      begin
+        short = JSON.parse(response.body)
+      rescue JSON::ParserError => e
+        @script.logger.error("URL shortener JSON parse error (#{e})")
+        return false
+      end
+
+      return short['id']
+    end
+
     def exec(message)
       words = message.message.split(/\s+/)
       id = message.id.to_s
@@ -1358,38 +1386,17 @@ class Chatbot < Sandbox::Script
         link = Trickster::Hackers::ReplayLink.new(replay[0])
       end
 
-      header = {
-        'Authorization' => "Bearer #{@config['token']}",
-        'Content-Type'  => 'application/json'
-      }
-      data = {
-        'long_url'    => link.generate,
-        'domain'      => @config['domain'],
-        'group_guid'  => @config['group']
-      }
-      response = @client.post(
-        PATH,
-        JSON.generate(data),
-        header
-      )
-
-      unless response.kind_of?(Net::HTTPSuccess)
+      short = shorten(link.generate)
+      unless short
         msg = "[b][95ff93]НЕ МОГУ СОЗДАТЬ ССЫЛКУ!"
         @script.say(msg)
         return
       end
 
-      begin
-        short = JSON.parse(response.body)
-      rescue JSON::ParserError => e
-        @script.logger.error("URL shortener JSON parse error (#{e})")
-        return
-      end
-
       if link.kind_of?(Trickster::Hackers::SimLink)
-        msg = "[b][95ff93]СИМУЛЯЦИЯ ДЛЯ [fc7cff]#{@script.config["users"][id]["nick"]}[95ff93]: [ff162e]#{short['id']}"
+        msg = "[b][95ff93]СИМУЛЯЦИЯ ДЛЯ [fc7cff]#{@script.config["users"][id]["nick"]}[95ff93]: [ff162e]#{short}"
       else
-        msg = "[b][95ff93]ПОВТОР АТАКИ [fc7cff]#{replay[1]['attacker']['name']} [95ff93]НА [fc7cff]#{replay[1]['target']['name']}[95ff93]: [ff162e]#{short['id']}"
+        msg = "[b][95ff93]ПОВТОР АТАКИ [fc7cff]#{replay[1]['attacker']['name']} [95ff93]НА [fc7cff]#{replay[1]['target']['name']}[95ff93]: [ff162e]#{short}"
       end
       @script.say(msg)
     end
