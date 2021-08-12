@@ -1405,8 +1405,6 @@ class Chatbot < Sandbox::Script
         "users"     => {},
         "config"    => {
           "flood"     => "15",
-          "repeats"   => "5",
-          "random"    => "on",
           },
         "startup"   => "",
         "name"      => "",
@@ -1573,29 +1571,6 @@ class Chatbot < Sandbox::Script
     @commands[CmdReadme::NAME]    = CmdReadme.new(self)
     @commands[CmdLink::NAME]    = CmdLink.new(self)
 
-    @randomCommands = [
-      CmdStat::NAME,
-      CmdClick::NAME,
-      CmdCounting::NAME,
-      CmdRoulette::NAME,
-      CmdCookie::NAME,
-      CmdLenta::NAME,
-      CmdHabr::NAME,
-      CmdLor::NAME,
-      CmdBash::NAME,
-      CmdPhrase::NAME,
-      CmdJoke::NAME,
-      CmdCurrency::NAME,
-      CmdDay::NAME,
-      CmdGoose::NAME,
-      CmdISS::NAME,
-      CmdSpaceX::NAME,
-      CmdCOVID19::NAME,
-      CmdWall::NAME,
-      CmdInfo::NAME,
-      CmdReadme::NAME,
-    ]
-
     @config["enabled"].each do |name|
       next unless @commands.keys.include?(name)
       @commands[name].enabled = true
@@ -1603,7 +1578,6 @@ class Chatbot < Sandbox::Script
 
     @logger.log("The bot listens room #{@room}")
 
-    roomLastUser = Hash.new
     saveLastTime = Time.now
     @chat = @game.getChat(@room)
 
@@ -1639,30 +1613,10 @@ class Chatbot < Sandbox::Script
         @config["users"][id]["counter"] += 1
         next if !@config["users"][id]["muteTime"].nil? && @config["users"][id]["muteTime"] >= Time.now
 
-        executed = false
         @commands.each do |name, command|
           if command.matched?(message) && command.enabled
             command.exec(message)
-            executed = true
             @config["users"][id]["lastTime"] = Time.now
-          end
-        end
-        
-        if !executed
-          if roomLastUser["id"].nil? || roomLastUser["id"] != message.id
-            roomLastUser = {
-              "id"        => message.id,
-              "counter"   => 1,
-            }
-          else
-            roomLastUser["counter"] += 1
-          end
-          if roomLastUser["counter"] >= @config["config"]["repeats"].to_i && @config["config"]["random"] == "on"
-            randomCommandsEnabled = @randomCommands.select {|c| @commands[c].enabled}
-            unless randomCommandsEnabled.empty?
-              @commands[randomCommandsEnabled.sample].exec(message)
-              roomLastUser.clear
-            end
           end
         end
 
