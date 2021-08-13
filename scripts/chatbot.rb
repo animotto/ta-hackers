@@ -1344,11 +1344,18 @@ class Chatbot < Sandbox::Script
         'domain'      => @config['domain'],
         'group_guid'  => @config['group']
       }
-      response = @client.post(
-        PATH,
-        JSON.generate(data),
-        header
-      )
+
+      json = JSON.generate(data)
+      begin
+        response = @client.post(
+          PATH,
+          json,
+          header
+        )
+      rescue => e
+        @script.logger.error("Shorten request error (#{e})")
+        return false
+      end
 
       return false unless response.kind_of?(Net::HTTPSuccess)
 
