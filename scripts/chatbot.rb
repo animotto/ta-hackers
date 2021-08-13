@@ -37,15 +37,16 @@ class Chatbot < Sandbox::Script
       end
     end
 
+    def flood?(id)
+      !@script.config["users"][id]["lastTime"].nil? && @script.config["users"][id]["lastTime"] + @script.config["config"]["flood"].to_i > Time.now
+    end
+
     def matched?(message)
       id = message.id.to_s
-      return false if !@script.config["users"][id]["lastTime"].nil? && @script.config["users"][id]["lastTime"] + @script.config["config"]["flood"].to_i > Time.now
-      return false if self.class::PATTERNS.empty?
+      return false if flood?(id)
       words = message.message.split(/\s+/)
       return false if words.empty?
-      self.class::PATTERNS.each do |pattern|
-        return true if pattern == words[0].downcase
-      end
+      return true if self.class::PATTERNS.include?(words[0].downcase)
       return false
     end
 
@@ -1012,7 +1013,7 @@ class Chatbot < Sandbox::Script
 
     def matched?(message)
       id = message.id.to_s
-      return false if !@script.config["users"][id]["lastTime"].nil? && @script.config["users"][id]["lastTime"] + @script.config["config"]["flood"].to_i > Time.now
+      return false if flood?(id)
       words = message.message.split(/\s+/)
       return true if words.include?("@#{@script.config["name"]}")
       return false
@@ -1166,8 +1167,7 @@ class Chatbot < Sandbox::Script
 
     def matched?(message)
       id = message.id.to_s
-      return false if !@script.config["users"][id]["lastTime"].nil? && @script.config["users"][id]["lastTime"] + @script.config["config"]["flood"].to_i > Time.now
-      return false if @config["patterns"].empty?
+      return false if flood?(id) || @config["patterns"].empty?
       words = message.message.split(/\s+/)
       return false if words.empty?
       return true if @config["patterns"].key?(words[0].downcase)
@@ -1323,6 +1323,17 @@ class Chatbot < Sandbox::Script
       @client.use_ssl = PORT == 443
     end
 
+    def matched?(message)
+      id = message.id.to_s
+      return false if flood?(id)
+      words = message.message.split(/\s+/)
+      return false if words.empty?
+      return true if self.class::PATTERNS.include?(words[0].downcase)
+      regexp = Regexp.new('\bhttps?://([[:alnum:]]|[[:punct:]])+\b')
+      return true if @match = regexp.match(message.message)
+      return false
+    end
+
     def shorten(uri)
       header = {
         'Authorization' => "Bearer #{@config['token']}",
@@ -1354,6 +1365,19 @@ class Chatbot < Sandbox::Script
     def exec(message)
       words = message.message.split(/\s+/)
       id = message.id.to_s
+      if !words.empty? && !self.class::PATTERNS.include?(words[0].downcase)
+        short = shorten(@match[0])
+        unless short
+          msg = "[b][95ff93]НЕ МОГУ СОЗДАТЬ ССЫЛКУ!"
+          @script.say(msg)
+          return
+        end
+
+        msg = "[b][95ff93]КОРОТКАЯ ССЫЛКА ОТ [fc7cff]#{@script.config["users"][id]["nick"]}[95ff93]: [ff162e]#{short}"
+        @script.say(msg)
+        return
+      end
+
       unless words[1].nil?
         nick = words[1].sub(/^@/, "")
         user = @script.config["users"].detect {|k, v| v["nick"] == nick}
