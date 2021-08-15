@@ -46,15 +46,23 @@ module Sandbox
         when "targets"
           @shell.puts("\e[1;35m\u2022 Targets\e[0m")
           @shell.puts(
-            "  \e[35m%-12s %s\e[0m" % [
+            "  \e[35m%-12s %-6s %-8s %-8s %-8s %s\e[0m" % [
               "ID",
+              "Level",
+              "X",
+              "Y",
+              "Country",
               "Name",
             ]
           )
           world["targets"].each do |k, v|
             @shell.puts(
-              "  %-12d %s" % [
+              "  %-12d %-6d %+-8d %+-8d %-8d %s" % [
                 k,
+                @game.getLevelByExp(v["experience"]),
+                v["x"],
+                v["y"],
+                v["country"],
                 v["name"],
               ]
             )
@@ -121,15 +129,23 @@ module Sandbox
         @shell.logger.log(msg)
         @shell.puts("\e[1;35m\u2022 Targets\e[0m")
         @shell.puts(
-          "  \e[35m%-12s %s\e[0m" % [
+          "  \e[35m%-12s %-6s %-8s %-8s %-8s %s\e[0m" % [
             "ID",
+            "Level",
+            "X",
+            "Y",
+            "Country",
             "Name",
           ]
         )
         targets["targets"].each do |k, v|
           @shell.puts(
-            "  %-12d %s" % [
+            "  %-12d %-6d %+-8d %+-8d %-8d %s" % [
               k,
+              @game.getLevelByExp(v["experience"]),
+              v["x"],
+              v["y"],
+              v["country"],
               v["name"],
             ]
           )
