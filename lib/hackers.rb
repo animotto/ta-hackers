@@ -1321,6 +1321,10 @@ module Trickster
         return serializer.parseCpGenerateCode
       end
 
+      ##
+      # Redeems promo code
+      #
+      # Returns Serializer#parseRedeemPromoCode
       def cmdRedeemPromoCode(id, code)
         params = {
           "redeem_promo_code" => 1,
@@ -1329,7 +1333,8 @@ module Trickster
           "app_version"       => @config["version"],
         }
         response = @client.request(params, @sid)
-        return response
+        serializer = Serializer.new(response)
+        return serializer.parseRedeemPromoCode
       end
 
       def cmdPaymentPayGoogle(id, receipt, signature)

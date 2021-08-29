@@ -1515,6 +1515,21 @@ module Trickster
       end
 
       ##
+      # Parses promo code
+      #
+      # Returns hash:
+      #   {
+      #     'credits' => Credits,
+      #     'message' => Message
+      #   }
+      def parseRedeemPromoCode
+        {
+          'credits' => @fields[0][0][0].to_i,
+          'message' => @fields[0][0][2]
+        }
+      end
+
+      ##
       # Parses player statistics
       #
       # Returns hash:
