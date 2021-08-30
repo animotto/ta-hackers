@@ -124,7 +124,10 @@ module Trickster
 
         if response.class != Net::HTTPOK
           fields = Serializer.parseData(response.body.force_encoding("utf-8"))
-          raise RequestError.new(fields.dig(0, 0, 0), fields.dig(0, 0, 1))
+          raise RequestError.new(
+            Serializer.normalizeData(fields.dig(0, 0, 0)),
+            Serializer.normalizeData(fields.dig(0, 0, 1))
+          )
         end
         return response.body.force_encoding("utf-8")
       end

@@ -41,13 +41,13 @@ module Trickster
       # Returns a normalized string
       def self.normalizeData(data, dir = true)
         if dir
-          data.gsub!(DELIM_NORM_FIELD, DELIM_FIELD)
-          data.gsub!(DELIM_NORM_RECORD, DELIM_RECORD)
-          data.gsub!(DELIM_NORM_SECTION, DELIM_SECTION)
+          data&.gsub!(DELIM_NORM_FIELD, DELIM_FIELD)
+          data&.gsub!(DELIM_NORM_RECORD, DELIM_RECORD)
+          data&.gsub!(DELIM_NORM_SECTION, DELIM_SECTION)
         else
-          data.gsub!(DELIM_FIELD, DELIM_NORM_FIELD)
-          data.gsub!(DELIM_RECORD, DELIM_NORM_RECORD)
-          data.gsub!(DELIM_SECTION, DELIM_NORM_SECTION)
+          data&.gsub!(DELIM_FIELD, DELIM_NORM_FIELD)
+          data&.gsub!(DELIM_RECORD, DELIM_NORM_RECORD)
+          data&.gsub!(DELIM_SECTION, DELIM_NORM_SECTION)
         end
         return data
       end
