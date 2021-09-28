@@ -1,12 +1,14 @@
-require "cgi"
+require 'cgi'
 
 class Telegram < Sandbox::Script
   DATA_DIR = "#{Sandbox::ContextScript::SCRIPTS_DIR}/telegram"
-  TOKEN_VAR = "telegram-token"
-  SLEEP_TIME = 10
-  
+  TOKEN_VAR = 'telegram-token'
+  CHAT_INTERVAL = 10
+  TELEGRAM_INTERVAL = 1
+  QUEUE_SIZE = 1000
+
   class API
-    HOST = "api.telegram.org"
+    HOST = 'api.telegram.org'
     PORT = 443
 
     def initialize(token)
@@ -14,6 +16,7 @@ class Telegram < Sandbox::Script
       @client = Net::HTTP.new(HOST, PORT)
       @client.use_ssl = (PORT == 443)
       @updateId = 0
+      @mutex = Mutex.new
     end
 
     def getMe
@@ -48,7 +51,10 @@ class Telegram < Sandbox::Script
       uri = "/bot#{@token}/#{method}"
       uri += "?" + encodeURI(params) unless params.empty?
       begin
-        response = @client.get(uri)
+        response = nil
+        @mutex.synchronize do
+          response = @client.get(uri)
+        end
       rescue => e
         raise APIError.new("HTTP request", e.message)
       end
@@ -95,6 +101,7 @@ class Telegram < Sandbox::Script
     super
     Dir.mkdir(DATA_DIR) unless Dir.exist?(DATA_DIR)
     @api = API.new(@game.config[TOKEN_VAR])
+    @queue = SizedQueue.new(QUEUE_SIZE)
   end
 
   def load
@@ -170,6 +177,34 @@ class Telegram < Sandbox::Script
     end
   end
 
+  def finish
+    @queue_thread.kill unless @queue_thread.nil?
+  end
+
+  def queue
+    time = Time.now
+    loop do
+      message = @queue.pop
+      t = Time.now - time
+      sleep(t) if t <= TELEGRAM_INTERVAL
+
+      msg = message[:message].message.clone
+      msg.gsub!(/\[([biusc]|sup|sub|[\da-f]{6})\]/i, '')
+      msg = format(
+        '<b>%<nick>s: </b>%<msg>s',
+        nick: CGI.escape_html(message[:message].nick),
+        msg: CGI.escape_html(msg)
+      )
+      time = Time.now
+      begin
+        @api.sendMessage(message[:channel], msg)
+      rescue APIError => e
+        @logger.error("Send message error, from chat room #{message[:room]} to channel #{message[:channel]} (#{e})")
+        @logger.error(msg)
+      end
+    end
+  end
+
   def main
     if @game.config[TOKEN_VAR].nil? || @game.config[TOKEN_VAR].empty?
       @logger.error("No telegram token")
@@ -190,9 +225,9 @@ class Telegram < Sandbox::Script
       @logger.log("Relay chat room #{room} to channel #{relay["channel"]}")
     end
 
-    loop do
-      sleep(SLEEP_TIME)
+    @queue_thread = Thread.new { queue }
 
+    loop do
       begin
         @api.getUpdates.each do |update|
           @logger.log("%d (%s): %s" % [
@@ -214,21 +249,20 @@ class Telegram < Sandbox::Script
         end
 
         messages.each do |message|
-          msg = message.message.clone
-          msg.gsub!(/\[([biusc]|sup|sub|[\da-f]{6})\]/i, "")
-          msg = "<b>%s: </b>%s" % [
-            CGI.escape_html(message.nick),
-            CGI.escape_html(msg),
-          ]
-          begin
-            @api.sendMessage(relay["channel"], msg)
-          rescue APIError => e
-            @logger.error("Send message error, from chat room #{room} to channel #{relay["channel"]} (#{e})")
-            @logger.error(msg)
-          end
+          @queue.push(
+            {
+              room: room,
+              channel: relay['channel'],
+              message: message
+            },
+            true
+          )
+        rescue ThreadError
+          next
         end
       end
+
+      sleep(CHAT_INTERVAL)
     end
   end
 end
-
