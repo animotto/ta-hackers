@@ -1,14 +1,26 @@
 class Replaylink < Sandbox::Script
   def main
     if @args[0].nil?
-      @logger.log("Specify replay ID")
+      @logger.log("Specify replay ID or URI")
       return
     end
 
-    id = @args[0].to_i
+    if @args[0] =~ /^\d+$/
+      replaylink = Trickster::Hackers::ReplayLink.new(@args[0].to_i)
+      @logger.log(replaylink.generate)
+    else
+      replaylink = Trickster::Hackers::ReplayLink.new(0)
+      begin
+        data = replaylink.parse(@args[0])
+      rescue Trickster::Hackers::LinkError => e
+        @logger.error(e)
+        return
+      end
 
-    replaylink = Trickster::Hackers::ReplayLink.new(id)
-    @logger.log(replaylink.generate)
+      @logger.log("Timestamp: #{Time.at(data[:timestamp] / 1000)}")
+      @logger.log("Replay ID: #{data[:value]}")
+    end
+
   end
 end
 

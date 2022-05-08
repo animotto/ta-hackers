@@ -40,6 +40,21 @@ module Trickster
       end
 
       ##
+      # Decodes data
+      def decode(**data)
+        time = (data[:common] + data[:timestamp].reverse).to_i
+        value = (data[:common] + data[:value]).to_i
+        raise LinkChecksumError, 'Checksum error' unless data[:checksum].to_i == checksum(value)
+
+        value = (value ^ time) - data[:random].to_i
+
+        {
+          value: value,
+          timestamp: time
+        }
+      end
+
+      ##
       # Calculates checksum
       def checksum(data)
         return 700 if data < 1
@@ -51,6 +66,24 @@ module Trickster
         end
 
         sum = -acc * 7 + 700 - 7
+      end
+
+      ##
+      # Generates link
+      def generate; end
+
+      ##
+      # Parses link
+      def parse(uri)
+        begin
+          uri = URI.parse(uri)
+        rescue URI::Error => e
+          raise LinkParserError, e
+        end
+
+        raise LinkParserError, 'URI has no query' if uri.query.nil?
+
+        uri
       end
     end
 
@@ -65,7 +98,7 @@ module Trickster
       URI_PARAM_CHECKSUM    = 's'
 
       ##
-      # Generates simulation link
+      # Generates a simulation link
       def generate
         time = Time.now.strftime('%s%L').to_i
         data = encode(@id, time)
@@ -83,6 +116,24 @@ module Trickster
           query: query
         )
       end
+
+      ##
+      # Parses the simulation link and returns the data
+      def parse(uri)
+        uri = super
+        params = URI.decode_www_form(uri.query).to_h
+        [URI_PARAM_PLAYER, URI_PARAM_TIMESTAMP, URI_PARAM_COMMON, URI_PARAM_RANDOM, URI_PARAM_CHECKSUM].each do |param|
+          raise LinkParserError, "Param #{param} not found" unless params.key?(param)
+        end
+
+        decode(
+          value: params[URI_PARAM_PLAYER],
+          timestamp: params[URI_PARAM_TIMESTAMP],
+          common: params[URI_PARAM_COMMON],
+          random: params[URI_PARAM_RANDOM],
+          checksum: params[URI_PARAM_CHECKSUM]
+        )
+      end
     end
 
     ##
@@ -96,7 +147,7 @@ module Trickster
       URI_PARAM_CHECKSUM    = 's'
 
       ##
-      # Generates replay link
+      # Generates a replay link
       def generate
         time = Time.now.strftime('%s%L').to_i
         data = encode(@id, time)
@@ -114,6 +165,36 @@ module Trickster
           query: query
         )
       end
+
+      ##
+      # Parses the replay link and returns the data
+      def parse(uri)
+        uri = super
+        params = URI.decode_www_form(uri.query).to_h
+        [URI_PARAM_REPLAY, URI_PARAM_TIMESTAMP, URI_PARAM_COMMON, URI_PARAM_RANDOM, URI_PARAM_CHECKSUM].each do |param|
+          raise LinkParserError, "Param #{param} not found" unless params.key?(param)
+        end
+
+        decode(
+          value: params[URI_PARAM_REPLAY],
+          timestamp: params[URI_PARAM_TIMESTAMP],
+          common: params[URI_PARAM_COMMON],
+          random: params[URI_PARAM_RANDOM],
+          checksum: params[URI_PARAM_CHECKSUM]
+        )
+      end
     end
+
+    ##
+    # Link error
+    class LinkError < StandardError; end
+
+    ##
+    # Link parser error
+    class LinkParserError < LinkError; end
+
+    ##
+    # Link checksum error
+    class LinkChecksumError < LinkError; end
   end
 end
