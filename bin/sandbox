@@ -1,0 +1,54 @@
+#!/usr/bin/env ruby
+
+# frozen_string_literal: true
+
+BASE_DIR = File.join(__dir__, '..')
+$LOAD_PATH.unshift(File.join(BASE_DIR, 'lib'))
+
+require 'optparse'
+require 'json'
+
+require 'hackers'
+require 'sandbox'
+
+Signal.trap('INT') { exit }
+
+Dir.chdir(BASE_DIR)
+CONFIGS_DIR = 'configs'
+DEFAULT_CONFIG = 'default'
+
+options = {
+  'config' => DEFAULT_CONFIG
+}
+begin
+  OptionParser.new do |opts|
+    opts.banner = 'TricksterArts Hackers sandbox'
+    opts.on('-c config', '', 'Configuration name') do |v|
+      options['config'] = v
+    end
+  end.parse!
+rescue OptionParser::InvalidOption, OptionParser::MissingArgument => e
+  puts "#{$PROGRAM_NAME}: #{e.message}"
+  exit
+end
+
+config_file = "#{options['config']}.conf"
+unless File.file?("#{CONFIGS_DIR}/#{config_file}")
+  puts "#{$PROGRAM_NAME}: Can't load config #{options['config']}"
+  exit
+end
+config = Sandbox::Config.new("#{CONFIGS_DIR}/#{config_file}")
+begin
+  config.load
+rescue JSON::ParserError => e
+  puts "#{$PROGRAM_NAME}: Invalid config format"
+  puts
+  puts e
+  exit
+end
+
+game = Trickster::Hackers::Game.new(config)
+shell = Sandbox::Shell.new(game)
+config['autocmd']&.each { |cmd| shell.exec(cmd) }
+
+shell.readline
