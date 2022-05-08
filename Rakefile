@@ -1,18 +1,20 @@
-$:.unshift("#{__dir__}/lib")
+# frozen_string_literal: true
 
-require "sandbox"
-require "hackers"
+$LOAD_PATH.unshift(File.join(__dir__, 'lib'))
 
-CONFIGS_DIR     = "configs"
-DEFAULT_CONFIG  = "default.conf"
-SANDBOX_FILE    = "sandbox.rb"
+require 'sandbox'
+require 'hackers'
+
+CONFIGS_DIR     = 'configs'
+DEFAULT_CONFIG  = 'default.conf'
+SANDBOX_FILE    = 'bin/sandbox'
 
 Dir.chdir(__dir__)
 
-desc "Run sandbox"
-task :run, [:config] do |task, args|
+desc 'Run sandbox'
+task :run, [:config] do |_task, args|
   unless args[:config]
-    puts "Specify config name"
+    puts 'Specify config name'
     exit
   end
 
@@ -25,24 +27,24 @@ task :run, [:config] do |task, args|
   exec("./#{SANDBOX_FILE} -c #{args[:config]}")
 end
 
-desc "News list"
+desc 'News list'
 task :news do
   config = Sandbox::Config.new("#{CONFIGS_DIR}/#{DEFAULT_CONFIG}")
   config.load
   game = Trickster::Hackers::Game.new(config)
   news = game.cmdNewsGetList
-  news.each do |k, v|
-    puts "\e[34m#{v["date"]} \e[33m#{v["title"]}\e[0m"
-    puts "\e[35m#{v["body"]}\e[0m"
+  news.each do |_, v|
+    puts "\e[34m#{v['date']} \e[33m#{v['title']}\e[0m"
+    puts "\e[35m#{v['body']}\e[0m"
     puts
   end
 end
 
 namespace :account do
-  desc "Create new account"
-  task :new, [:name] do |task, args|
+  desc 'Create new account'
+  task :new, [:name] do |_task, args|
     unless args[:name]
-      puts "Specify config name"
+      puts 'Specify config name'
       exit
     end
 
@@ -57,16 +59,16 @@ namespace :account do
     config.file = file
     game = Trickster::Hackers::Game.new(config)
     account = game.cmdPlayerCreate
-    config["id"] = account["id"]
-    config["password"] = account["password"]
+    config['id'] = account['id']
+    config['password'] = account['password']
     config.save
-    puts "New account #{args[:name]} has been created (#{account["id"]})"
+    puts "New account #{args[:name]} has been created (#{account['id']})"
   end
 
-  desc "Delete config"
-  task :del, [:name] do |task, args|
+  desc 'Delete config'
+  task :del, [:name] do |_task, args|
     unless args[:name]
-      puts "Specify config name"
+      puts 'Specify config name'
       exit
     end
 
@@ -80,21 +82,22 @@ namespace :account do
     puts "Config #{args[:name]} has been deleted"
   end
 
-  desc "List configs"
+  desc 'List configs'
   task :list do
     files = Dir.entries(CONFIGS_DIR)
     files.sort!
     files.each do |file|
       next if file =~ /^..?$/
-      name = file.split(".").first
+
+      name = file.split('.').first
       puts name
     end
   end
 
-  desc "Show config"
-  task :show, [:name] do |task, args|
+  desc 'Show config'
+  task :show, [:name] do |_task, args|
     unless args[:name]
-      puts "Specify config name"
+      puts 'Specify config name'
       exit
     end
 
@@ -115,8 +118,11 @@ namespace :account do
 
     puts "Configuration #{args[:name]}:"
     config.each do |k, v|
-      puts " %-20s .. %s" % [k, v]
+      puts format(
+        ' %<key>-20s .. %<value>s',
+        key: k,
+        value: v
+      )
     end
   end
 end
-
