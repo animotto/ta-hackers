@@ -49,6 +49,12 @@ end
 
 game = Trickster::Hackers::Game.new(config)
 shell = Sandbox::Shell.new(game)
-config['autocmd']&.each { |cmd| shell.exec(cmd) }
+if config.key?('autocmd')
+  if config['autocmd'].instance_of?(Array)
+    config['autocmd'].each { |cmd| shell.exec(cmd) }
+  else
+    shell.exec(config['autocmd'].to_s)
+  end
+end
 
 shell.readline

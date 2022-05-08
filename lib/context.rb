@@ -80,7 +80,12 @@ module Sandbox
           return
         end
 
-        @game.config[words[1]] = words[2]
+        if words.length == 3
+          @game.config[words[1]] = words[2]
+          return
+        end
+
+        @game.config[words[1]] = words[2..-1]
         return
 
       when "unset"

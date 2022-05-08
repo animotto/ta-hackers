@@ -40,12 +40,12 @@ module Sandbox
       }
 
       @logger = Logger.new(self)
-      @logger.logPrefix = '\e[1;32m\u2714\e[22;32m '
-      @logger.logSuffix = '\e[0m'
-      @logger.errorPrefix = '\e[1;31m\u2718\e[22;31m '
-      @logger.errorSuffix = '\e[0m'
-      @logger.infoPrefix = '\e[1;37m\u2759\e[22;37m '
-      @logger.infoSuffix = '\e[0m'
+      @logger.logPrefix = "\e[1;32m\u2714\e[22;32m "
+      @logger.logSuffix = "\e[0m"
+      @logger.errorPrefix = "\e[1;31m\u2718\e[22;31m "
+      @logger.errorSuffix = "\e[0m"
+      @logger.infoPrefix = "\e[1;37m\u2759\e[22;37m "
+      @logger.infoSuffix = "\e[0m"
 
       Readline.completion_proc = proc do |text|
         @contexts[@context].completion(text)
