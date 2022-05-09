@@ -2,14 +2,18 @@
 
 # frozen_string_literal: true
 
+BANNER = <<~BANNER_TEXT
+  Trickster Arts Hackers sandbox
+BANNER_TEXT
+
 BASE_DIR = File.join(__dir__, '..')
-$LOAD_PATH.unshift(File.join(BASE_DIR, 'lib'))
 
 require 'optparse'
 require 'json'
 
 require 'hackers'
 require 'sandbox'
+require 'cli/sandbox'
 
 Signal.trap('INT') { exit }
 
@@ -22,7 +26,7 @@ options = {
 }
 begin
   OptionParser.new do |opts|
-    opts.banner = 'TricksterArts Hackers sandbox'
+    opts.banner = BANNER
     opts.on('-c config', '', 'Configuration name') do |v|
       options['config'] = v
     end
@@ -47,14 +51,24 @@ rescue JSON::ParserError => e
   exit
 end
 
-game = Trickster::Hackers::Game.new(config)
-shell = Sandbox::Shell.new(game)
-if config.key?('autocmd')
-  if config['autocmd'].instance_of?(Array)
-    config['autocmd'].each { |cmd| shell.exec(cmd) }
-  else
-    shell.exec(config['autocmd'].to_s)
-  end
-end
+GAME = Trickster::Hackers::Game.new(config)
+SHELL = Sandbox::Shell.new(banner: BANNER)
+# if config.key?('autocmd')
+#   if config['autocmd'].instance_of?(Array)
+#     config['autocmd'].each { |cmd| SHELL.exec(cmd) }
+#   else
+#     SHELL.exec(config['autocmd'].to_s)
+#   end
+# end
 
-shell.readline
+LOGGER = Sandbox::Logger.new(SHELL)
+LOGGER.logPrefix = "\e[1;32m\u2714\e[22;32m "
+LOGGER.logSuffix = "\e[0m"
+LOGGER.errorPrefix = "\e[1;31m\u2718\e[22;31m "
+LOGGER.errorSuffix = "\e[0m"
+LOGGER.infoPrefix = "\e[1;37m\u2759\e[22;37m "
+LOGGER.infoSuffix = "\e[0m"
+
+require 'cli'
+
+SHELL.run
