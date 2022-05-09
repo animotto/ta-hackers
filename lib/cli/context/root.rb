@@ -24,123 +24,59 @@ CONTEXT_BUY = SHELL.root.add_context(:buy, description: 'The buys')
 # connect
 SHELL.root.add_command(:connect, description: 'Connect to the server') do |shell, context, tokens|
   msg = 'Language translations'
-  begin
-    GAME.transLang = GAME.cmdTransLang
-  rescue Trickster::Hackers::RequestError => e
-    LOGGER.error("#{msg} (#{e})")
-    next
-  end
+  GAME.transLang = GAME.cmdTransLang
   LOGGER.log(msg)
 
   msg = 'Application settings'
-  begin
-    GAME.appSettings = GAME.cmdAppSettings
-  rescue Trickster::Hackers::RequestError => e
-    LOGGER.error("#{msg} (#{e})")
-    next
-  end
+  GAME.appSettings = GAME.cmdAppSettings
   LOGGER.log(msg)
 
   msg = 'Node types and levels'
-  begin
-    GAME.nodeTypes = GAME.cmdGetNodeTypes
-  rescue Trickster::Hackers::RequestError => e
-    LOGGER.error("#{msg} (#{e})")
-    next
-  end
+  GAME.nodeTypes = GAME.cmdGetNodeTypes
   LOGGER.log(msg)
 
   msg = 'Program types and levels'
-  begin
-    GAME.programTypes = GAME.cmdGetProgramTypes
-  rescue Trickster::Hackers::RequestError => e
-    LOGGER.error("#{msg} (#{e})")
-    next
-  end
+  GAME.programTypes = GAME.cmdGetProgramTypes
   LOGGER.log(msg)
 
   msg = 'Missions list'
-  begin
-    GAME.missionsList = GAME.cmdGetMissionsList
-  rescue Trickster::Hackers::RequestError => e
-    LOGGER.error("#{msg} (#{e})")
-    next
-  end
+  GAME.missionsList = GAME.cmdGetMissionsList
   LOGGER.log(msg)
 
   msg = 'Skin types'
-  begin
-    GAME.skinTypes = GAME.cmdSkinTypesGetList
-  rescue Trickster::Hackers::RequestError => e
-    LOGGER.error("#{msg} (#{e})")
-    next
-  end
+  GAME.skinTypes = GAME.cmdSkinTypesGetList
   LOGGER.log(msg)
 
   msg = 'Hints list'
-  begin
-    GAME.hintsList = GAME.cmdHintsGetList
-  rescue Trickster::Hackers::RequestError => e
-    LOGGER.error("#{msg} (#{e})")
-    next
-  end
+  GAME.hintsList = GAME.cmdHintsGetList
   LOGGER.log(msg)
 
   msg = 'Experience list'
-  begin
-    GAME.experienceList = GAME.cmdGetExperienceList
-  rescue Trickster::Hackers::RequestError => e
-    LOGGER.error("#{msg} (#{e})")
-    next
-  end
+  GAME.experienceList = GAME.cmdGetExperienceList
   LOGGER.log(msg)
 
   msg = 'Builders list'
-  begin
-    GAME.buildersList = GAME.cmdBuildersCountGetList
-  rescue Trickster::Hackers::RequestError => e
-    LOGGER.error("#{msg} (#{e})")
-    next
-  end
+  GAME.buildersList = GAME.cmdBuildersCountGetList
   LOGGER.log(msg)
 
   msg = 'Goals types'
-  begin
-    GAME.goalsTypes = GAME.cmdGoalTypesGetList
-  rescue Trickster::Hackers::RequestError => e
-    LOGGER.error("#{msg} (#{e})")
-    next
-  end
+  GAME.goalsTypes = GAME.cmdGoalTypesGetList
   LOGGER.log(msg)
 
   msg = 'Shield types'
-  begin
-    GAME.shieldTypes = GAME.cmdShieldTypesGetList
-  rescue Trickster::Hackers::RequestError => e
-    LOGGER.error("#{msg} (#{e})")
-    next
-  end
+  GAME.shieldTypes = GAME.cmdShieldTypesGetList
   LOGGER.log(msg)
 
   msg = 'Rank list'
-  begin
-    GAME.rankList = GAME.cmdRankGetList
-  rescue Trickster::Hackers::RequestError => e
-    LOGGER.error("#{msg} (#{e})")
-    next
-  end
+  GAME.rankList = GAME.cmdRankGetList
   LOGGER.log(msg)
 
   msg = 'Authenticate'
-  begin
-    auth = GAME.cmdAuthIdPassword
-  rescue Trickster::Hackers::RequestError => e
-    LOGGER.error("#{msg} (#{e})")
-    next
-  end
+  auth = GAME.cmdAuthIdPassword
   LOGGER.log(msg)
-
   GAME.sid = auth['sid']
+rescue Trickster::Hackers::RequestError => e
+  LOGGER.error("#{msg} (#{e})")
 end
 
 # sid
@@ -339,7 +275,7 @@ SHELL.root.add_command(:missions, description: 'Missions list') do |shell, conte
     shell.puts(format('%-20s %s', 'Name', GAME.missionsList[id]['name']))
     shell.puts(format('%-20s %s', 'Target', GAME.missionsList[id]['target']))
     shell.puts(format('%-20s %d, %d', 'Coordinates', GAME.missionsList[id]['x'], GAME.missionsList[id]['y']))
-    shell.puts(format('%-20s %d (%s)', 'Country', GAME.missionsList[id]['country'], GAME.countriesList.fetch(GAME.missionsList[id]['country'].to_s, 'Unknown')))
+    shell.puts(format('%-20s %d (%s)', 'Country', GAME.missionsList[id]['country'], GAME.getCountryNameByID(GAME.missionsList[id]['country'])))
     shell.puts(format('%-20s %d', 'Money', GAME.missionsList[id]['money']))
     shell.puts(format('%-20s %d', 'Bitcoins', GAME.missionsList[id]['bitcoins']))
     shell.puts(format('Requirements'))
@@ -394,12 +330,7 @@ end
 # news
 SHELL.root.add_command(:news, description: 'News') do |shell, context, tokens|
   msg = 'News'
-  begin
-    news = GAME.cmdNewsGetList
-  rescue Trickster::Hackers::RequestError => e
-    LOGGER.error("#{msg} (#{e})")
-    next
-  end
+  news = GAME.cmdNewsGetList
   LOGGER.log(msg)
 
   news.each do |k, v|
@@ -418,6 +349,8 @@ SHELL.root.add_command(:news, description: 'News') do |shell, context, tokens|
     )
     shell.puts
   end
+rescue Trickster::Hackers::RequestError => e
+  LOGGER.error("#{msg} (#{e})")
 end
 
 # hints
@@ -472,4 +405,452 @@ SHELL.root.add_command(:builders, description: 'Builders list') do |shell, conte
       )
     )
   end
+end
+
+# goals
+SHELL.root.add_command(:goals, description: 'Goals types') do |shell, context, tokens|
+  if GAME.goalsTypes.empty?
+    shell.puts('No goals types')
+    next
+  end
+
+  shell.puts(
+    format(
+      ' %-4s %-20s %-6s %-7s %s',
+      'Type',
+      'Name',
+      'Amount',
+      'Credits',
+      'Title'
+    )
+  )
+  GAME.goalsTypes.each do |type, goal|
+    shell.puts(
+      format(
+        ' %-4d %-20s %-6d %-7d %s',
+        type,
+        goal['name'],
+        goal['amount'],
+        goal['credits'],
+        goal['title']
+      )
+    )
+  end
+end
+
+# shields
+SHELL.root.add_command(:shields, description: 'Shield types') do |shell, context, tokens|
+  if GAME.shieldTypes.empty?
+    shell.puts('No shield types')
+    next
+  end
+
+  GAME.shieldTypes.each do |k, v|
+    shell.puts(
+      format(
+        ' %-7d .. %d, %s, %s',
+        k,
+        v['price'],
+        v['name'],
+        v['description']
+      )
+    )
+  end
+end
+
+# ranks
+SHELL.root.add_command(:ranks, description: 'Rank list') do |shell, context, tokens|
+  if GAME.rankList.empty?
+    shell.puts('No rank list')
+    next
+  end
+
+  GAME.rankList.each do |k, v|
+    shell.puts(
+      format(
+        ' %-7d .. %d',
+        k,
+        v['rank']
+      )
+    )
+  end
+end
+
+# countries
+SHELL.root.add_command(:countries, description: 'Contries list') do |shell, context, tokens|
+  if GAME.countriesList.empty?
+    shell.puts('No countries list')
+    next
+  end
+
+  GAME.countriesList.each do |k, v|
+    shell.puts(
+      format(
+        ' %-3d .. %s',
+        k,
+        v
+      )
+    )
+  end
+end
+
+# new
+SHELL.root.add_command(:new, description: 'Create new account') do |shell, context, tokens|
+  msg = 'Player create'
+  player = GAME.cmdPlayerCreate
+  LOGGER.log(msg)
+
+  shell.puts("\e[1;35m\u2022 New account\e[0m")
+  shell.puts("  ID: #{player['id']}")
+  shell.puts("  Password: #{player['password']}")
+  shell.puts("  Session ID: #{player['sid']}")
+rescue Trickster::Hackers::RequestError => e
+  LOGGER.error("#{msg} (#{e})")
+end
+
+# rename
+SHELL.root.add_command(:rename, description: 'Set new name') do |shell, context, tokens|
+  if tokens[1].nil?
+    shell.puts('Specify name')
+    next
+  end
+
+  if GAME.sid.empty?
+    shell.puts('No session ID')
+    next
+  end
+
+  msg = 'Player set name'
+  GAME.cmdPlayerSetName(GAME.config['id'], tokens[1])
+  LOGGER.log(msg)
+rescue Trickster::Hackers::RequestError => e
+  LOGGER.error("#{msg} (#{e})")
+end
+
+# info
+SHELL.root.add_command(:info, description: 'Get player info') do |shell, context, tokens|
+  if tokens[1].nil?
+    shell.puts('Specify ID')
+    next
+  end
+
+  if GAME.sid.empty?
+    shell.puts('No session ID')
+    next
+  end
+
+  msg = 'Player get info'
+  profile = GAME.cmdPlayerGetInfo(tokens[1].to_i)
+  LOGGER.log(msg)
+
+  shell.puts("\e[1;35m\u2022 Player info\e[0m")
+  shell.puts(format('  %-15s %d', 'ID', profile.id))
+  shell.puts(format('  %-15s %s', 'Name', profile.name))
+  shell.puts(format("  %-15s \e[33m$ %d\e[0m", 'Money', profile.money))
+  shell.puts(format("  %-15s \e[31m\u20bf %d\e[0m", 'Bitcoins', profile.bitcoins))
+  shell.puts(format('  %-15s %d', 'Credits', profile.credits))
+  shell.puts(format('  %-15s %d', 'Experience', profile.experience))
+  shell.puts(format('  %-15s %d', 'Rank', profile.rank))
+  shell.puts(format('  %-15s %s', 'Builders', "\e[37m" + "\u25b0" * profile.builders + "\e[0m"))
+  shell.puts(format('  %-15s %d', 'X', profile.x))
+  shell.puts(format('  %-15s %d', 'Y', profile.y))
+  shell.puts(format('  %-15s %d', 'Country', profile.country))
+  shell.puts(format('  %-15s %d', 'Skin', profile.skin))
+  shell.puts(format('  %-15s %d', 'Level', GAME.getLevelByExp(profile.experience)))
+rescue Trickster::Hackers::RequestError => e
+  LOGGER.error("#{msg} (#{e})")
+end
+
+# detail
+SHELL.root.add_command(:detail, description: "Get detailed info about player's network") do |shell, context, tokens|
+  if tokens[1].nil?
+    shell.puts('Specify ID')
+    next
+  end
+
+  if GAME.sid.empty?
+    shell.puts('No session ID')
+    next
+  end
+
+  msg = 'Get net details world'
+  detail = GAME.cmdGetNetDetailsWorld(tokens[1].to_i)
+  LOGGER.log(msg)
+
+  shell.puts("\e[1;35m\u2022 Detailed player network\e[0m")
+  shell.puts(format('  %-15s %d', 'ID', detail['profile'].id))
+  shell.puts(format('  %-15s %s', 'Name', detail['profile'].name))
+  shell.puts(format("  %-15s \e[33m$ %d\e[0m", 'Money', detail['profile'].money))
+  shell.puts(format("  %-15s \e[31m\u20bf %d\e[0m", 'Bitcoins', detail['profile'].bitcoins))
+  shell.puts(format('  %-15s %d', 'Credits', detail['profile'].credits))
+  shell.puts(format('  %-15s %d', 'Experience', detail['profile'].experience))
+  shell.puts(format('  %-15s %d', 'Rank', detail['profile'].rank))
+  shell.puts(format('  %-15s %s', 'Builders', "\e[37m" + "\u25b0" * detail['profile'].builders + "\e[0m"))
+  shell.puts(format('  %-15s %d', 'X', detail['profile'].x))
+  shell.puts(format('  %-15s %d', 'Y', detail['profile'].y))
+  shell.puts(format('  %-15s %d', 'Country', detail['profile'].country))
+  shell.puts(format('  %-15s %d', 'Skin', detail['profile'].skin))
+  shell.puts(format('  %-15s %d', 'Level', GAME.getLevelByExp(detail['profile'].experience)))
+
+  shell.puts
+  shell.puts(
+    format(
+      "  \e[35m%-12s %-4s %-5s %-12s %-12s\e[0m",
+      'ID',
+      'Type',
+      'Level',
+      'Timer',
+      'Name'
+    )
+  )
+  detail['nodes'].each do |k, v|
+    shell.puts(
+      format(
+        '  %-12d %-4d %-5d %-12d %-12s',
+        k,
+        v['type'],
+        v['level'],
+        v['timer'],
+        GAME.nodeTypes[v['type']]['name']
+      )
+    )
+  end
+rescue Trickster::Hackers::RequestError => e
+  LOGGER.error("#{msg} (#{e})")
+end
+
+# hq
+SHELL.root.add_command(:hq, description: 'Set player HQ') do |shell, context, tokens|
+  x = tokens[1]
+  y = tokens[2]
+  country = tokens[3]
+  if x.nil? || y.nil? || country.nil?
+    shell.puts('Specify x, y, country')
+    next
+  end
+
+  if GAME.sid.empty?
+    shell.puts('No session ID')
+    next
+  end
+
+  msg = 'Set player HQ'
+  GAME.cmdSetPlayerHqCountry(GAME.config['id'], x.to_i, y.to_i, country.to_i)
+  LOGGER.log(msg)
+rescue Trickster::Hackers::RequestError => e
+  LOGGER.error("#{msg} (#{e})")
+end
+
+# skin
+SHELL.root.add_command(:skin, description: 'Set player skin') do |shell, context, tokens|
+  if tokens[1].nil?
+    shell.puts('Specify skin')
+    next
+  end
+
+  if GAME.sid.empty?
+    shell.puts('No session ID')
+    next
+  end
+
+  msg = 'Player set skin'
+  GAME.cmdPlayerSetSkin(tokens[1].to_i)
+  LOGGER.log(msg)
+rescue Trickster::Hackers::RequestError => e
+  LOGGER.error("#{msg} (#{e})")
+end
+
+# tutorial
+SHELL.root.add_command(:tutorial, description: 'Set tutorial') do |shell, context, tokens|
+  if tokens[1].nil?
+    shell.puts('Specify tutorial')
+    next
+  end
+
+  if GAME.sid.empty?
+    shell.puts('No session ID')
+    next
+  end
+
+  msg = 'Player set tutorial'
+  GAME.cmdPlayerSetTutorial(tokens[1].to_i)
+  LOGGER.log(msg)
+rescue Trickster::Hackers::RequestError => e
+  LOGGER.error("#{msg} (#{e})")
+end
+
+# email
+SHELL.root.add_command(:email, description: 'Email subscribe') do |shell, context, tokens|
+  if tokens[1].nil?
+    shell.puts('Specify email')
+    next
+  end
+
+  if GAME.sid.empty?
+    shell.puts('No session ID')
+    next
+  end
+
+  msg = 'Email subscribe'
+  GAME.cmdEmailSubscribe(tokens[1])
+  LOGGER.log(msg)
+rescue Trickster::Hackers::RequestError => e
+  LOGGER.error("#{msg} (#{e})")
+end
+
+# top
+SHELL.root.add_command(:top, description: 'Show top ranking') do |shell, context, tokens|
+  if tokens[1].nil?
+    shell.puts('Specify country')
+    next
+  end
+
+  if GAME.sid.empty?
+    shell.puts('No session ID')
+    next
+  end
+
+  msg = 'Ranking get all'
+  top = GAME.cmdRankingGetAll(tokens[1].to_i)
+  LOGGER.log(msg)
+
+  types = {
+    'nearby' => 'Players nearby',
+    'country' => 'Top country players',
+    'world' => 'Top world players'
+  }
+
+  types.each do |type, title|
+    shell.puts("\e[1;35m\u2022 #{title}\e[0m")
+    shell.puts(
+      format(
+        "  \e[35m%-12s %-25s %-12s %-7s %-12s\e[0m",
+        'ID',
+        'Name',
+        'Experience',
+        'Country',
+        'Rank'
+      )
+    )
+    top[type].each do |player|
+      shell.puts(
+        format(
+          '  %-12s %-25s %-12s %-7s %-12s',
+          player['id'],
+          player['name'],
+          player['experience'],
+          player['country'],
+          player['rank']
+        )
+      )
+    end
+    shell.puts
+  end
+
+  shell.puts("\e[1;35m\u2022 Top countries\e[0m")
+  shell.puts(
+    format(
+      "  \e[35m%-7s %-12s\e[0m",
+      'Country',
+      'Rank'
+    )
+  )
+  top['countries'].each do |player|
+    shell.puts(
+      format(
+        '  %-7s %-12s',
+        player['country'],
+        player['rank']
+      )
+    )
+  end
+rescue Trickster::Hackers::RequestError => e
+  LOGGER.error("#{msg} (#{e})")
+end
+
+# cpgen
+SHELL.root.add_command(:cpgen, description: 'Cp generate code') do |shell, context, tokens|
+  if GAME.sid.empty?
+    shell.puts('No session ID')
+    next
+  end
+
+  msg = 'Cp generate code'
+  code = GAME.cmdCpGenerateCode(GAME.config['id'], GAME.config['platform'])
+  LOGGER.log(msg)
+
+  shell.puts("\e[1;35m\u2022 Generated code\e[0m")
+  shell.puts("  Code: #{code}")
+rescue Trickster::Hackers::RequestError => e
+  LOGGER.error("#{msg} (#{e})")
+end
+
+# cpuse
+SHELL.root.add_command(:cpuse, description: 'Cp use code') do |shell, context, tokens|
+  if tokens[1].nil?
+    shell.puts('Specify code')
+    next
+  end
+
+  if GAME.sid.empty?
+    shell.puts('No session ID')
+    next
+  end
+
+  msg = 'Cp use code'
+  data = GAME.cmdCpUseCode(GAME.config['id'], tokens[1], GAME.config['platform'])
+  LOGGER.log(msg)
+
+  shell.puts("\e[1;35m\u2022 Account credentials\e[0m")
+  shell.puts("  ID: #{data["id"]}")
+  shell.puts("  Password: #{data["password"]}")
+rescue Trickster::Hackers::RequestError => e
+  LOGGER.error("#{msg} (#{e})")
+end
+
+# stats
+SHELL.root.add_command(:stats, description: 'Show player statistics') do |shell, context, tokens|
+  if GAME.sid.empty?
+    shell.puts('No session ID')
+    next
+  end
+
+  msg = 'Player stats'
+  stats = GAME.cmdPlayerGetStats
+  LOGGER.log(msg)
+
+  shell.puts("\e[1;35m\u2022 Player statistics\e[0m")
+  shell.puts("  Rank: #{stats['rank']}")
+  shell.puts("  Experience: #{stats['experience']}")
+  shell.puts("  Level: #{GAME.getLevelByExp(stats['experience'])}")
+  shell.puts('  Hacks:')
+  shell.puts("   Successful: #{stats['hacks']['success']}")
+  shell.puts("   Failed: #{stats['hacks']['fail']}")
+
+  if stats['hacks']['success'].zero? && stats['hacks']['fail'].zero?
+    win_rate = 0
+  else
+    win_rate = (stats['hacks']['success'].to_f / (stats['hacks']['success'] + stats['hacks']['fail']) * 100).to_i
+  end
+  shell.puts("   Win rate: #{win_rate}%")
+
+  shell.puts('  Defenses:')
+  shell.puts("   Successful: #{stats['defense']['success']}")
+  shell.puts("   Failed: #{stats['defense']['fail']}")
+
+  if stats['defense']['success'].zero? && stats['defense']['fail'].zero?
+    win_rate = 0
+  else
+    win_rate = (stats['defense']['success'].to_f / (stats['defense']['success'] + stats['defense']['fail']) * 100).to_i
+  end
+  shell.puts("   Win rate: #{win_rate}%")
+
+  shell.puts('  Looted:')
+  shell.puts("   Money: #{stats['loot']['money']}")
+  shell.puts("   Bitcoins: #{stats['loot']['bitcoins']}")
+  shell.puts('  Collected:')
+  shell.puts("   Money: #{stats['collect']['money']}")
+  shell.puts("   Bitcoins: #{stats['collect']['bitcoins']}")
+rescue Trickster::Hackers::RequestError => e
+  LOGGER.error("#{msg} (#{e})")
 end

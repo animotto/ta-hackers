@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'yaml'
-require 'hackers-link'
+require 'hackers/link'
 
 SIMLINKS = 'spec/data/simlinks.yml'
 REPLAYLINKS = 'spec/data/replaylinks.yml'

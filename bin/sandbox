@@ -7,6 +7,7 @@ BANNER = <<~BANNER_TEXT
 BANNER_TEXT
 
 BASE_DIR = File.join(__dir__, '..')
+DATA_DIR = File.join(BASE_DIR, 'data')
 
 require 'optparse'
 require 'json'
@@ -52,6 +53,9 @@ rescue JSON::ParserError => e
 end
 
 GAME = Trickster::Hackers::Game.new(config)
+GAME.countriesList = Sandbox::Config.new(File.join(DATA_DIR, 'countries.conf'))
+GAME.countriesList.load
+
 SHELL = Sandbox::Shell.new(banner: BANNER)
 # if config.key?('autocmd')
 #   if config['autocmd'].instance_of?(Array)
