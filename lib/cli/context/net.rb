@@ -142,12 +142,11 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # write
-CONTEXT_NET.add_command(:write, description: 'Write message to readme') do |shell, context, tokens|
-  if tokens[1].nil?
-    shell.puts('Specify message')
-    next
-  end
-
+CONTEXT_NET.add_command(
+  :write,
+  description: 'Write message to readme',
+  params: ['<message>']
+) do |shell, context, tokens|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -171,7 +170,11 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # remove
-CONTEXT_NET.add_command(:remove, description: 'Remove message from readme') do |shell, context, tokens|
+CONTEXT_NET.add_command(
+  :remove,
+  description: 'Remove message from readme',
+  params: ['<id>']
+) do |shell, context, tokens|
   if tokens[1].nil?
     shell.puts('Specify message ID')
     next
@@ -284,17 +287,17 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # create
-CONTEXT_NET.add_command(:create, description: 'Create node') do |shell, context, tokens|
-  if tokens[1].nil?
-    shell.puts('Specify node type')
-    next
-  end
-  type = tokens[1].to_i
-
+CONTEXT_NET.add_command(
+  :create,
+  description: 'Create node',
+  params: ['<type>']
+) do |shell, context, tokens|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
   end
+
+  type = tokens[1].to_i
 
   msg = 'Network maintenance'
   net = GAME.cmdNetGetForMaint
@@ -308,17 +311,17 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # upgrade
-CONTEXT_NET.add_command(:upgrade, description: 'Upgrade node') do |shell, context, tokens|
-  if tokens[1].nil?
-    shell.puts('Specify node ID')
-    next
-  end
-  id = tokens[1].to_i
-
+CONTEXT_NET.add_command(
+  :upgrade,
+  description: 'Upgrade node',
+  params: ['<id>']
+) do |shell, context, tokens|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
   end
+
+  id = tokens[1].to_i
 
   msg = 'Upgrade node'
   GAME.cmdUpgradeNode(id)
@@ -328,17 +331,17 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # finish
-CONTEXT_NET.add_command(:finish, description: 'Finish node') do |shell, context, tokens|
-  if tokens[1].nil?
-    shell.puts('Specify node ID')
-    next
-  end
-  id = tokens[1].to_i
-
+CONTEXT_NET.add_command(
+  :finish,
+  description: 'Finish node',
+  params: ['<id>']
+) do |shell, context, tokens|
   if GAME.sid.empty?
     SHELL.puts('No session ID')
     next
   end
+
+  id = tokens[1].to_i
 
   msg = 'Finish node'
   GAME.cmdFinishNode(id)
@@ -348,17 +351,17 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # cancel
-CONTEXT_NET.add_command(:cancel, description: 'Cancel node upgrade') do |shell, context, tokens|
-  if tokens[1].nil?
-    shell.puts('Specify node ID')
-    next
-  end
-  id = tokens[1].to_i
-
+CONTEXT_NET.add_command(
+  :cancel,
+  description: 'Cancel node upgrade',
+  params: ['<id>']
+) do |shell, context, tokens|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
   end
+
+  id = tokens[1].to_i
 
   msg = 'Cancel node'
   GAME.cmdNodeCancel(id)
@@ -368,17 +371,17 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # delete
-CONTEXT_NET.add_command(:delete, description: 'Delete node') do |shell, context, tokens|
-  if tokens[1].nil?
-    shell.puts('Specify node ID')
-    next
-  end
-  id = tokens[1].to_i
-
+CONTEXT_NET.add_command(
+  :delete,
+  description: 'Delete node',
+  params: ['<id>']
+) do |shell, context, tokens|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
   end
+
+  id = tokens[1].to_i
 
   msg = 'Network maintenance'
   net = GAME.cmdNetGetForMaint
@@ -392,23 +395,18 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # builders
-CONTEXT_NET.add_command(:builders, description: 'Set node builders') do |shell, context, tokens|
-  if tokens[1].nil?
-    shell.puts('Specify node ID')
-    next
-  end
-  id = tokens[1].to_i
-
-  if tokens[2].nil?
-    shell.puts('Specify number of builders')
-    next
-  end
-  builders = tokens[2].to_i
-
+CONTEXT_NET.add_command(
+  :builders,
+  description: 'Set node builders',
+  params: ['<id>', '<amount>']
+) do |shell, context, tokens|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
   end
+
+  id = tokens[1].to_i
+  builders = tokens[2].to_i
 
   msg = 'Node set builders'
   GAME.cmdNodeSetBuilders(id, builders)
@@ -418,7 +416,11 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # collect
-CONTEXT_NET.add_command(:collect, description: 'Collect node resources') do |shell, context, tokens|
+CONTEXT_NET.add_command(
+  :collect,
+  description: 'Collect node resources',
+  params: ['[id]']
+) do |shell, context, tokens|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next

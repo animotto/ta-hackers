@@ -128,7 +128,11 @@ SHELL.root.add_command(:settings, description: 'Application settings') do |shell
 end
 
 # nodes
-SHELL.root.add_command(:nodes, description: 'Node types') do |shell, context, tokens|
+SHELL.root.add_command(
+  :nodes,
+  description: 'Node types',
+  params: ['[id]']
+) do |shell, context, tokens|
   if GAME.nodeTypes.empty?
     shell.puts('No node types')
     next
@@ -193,7 +197,11 @@ SHELL.root.add_command(:nodes, description: 'Node types') do |shell, context, to
 end
 
 # progs
-SHELL.root.add_command(:progs, description: 'Program types') do |shell, context, tokens|
+SHELL.root.add_command(
+  :progs,
+  description: 'Program types',
+  params: ['[id]']
+) do |shell, context, tokens|
   if GAME.programTypes.empty?
     shell.puts('No program types')
     next
@@ -257,7 +265,11 @@ SHELL.root.add_command(:progs, description: 'Program types') do |shell, context,
 end
 
 # missions
-SHELL.root.add_command(:missions, description: 'Missions list') do |shell, context, tokens|
+SHELL.root.add_command(
+  :missions,
+  description: 'Missions list',
+  params: ['[id]']
+) do |shell, context, tokens|
   if GAME.missionsList.empty?
     shell.puts('No missions list')
     next
@@ -509,12 +521,11 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # rename
-SHELL.root.add_command(:rename, description: 'Set new name') do |shell, context, tokens|
-  if tokens[1].nil?
-    shell.puts('Specify name')
-    next
-  end
-
+SHELL.root.add_command(
+  :rename,
+  description: 'Set new name',
+  params: ['<name>']
+) do |shell, context, tokens|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -528,12 +539,11 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # info
-SHELL.root.add_command(:info, description: 'Get player info') do |shell, context, tokens|
-  if tokens[1].nil?
-    shell.puts('Specify ID')
-    next
-  end
-
+SHELL.root.add_command(
+  :info,
+  description:'Get player info',
+  params: ['<id>']
+) do |shell, context, tokens|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -562,12 +572,11 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # detail
-SHELL.root.add_command(:detail, description: "Get detailed info about player's network") do |shell, context, tokens|
-  if tokens[1].nil?
-    shell.puts('Specify ID')
-    next
-  end
-
+SHELL.root.add_command(
+  :detail,
+  description: "Get detailed info about player's network",
+  params: ['<id>']
+) do |shell, context, tokens|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -620,14 +629,14 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # hq
-SHELL.root.add_command(:hq, description: 'Set player HQ') do |shell, context, tokens|
-  x = tokens[1]
-  y = tokens[2]
-  country = tokens[3]
-  if x.nil? || y.nil? || country.nil?
-    shell.puts('Specify x, y, country')
-    next
-  end
+SHELL.root.add_command(
+  :hq,
+  description: 'Set player HQ',
+  params: ['<x>', '<y>', '<country>']
+) do |shell, context, tokens|
+  x = tokens[1].to_i
+  y = tokens[2].to_i
+  country = tokens[3].to_i
 
   if GAME.sid.empty?
     shell.puts('No session ID')
@@ -635,19 +644,18 @@ SHELL.root.add_command(:hq, description: 'Set player HQ') do |shell, context, to
   end
 
   msg = 'Set player HQ'
-  GAME.cmdSetPlayerHqCountry(GAME.config['id'], x.to_i, y.to_i, country.to_i)
+  GAME.cmdSetPlayerHqCountry(GAME.config['id'], x, y, country)
   LOGGER.log(msg)
 rescue Trickster::Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
 # skin
-SHELL.root.add_command(:skin, description: 'Set player skin') do |shell, context, tokens|
-  if tokens[1].nil?
-    shell.puts('Specify skin')
-    next
-  end
-
+SHELL.root.add_command(
+  :skin,
+  description: 'Set player skin',
+  params: ['<skin>']
+) do |shell, context, tokens|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -661,12 +669,11 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # tutorial
-SHELL.root.add_command(:tutorial, description: 'Set tutorial') do |shell, context, tokens|
-  if tokens[1].nil?
-    shell.puts('Specify tutorial')
-    next
-  end
-
+SHELL.root.add_command(
+  :tutorial,
+  description: 'Set tutorial',
+  params: ['<id>']
+) do |shell, context, tokens|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -680,12 +687,11 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # email
-SHELL.root.add_command(:email, description: 'Email subscribe') do |shell, context, tokens|
-  if tokens[1].nil?
-    shell.puts('Specify email')
-    next
-  end
-
+SHELL.root.add_command(
+  :email,
+  description: 'Email subscribe',
+  params: ['<email>']
+) do |shell, context, tokens|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -699,12 +705,11 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # top
-SHELL.root.add_command(:top, description: 'Show top ranking') do |shell, context, tokens|
-  if tokens[1].nil?
-    shell.puts('Specify country')
-    next
-  end
-
+SHELL.root.add_command(
+  :top,
+  description: 'Show top ranking',
+  params: ['<id>']
+) do |shell, context, tokens|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -786,12 +791,11 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # cpuse
-SHELL.root.add_command(:cpuse, description: 'Cp use code') do |shell, context, tokens|
-  if tokens[1].nil?
-    shell.puts('Specify code')
-    next
-  end
-
+SHELL.root.add_command(
+  :cpuse,
+  description: 'Cp use code',
+  params: ['<code>']
+) do |shell, context, tokens|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
