@@ -16,8 +16,6 @@ require 'hackers'
 require 'sandbox'
 require 'cli/sandbox'
 
-Signal.trap('INT') { exit }
-
 Dir.chdir(BASE_DIR)
 CONFIGS_DIR = 'configs'
 DEFAULT_CONFIG = 'default'
@@ -56,7 +54,7 @@ GAME = Trickster::Hackers::Game.new(config)
 GAME.countriesList = Sandbox::Config.new(File.join(DATA_DIR, 'countries.conf'))
 GAME.countriesList.load
 
-SHELL = Sandbox::Shell.new(banner: BANNER)
+SHELL = Sandbox::Shell.new(prompt: " \e[1;35m\u25b8\e[0m ", banner: BANNER)
 # if config.key?('autocmd')
 #   if config['autocmd'].instance_of?(Array)
 #     config['autocmd'].each { |cmd| SHELL.exec(cmd) }

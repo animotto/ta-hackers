@@ -95,7 +95,7 @@ module Trickster
       #
       # Returns true or false
       def id?(index)
-        @messages[index].nil?
+        !@messages[index].nil?
       end
     end
 
