@@ -2,13 +2,6 @@
 
 # frozen_string_literal: true
 
-BANNER = <<~BANNER_TEXT
-  Trickster Arts Hackers sandbox
-BANNER_TEXT
-
-BASE_DIR = File.join(__dir__, '..')
-DATA_DIR = File.join(BASE_DIR, 'data')
-
 require 'optparse'
 require 'json'
 
@@ -16,9 +9,16 @@ require 'hackers'
 require 'sandbox'
 require 'cli/sandbox'
 
+BASE_DIR = File.join(__dir__, '..')
+DATA_DIR = File.join(BASE_DIR, 'data')
+
 Dir.chdir(BASE_DIR)
 CONFIGS_DIR = 'configs'
 DEFAULT_CONFIG = 'default'
+
+BANNER = <<~BANNER_TEXT
+  Trickster Arts Hackers sandbox
+BANNER_TEXT
 
 options = {
   'config' => DEFAULT_CONFIG
