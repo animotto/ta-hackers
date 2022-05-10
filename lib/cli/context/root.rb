@@ -21,6 +21,93 @@ CONTEXT_BUY = SHELL.root.add_context(:buy, description: 'The buys')
 
 ## Commands
 
+# echo
+CONTEXT_ROOT_ECHO = SHELL.root.add_command(
+  :echo,
+  description: 'Print configuration variables',
+  params: ['<var>'],
+  global: true
+) do |shell, context, tokens|
+  unless GAME.config.key?(tokens[1])
+    shell.puts('No such variable')
+    next
+  end
+
+  shell.puts(GAME.config[tokens[1]])
+end
+
+CONTEXT_ROOT_ECHO.completion do |shell, tokens, line|
+  GAME.config.keys.grep(/^#{Regexp.escape(line)}/)
+end
+
+# set
+CONTEXT_ROOT_SET = SHELL.root.add_command(
+  :set,
+  description: 'Set configuration variables',
+  params: ['[var]', '[value]'],
+  global: true
+) do |shell, context, tokens|
+  if tokens.length < 2
+    shell.puts('Configuration:')
+    GAME.config.each do |k, v|
+      shell.puts(
+        format(
+          ' %-16s .. %s',
+          k,
+          v
+        )
+      )
+    end
+    next
+  end
+
+  if tokens.length < 3
+    shell.puts('No variable value')
+    next
+  end
+
+  shell.puts("Variable #{tokens[1]} has been updated")
+  if tokens.length == 3
+    GAME.config[tokens[1]] = tokens[2]
+    next
+  end
+
+  GAME.config[tokens[1]] = tokens[2..-1]
+end
+
+CONTEXT_ROOT_SET.completion do |shell, tokens, line|
+  GAME.config.keys.grep(/^#{Regexp.escape(line)}/)
+end
+
+# unset
+CONTEXT_ROOT_UNSET = SHELL.root.add_command(
+  :unset,
+  description: 'Unset configuration variables',
+  params: ['<var>'],
+  global: true
+) do |shell, context, tokens|
+  unless GAME.config.key?(tokens[1])
+    shell.puts('No such variable')
+    next
+  end
+
+  GAME.config.delete(tokens[1])
+  shell.puts("Variable #{tokens[1]} has been removed")
+end
+
+CONTEXT_ROOT_UNSET.completion do |shell, tokens, line|
+  GAME.config.keys.grep(/^#{Regexp.escape(line)}/)
+end
+
+# save
+SHELL.root.add_command(
+  :save,
+  description: 'Save configuration'
+) do |shell, context, tokens|
+  GAME.config.save
+  shell.puts('Configuration has been saved')
+end
+
 # connect
 SHELL.root.add_command(:connect, description: 'Connect to the server') do |shell, context, tokens|
   msg = 'Language translations'
