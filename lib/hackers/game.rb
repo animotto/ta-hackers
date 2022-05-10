@@ -12,9 +12,10 @@ module Trickster
       MISSION_FINISHED = 1
       MISSION_REJECTED = 2
 
+      CURRENCY_MONEY = 0
+      CURRENCY_BITCOINS = 1
+
       PRODUCTION_TITLE = "CurrencyProduction"
-      PRODUCTION_MONEY = 0
-      PRODUCTION_BITCOINS = 1
 
       attr_accessor :config, :appSettings, :transLang,
                     :nodeTypes, :programTypes, :missionsList,

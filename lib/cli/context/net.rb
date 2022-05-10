@@ -260,9 +260,9 @@ CONTEXT_NET.add_command(:nodes, description: 'Show nodes') do |shell, context, t
       if production.key?(v['type'])
         level = production[v['type']]['levels'][v['level']]
         case level['data'][0]
-        when Trickster::Hackers::Game::PRODUCTION_MONEY
+        when Trickster::Hackers::Game::CURRENCY_MONEY
           timer += "\e[33m$ "
-        when Trickster::Hackers::Game::PRODUCTION_BITCOINS
+        when Trickster::Hackers::Game::CURRENCY_BITCOINS
           timer += "\e[31m\u20bf "
         end
         produced = (level['data'][2].to_f / 60 / 60 * v['timer']).to_i
