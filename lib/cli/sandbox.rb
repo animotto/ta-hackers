@@ -1,78 +1,8 @@
 # frozen_string_literal: true
 
-require 'readline'
 require 'json'
-require 'base64'
 
 module Sandbox
-  ##
-  # Shell
-  # class Shell
-  #   DATA_DIR = 'data'
-
-  #   attr_reader :logger
-  #   attr_accessor :context, :reading
-
-  #   def initialize(game)
-  #     @game = game
-  #     @context = '/'
-  #     @contexts = {
-  #       '/' => ContextRoot.new(@game, self),
-  #       '/query' => ContextQuery.new(@game, self),
-  #       '/net' => ContextNet.new(@game, self),
-  #       '/prog' => ContextProg.new(@game, self),
-  #       '/mission' => ContextMission.new(@game, self),
-  #       '/world' => ContextWorld.new(@game, self),
-  #       '/script' => ContextScript.new(@game, self),
-  #       '/chat' => ContextChat.new(@game, self),
-  #       '/buy' => ContextBuy.new(@game, self)
-  #     }
-
-  #     @logger = Logger.new(self)
-  #     @logger.logPrefix = "\e[1;32m\u2714\e[22;32m "
-  #     @logger.logSuffix = "\e[0m"
-  #     @logger.errorPrefix = "\e[1;31m\u2718\e[22;31m "
-  #     @logger.errorSuffix = "\e[0m"
-  #     @logger.infoPrefix = "\e[1;37m\u2759\e[22;37m "
-  #     @logger.infoSuffix = "\e[0m"
-
-  #     Readline.completion_proc = proc do |text|
-  #       @contexts[@context].completion(text)
-  #     end
-
-  #     @game.countriesList = Config.new("#{DATA_DIR}/countries.conf")
-  #     @game.countriesList.load
-  #   end
-
-  #   def puts(data = '')
-  #     $stdout.puts("\e[0G\e[J#{data}")
-  #     Readline.refresh_line if @reading
-  #   end
-
-  #   def readline
-  #     loop do
-  #       prompt = "#{@context} \e[1;35m\u25b8\e[0m "
-  #       @reading = true
-  #       line = Readline.readline(prompt, true)
-  #       @reading = false
-  #       exit if line.nil?
-  #       line.strip!
-  #       Readline::HISTORY.pop if line.empty?
-  #       next if line.empty?
-
-  #       exec(line)
-  #     end
-  #   end
-
-  #   def exec(line)
-  #     words = line.scan(/['"][^'"]*['"]|[^\s'"]+/)
-  #     words.map! do |word|
-  #       word.sub(/^['"]/, '').sub(/['"]$/, '')
-  #     end
-  #     @contexts[@context].exec(words)
-  #   end
-  # end
-
   ##
   # Config
   class Config < Hash

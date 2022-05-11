@@ -2,7 +2,7 @@
 
 $LOAD_PATH.unshift(File.join(__dir__, 'lib'))
 
-require 'sandbox'
+require 'cli/sandbox'
 require 'hackers'
 
 CONFIGS_DIR     = 'configs'
