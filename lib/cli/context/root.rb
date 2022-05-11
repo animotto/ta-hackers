@@ -3,26 +3,26 @@
 ## Contexts
 
 # query
-CONTEXT_QUERY = SHELL.root.add_context(:query, description: 'Analyze queries and data dumps')
+CONTEXT_QUERY = SHELL.add_context(:query, description: 'Analyze queries and data dumps')
 # net
-CONTEXT_NET = SHELL.root.add_context(:net, description: 'Network')
+CONTEXT_NET = SHELL.add_context(:net, description: 'Network')
 # prog
-CONTEXT_PROG = SHELL.root.add_context(:prog, description: 'Programs')
+CONTEXT_PROG = SHELL.add_context(:prog, description: 'Programs')
 # mission
-CONTEXT_MISSION = SHELL.root.add_context(:mission, description: 'Mission')
+CONTEXT_MISSION = SHELL.add_context(:mission, description: 'Mission')
 # world
-CONTEXT_WORLD = SHELL.root.add_context(:world, description: 'World')
+CONTEXT_WORLD = SHELL.add_context(:world, description: 'World')
 # script
-CONTEXT_SCRIPT = SHELL.root.add_context(:script, description: 'Scripts')
+CONTEXT_SCRIPT = SHELL.add_context(:script, description: 'Scripts')
 # chat
-CONTEXT_CHAT = SHELL.root.add_context(:chat, description: 'Internal chat')
+CONTEXT_CHAT = SHELL.add_context(:chat, description: 'Internal chat')
 # buy
-CONTEXT_BUY = SHELL.root.add_context(:buy, description: 'The buys')
+CONTEXT_BUY = SHELL.add_context(:buy, description: 'The buys')
 
 ## Commands
 
 # echo
-CONTEXT_ROOT_ECHO = SHELL.root.add_command(
+CONTEXT_ROOT_ECHO = SHELL.add_command(
   :echo,
   description: 'Print configuration variables',
   params: ['<var>'],
@@ -41,7 +41,7 @@ CONTEXT_ROOT_ECHO.completion do |shell, tokens, line|
 end
 
 # set
-CONTEXT_ROOT_SET = SHELL.root.add_command(
+CONTEXT_ROOT_SET = SHELL.add_command(
   :set,
   description: 'Set configuration variables',
   params: ['[var]', '[value]'],
@@ -80,7 +80,7 @@ CONTEXT_ROOT_SET.completion do |shell, tokens, line|
 end
 
 # unset
-CONTEXT_ROOT_UNSET = SHELL.root.add_command(
+CONTEXT_ROOT_UNSET = SHELL.add_command(
   :unset,
   description: 'Unset configuration variables',
   params: ['<var>'],
@@ -100,7 +100,7 @@ CONTEXT_ROOT_UNSET.completion do |shell, tokens, line|
 end
 
 # save
-SHELL.root.add_command(
+SHELL.add_command(
   :save,
   description: 'Save configuration'
 ) do |shell, context, tokens|
@@ -109,7 +109,7 @@ SHELL.root.add_command(
 end
 
 # connect
-SHELL.root.add_command(:connect, description: 'Connect to the server') do |shell, context, tokens|
+SHELL.add_command(:connect, description: 'Connect to the server') do |shell, context, tokens|
   msg = 'Language translations'
   GAME.transLang = GAME.cmdTransLang
   LOGGER.log(msg)
@@ -167,7 +167,7 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # sid
-SHELL.root.add_command(:sid, description: 'Show session ID') do |shell, context, tokens|
+SHELL.add_command(:sid, description: 'Show session ID') do |shell, context, tokens|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -177,7 +177,7 @@ SHELL.root.add_command(:sid, description: 'Show session ID') do |shell, context,
 end
 
 # trans
-SHELL.root.add_command(:trans, description: 'Language translations') do |shell, context, tokens|
+SHELL.add_command(:trans, description: 'Language translations') do |shell, context, tokens|
   if GAME.transLang.empty?
     shell.puts('No language translations')
     next
@@ -196,7 +196,7 @@ SHELL.root.add_command(:trans, description: 'Language translations') do |shell, 
 end
 
 # settings
-SHELL.root.add_command(:settings, description: 'Application settings') do |shell, context, tokens|
+SHELL.add_command(:settings, description: 'Application settings') do |shell, context, tokens|
   if GAME.appSettings.empty?
     shell.puts('No application settings')
     next
@@ -215,7 +215,7 @@ SHELL.root.add_command(:settings, description: 'Application settings') do |shell
 end
 
 # nodes
-SHELL.root.add_command(
+SHELL.add_command(
   :nodes,
   description: 'Node types',
   params: ['[id]']
@@ -284,7 +284,7 @@ SHELL.root.add_command(
 end
 
 # progs
-SHELL.root.add_command(
+SHELL.add_command(
   :progs,
   description: 'Program types',
   params: ['[id]']
@@ -352,7 +352,7 @@ SHELL.root.add_command(
 end
 
 # missions
-SHELL.root.add_command(
+SHELL.add_command(
   :missions,
   description: 'Missions list',
   params: ['[id]']
@@ -406,7 +406,7 @@ SHELL.root.add_command(
 end
 
 # skins
-SHELL.root.add_command(:skins, description: 'Skin types') do |shell, context, tokens|
+SHELL.add_command(:skins, description: 'Skin types') do |shell, context, tokens|
   if GAME.skinTypes.empty?
     shell.puts('No skin types')
     next
@@ -427,7 +427,7 @@ SHELL.root.add_command(:skins, description: 'Skin types') do |shell, context, to
 end
 
 # news
-SHELL.root.add_command(:news, description: 'News') do |shell, context, tokens|
+SHELL.add_command(:news, description: 'News') do |shell, context, tokens|
   msg = 'News'
   news = GAME.cmdNewsGetList
   LOGGER.log(msg)
@@ -453,7 +453,7 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # hints
-SHELL.root.add_command(:hints, description: 'Hints list') do |shell, context, tokens|
+SHELL.add_command(:hints, description: 'Hints list') do |shell, context, tokens|
   if GAME.hintsList.empty?
     shell.puts('No hints list')
     next
@@ -471,7 +471,7 @@ SHELL.root.add_command(:hints, description: 'Hints list') do |shell, context, to
 end
 
 # experience
-SHELL.root.add_command(:experience, description: 'Experience list') do |shell, context, tokens|
+SHELL.add_command(:experience, description: 'Experience list') do |shell, context, tokens|
   if GAME.experienceList.empty?
     shell.puts('No experience list')
     next
@@ -489,7 +489,7 @@ SHELL.root.add_command(:experience, description: 'Experience list') do |shell, c
 end
 
 # builders
-SHELL.root.add_command(:builders, description: 'Builders list') do |shell, context, tokens|
+SHELL.add_command(:builders, description: 'Builders list') do |shell, context, tokens|
   if GAME.buildersList.empty?
     shell.puts('No builders list')
     next
@@ -507,7 +507,7 @@ SHELL.root.add_command(:builders, description: 'Builders list') do |shell, conte
 end
 
 # goals
-SHELL.root.add_command(:goals, description: 'Goals types') do |shell, context, tokens|
+SHELL.add_command(:goals, description: 'Goals types') do |shell, context, tokens|
   if GAME.goalsTypes.empty?
     shell.puts('No goals types')
     next
@@ -538,7 +538,7 @@ SHELL.root.add_command(:goals, description: 'Goals types') do |shell, context, t
 end
 
 # shields
-SHELL.root.add_command(:shields, description: 'Shield types') do |shell, context, tokens|
+SHELL.add_command(:shields, description: 'Shield types') do |shell, context, tokens|
   if GAME.shieldTypes.empty?
     shell.puts('No shield types')
     next
@@ -558,7 +558,7 @@ SHELL.root.add_command(:shields, description: 'Shield types') do |shell, context
 end
 
 # ranks
-SHELL.root.add_command(:ranks, description: 'Rank list') do |shell, context, tokens|
+SHELL.add_command(:ranks, description: 'Rank list') do |shell, context, tokens|
   if GAME.rankList.empty?
     shell.puts('No rank list')
     next
@@ -576,7 +576,7 @@ SHELL.root.add_command(:ranks, description: 'Rank list') do |shell, context, tok
 end
 
 # countries
-SHELL.root.add_command(:countries, description: 'Contries list') do |shell, context, tokens|
+SHELL.add_command(:countries, description: 'Contries list') do |shell, context, tokens|
   if GAME.countriesList.empty?
     shell.puts('No countries list')
     next
@@ -594,7 +594,7 @@ SHELL.root.add_command(:countries, description: 'Contries list') do |shell, cont
 end
 
 # new
-SHELL.root.add_command(:new, description: 'Create new account') do |shell, context, tokens|
+SHELL.add_command(:new, description: 'Create new account') do |shell, context, tokens|
   msg = 'Player create'
   player = GAME.cmdPlayerCreate
   LOGGER.log(msg)
@@ -608,7 +608,7 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # rename
-SHELL.root.add_command(
+SHELL.add_command(
   :rename,
   description: 'Set new name',
   params: ['<name>']
@@ -626,7 +626,7 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # info
-SHELL.root.add_command(
+SHELL.add_command(
   :info,
   description:'Get player info',
   params: ['<id>']
@@ -659,7 +659,7 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # detail
-SHELL.root.add_command(
+SHELL.add_command(
   :detail,
   description: "Get detailed info about player's network",
   params: ['<id>']
@@ -716,7 +716,7 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # hq
-SHELL.root.add_command(
+SHELL.add_command(
   :hq,
   description: 'Set player HQ',
   params: ['<x>', '<y>', '<country>']
@@ -738,7 +738,7 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # skin
-SHELL.root.add_command(
+SHELL.add_command(
   :skin,
   description: 'Set player skin',
   params: ['<skin>']
@@ -756,7 +756,7 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # tutorial
-SHELL.root.add_command(
+SHELL.add_command(
   :tutorial,
   description: 'Set tutorial',
   params: ['<id>']
@@ -774,7 +774,7 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # email
-SHELL.root.add_command(
+SHELL.add_command(
   :email,
   description: 'Email subscribe',
   params: ['<email>']
@@ -792,7 +792,7 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # top
-SHELL.root.add_command(
+SHELL.add_command(
   :top,
   description: 'Show top ranking',
   params: ['<id>']
@@ -861,7 +861,7 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # cpgen
-SHELL.root.add_command(:cpgen, description: 'Cp generate code') do |shell, context, tokens|
+SHELL.add_command(:cpgen, description: 'Cp generate code') do |shell, context, tokens|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -878,7 +878,7 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # cpuse
-SHELL.root.add_command(
+SHELL.add_command(
   :cpuse,
   description: 'Cp use code',
   params: ['<code>']
@@ -900,7 +900,7 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # stats
-SHELL.root.add_command(:stats, description: 'Show player statistics') do |shell, context, tokens|
+SHELL.add_command(:stats, description: 'Show player statistics') do |shell, context, tokens|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
