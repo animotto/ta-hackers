@@ -22,23 +22,83 @@ BANNER = <<~BANNER_TEXT
 BANNER_TEXT
 
 options = {
-  'config' => DEFAULT_CONFIG
+  config: DEFAULT_CONFIG
 }
+
+option_parser = OptionParser.new do |opts|
+  opts.banner = BANNER
+
+  opts.on('-c config', '', 'Run with the config') do |v|
+    options[:config] = v
+  end
+
+  opts.on('-a', '', 'Disable execution of the auto commands') do |v|
+    options[:auto] = v
+  end
+
+  opts.on('-l', '', 'List configs') do |v|
+    options[:list] = v
+  end
+
+  opts.on('-n config', '', 'Create a new account with the config') do |v|
+    options[:new] = v
+  end
+
+  opts.on('-d config', '', 'Delete the config') do |v|
+    options[:delete] = v
+  end
+end
+
 begin
-  OptionParser.new do |opts|
-    opts.banner = BANNER
-    opts.on('-c config', '', 'Configuration name') do |v|
-      options['config'] = v
-    end
-  end.parse!
+  option_parser.parse!
 rescue OptionParser::InvalidOption, OptionParser::MissingArgument => e
-  puts "#{$PROGRAM_NAME}: #{e.message}"
+  puts(e)
   exit
 end
 
-config_file = File.join(CONFIGS_DIR, "#{options['config']}#{CONFIG_EXT}")
+if options.key?(:list)
+  files = Dir.children(CONFIGS_DIR)
+  files = files.select { |f| f.end_with?(CONFIG_EXT) }
+  files.map! { |f| f.delete_suffix(CONFIG_EXT) }
+  files.sort! { |a, b| a <=> b }
+  files.each { |f| puts(f) }
+  exit
+end
+
+if options.key?(:new)
+  config_file = File.join(CONFIGS_DIR, "#{options[:new]}#{CONFIG_EXT}")
+  if File.file?(config_file)
+    puts("Config #{options[:new]} already exists")
+    exit
+  end
+
+  config = Sandbox::Config.new(File.join(CONFIGS_DIR, "#{DEFAULT_CONFIG}#{CONFIG_EXT}"))
+  config.load
+  config.file = config_file
+  game = Trickster::Hackers::Game.new(config)
+  account = game.cmdPlayerCreate
+  config['id'] = account['id']
+  config['password'] = account['password']
+  config.save
+  puts("New account #{options[:new]} has been created (#{account['id']})")
+  exit
+end
+
+if options.key?(:delete)
+  config_file = File.join(CONFIGS_DIR, "#{options[:delete]}#{CONFIG_EXT}")
+  unless File.file?(config_file)
+    puts("Config #{options[:delete]} doesn't exist")
+    exit
+  end
+
+  File.unlink(config_file)
+  puts("Config #{options[:delete]} has been deleted")
+  exit
+end
+
+config_file = File.join(CONFIGS_DIR, "#{options[:config]}#{CONFIG_EXT}")
 unless File.file?(config_file)
-  puts "#{$PROGRAM_NAME}: Can't load config #{options['config']}"
+  puts("Config #{options[:config]} doesn't exist")
   exit
 end
 
@@ -46,9 +106,9 @@ config = Sandbox::Config.new(config_file)
 begin
   config.load
 rescue JSON::ParserError => e
-  puts "#{$PROGRAM_NAME}: Invalid config format"
+  puts("Format of the config #{options[:config]} is invalid")
   puts
-  puts e
+  puts(e)
   exit
 end
 
@@ -72,7 +132,7 @@ LOGGER.infoSuffix = "\e[0m"
 require 'cli'
 
 begin
-  if config.key?('autocmd')
+  if config.key?('autocmd') && !options.key?(:auto)
     if config['autocmd'].instance_of?(Array)
       config['autocmd'].each { |cmd| SHELL.exec(cmd) }
     else
