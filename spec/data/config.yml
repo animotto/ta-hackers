@@ -1,0 +1,6 @@
+host: 'hackers-1.appspot.com'
+port: 443
+ssl: true
+url: '/req.php'
+salt: 'WGmHVNph'
+version: 1220

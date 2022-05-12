@@ -16,20 +16,19 @@ CONTEXT_QUERY.add_command(
   description: 'Raw query',
   params: ['<args>']
 ) do |tokens, shell|
-  data = {}
+  params = {}
   tokens[1..-1].each do |token|
     GAME.config.each do |k, v|
       token.gsub!("%#{k}%", v.to_s)
     end
     param = token.split('=', 2)
-    data[param[0]] = param.length > 1 ? param[1] : ''
+    params[param[0]] = param.length > 1 ? param[1] : ''
   end
 
-  uri = GAME.client.encodeURI(data)
-  query = GAME.client.makeURI(uri, GAME.sid, false, false)
+  query = GAME.client.generate_uri_raw(params.clone)
 
   msg = "Query: #{query}"
-  response = GAME.client.request(data, GAME.sid, false, false)
+  response = GAME.client.request_raw(params)
   LOGGER.log(msg)
   shell.puts("\e[22;35m#{response}\e[0m")
 
@@ -52,20 +51,19 @@ CONTEXT_QUERY.add_command(
   description: 'Hashed query',
   params: ['<args>']
 ) do |tokens, shell|
-  data = {}
+  params = {}
   tokens[1..-1].each do |token|
     GAME.config.each do |k, v|
       token.gsub!("%#{k}%", v.to_s)
     end
     param = token.split('=', 2)
-    data[param[0]] = param.length > 1 ? param[1] : ''
+    params[param[0]] = param.length > 1 ? param[1] : ''
   end
 
-  uri = GAME.client.encodeURI(data)
-  query = GAME.client.makeURI(uri, GAME.sid, true, false)
+  query = GAME.client.generate_uri_cmd(params.clone)
 
   msg = "Query: #{query}"
-  response = GAME.client.request(data, GAME.sid, true, false)
+  response = GAME.client.request_cmd(params)
   LOGGER.log(msg)
   shell.puts("\e[22;35m#{response}\e[0m")
 
@@ -93,20 +91,19 @@ CONTEXT_QUERY.add_command(
     next
   end
 
-  data = {}
+  params = {}
   tokens[1..-1].each do |token|
     GAME.config.each do |k, v|
       token.gsub!("%#{k}%", v.to_s)
     end
     param = token.split('=', 2)
-    data[param[0]] = param.length > 1 ? param[1] : ''
+    params[param[0]] = param.length > 1 ? param[1] : ''
   end
 
-  uri = GAME.client.encodeURI(data)
-  query = GAME.client.makeURI(uri, GAME.sid, true, true)
+  query = GAME.client.generate_uri(params.clone, GAME.sid)
 
   msg = "Query: #{query}"
-  response = GAME.client.request(data, GAME.sid, true, true)
+  response = GAME.client.request_session(params, GAME.sid)
   LOGGER.log(msg)
   shell.puts("\e[22;35m#{response}\e[0m")
 

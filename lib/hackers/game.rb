@@ -102,7 +102,7 @@ module Hackers
         "language_code"                   => @config["language"],
         "app_version"                     => @config["version"],
       }
-      response = @client.request(params, @sid, true, false)
+      response = @client.request_cmd(params)
       serializer = Serializer.new(response)
       return serializer.parseTransLang(0)
     end
@@ -116,7 +116,7 @@ module Hackers
         "app_setting_get_list"  => 1,
         "app_version"           => @config["version"],
       }
-      response = @client.request(params, @sid, true, false)
+      response = @client.request_cmd(params)
       serializer = Serializer.new(response)
       return serializer.parseAppSettings(0)
     end
@@ -130,7 +130,7 @@ module Hackers
         "get_node_types_and_levels" => 1,
         "app_version"               => @config["version"],
       }
-      response = @client.request(params, @sid, true, false)
+      response = @client.request_cmd(params)
       serializer = Serializer.new(response)
       return serializer.parseNodeTypes
     end
@@ -144,7 +144,7 @@ module Hackers
         "get_program_types_and_levels"  => 1,
         "app_version"                   => @config["version"],
       }
-      response = @client.request(params, @sid, true, false)
+      response = @client.request_cmd(params)
       serializer = Serializer.new(response)
       return serializer.parseProgramTypes
     end
@@ -158,7 +158,7 @@ module Hackers
         "missions_get_list" => 1,
         "app_version"       => @config["version"],
       }
-      response = @client.request(params, @sid, true, false)
+      response = @client.request_cmd(params)
       serializer = Serializer.new(response)
       return serializer.parseMissionsList
     end
@@ -172,7 +172,7 @@ module Hackers
         "check_connectivity"  => 1,
         "app_version"         => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_cmd(params)
       return response.to_i
     end
 
@@ -185,7 +185,7 @@ module Hackers
         "player_create" => 1,
         "app_version"   => @config["version"],
       }
-      response = @client.request(params, @sid, true, false)
+      response = @client.request_cmd(params)
       serializer = Serializer.new(response)
       return serializer.parsePlayerCreate
     end
@@ -203,7 +203,7 @@ module Hackers
         "name"            => name,
         "app_version"     => @config["version"],
       }
-      response = @client.request(params, @sid, true, false)
+      response = @client.request_cmd(params)
       return response
     end
 
@@ -222,7 +222,7 @@ module Hackers
         "tutorial"                  => tutorial,
         "app_version"               => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -234,7 +234,7 @@ module Hackers
         "authCode"        => code,
         "app_version"     => @config["version"],
       }
-      response = @client.request(params, @sid, true, false)
+      response = @client.request_cmd(params)
       return response
     end
 
@@ -249,7 +249,7 @@ module Hackers
         "password"          => @config["password"],
         "app_version"       => @config["version"],
       }
-      response = @client.request(params, @sid, true, false)
+      response = @client.request_cmd(params)
       @syncSeq = 0
       serializer = Serializer.new(response)
       return serializer.parseAuthIdPassword
@@ -265,7 +265,7 @@ module Hackers
         "id_player"               => @config["id"],
         "app_version"             => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parseNetGetForMaint
     end
@@ -282,7 +282,7 @@ module Hackers
         "net"         => Serializer.generateNetwork(net),
         "app_version" => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -300,7 +300,7 @@ module Hackers
         "net"                         => Serializer.generateNetwork(net),
         "app_version"                 => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response.to_i
     end
 
@@ -318,7 +318,7 @@ module Hackers
         "net"                     => Serializer.generateNetwork(net),
         "app_version"             => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -333,7 +333,7 @@ module Hackers
         "id"            => id,
         "app_version"   => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -351,7 +351,7 @@ module Hackers
         "tutorial"                => tutorial,
         "app_version"             => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -366,7 +366,7 @@ module Hackers
         "id"            => id,
         "app_version"   => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -381,7 +381,7 @@ module Hackers
         "id_node"       => id,
         "app_version"   => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parseCollectNode
     end
@@ -399,7 +399,7 @@ module Hackers
         "builders"            => builders,
         "app_version"         => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -415,7 +415,7 @@ module Hackers
         "id_program"      => type,
         "app_version"     => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response.to_i
     end
 
@@ -430,7 +430,7 @@ module Hackers
         "id"              => id,
         "app_version"     => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -445,7 +445,7 @@ module Hackers
         "id"             => id,
         "app_version"    => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -466,7 +466,7 @@ module Hackers
         "data"            => Serializer.generatePrograms(programs),
         "app_version"     => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parseDeleteProgram
     end
@@ -491,7 +491,7 @@ module Hackers
         "app_version"     => @config["version"],
       }
       @syncSeq += 1
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parseQueueSync
     end
@@ -513,7 +513,7 @@ module Hackers
         "data"                      => Serializer.generatePrograms(programs),
         "app_version"               => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.parseData(response)
       return serializer.parseQueueSync
     end
@@ -530,7 +530,7 @@ module Hackers
         "id_country"        => country,
         "app_version"       => @config["version"],
       }
-      response = @client.request(params, @sid, true, true)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parsePlayerWorld
     end
@@ -545,7 +545,7 @@ module Hackers
         "id"                      => @config["id"],
         "app_version"             => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parseGetNewTargets
     end
@@ -561,7 +561,7 @@ module Hackers
         "id"            => id,
         "app_version"   => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -578,7 +578,7 @@ module Hackers
         "record"      => record,
         "app_version" => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parseGoalUpdate
     end
@@ -594,7 +594,7 @@ module Hackers
         "id"          => id,
         "app_version" => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -617,7 +617,7 @@ module Hackers
         "last_message"  => last,
         "app_version"   => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parseChat
     end
@@ -645,7 +645,7 @@ module Hackers
         "id_player"     => @config["id"],
         "app_version"   => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parseChat
     end
@@ -662,7 +662,7 @@ module Hackers
         "id_attacker"         => @config["id"],
         "app_version"         => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parseNetGetForAttack
     end
@@ -677,7 +677,7 @@ module Hackers
         "id_target"   => target,
         "app_version" => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -705,7 +705,7 @@ module Hackers
         "usedProgramsList"      => data[:programs],
         "app_version"           => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -740,7 +740,7 @@ module Hackers
       data = {
         "replayString" => data[:replay],
       }
-      response = @client.request(params, @sid, true, true, data)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -769,7 +769,7 @@ module Hackers
         "tutorial"                        => data[:tutorial],
         "app_version"                     => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -784,7 +784,7 @@ module Hackers
         "id"               => id,
         "app_version"      => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parseReplay(0, 0, 0)
     end
@@ -800,7 +800,7 @@ module Hackers
         "replay_id"               => id,
         "app_version"             => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parseReplayInfo
     end
@@ -817,7 +817,7 @@ module Hackers
         "id_attacker"       => @config["id"],
         "app_version"       => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parseGetMissionFight
     end
@@ -833,7 +833,7 @@ module Hackers
         "id"                => id,
         "app_version"       => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parseProfile(0, 0)
     end
@@ -853,7 +853,7 @@ module Hackers
         "id_player"             => id,
         "app_version"           => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       data = {
         "profile"  => serializer.parseProfile(0, 0),
@@ -879,7 +879,7 @@ module Hackers
         "id_country"                => country,
         "app_version"               => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -899,7 +899,7 @@ module Hackers
         "country"         => country,
         "app_version"     => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -912,7 +912,7 @@ module Hackers
         "hq_move_get_price" => "",
         "app_version"       => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response.to_i
     end
 
@@ -926,7 +926,7 @@ module Hackers
         "skin"            => skin,
         "app_version"     => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -942,7 +942,7 @@ module Hackers
         "id_skin"         => skin,
         "app_version"     => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -955,7 +955,7 @@ module Hackers
         "skin_types_get_list" => "",
         "app_version"         => @config["version"],
       }
-      response = @client.request(params, @sid, true, false)
+      response = @client.request_cmd(params)
       serializer = Serializer.new(response)
       return serializer.parseSkinTypes
     end
@@ -972,7 +972,7 @@ module Hackers
         "id_shield_type"  => shield,
         "app_version"     => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -990,7 +990,7 @@ module Hackers
         "max_storage_percentage"         => perc,
         "app_version"                    => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parsePlayerBuyCurrencyPerc
     end
@@ -1007,7 +1007,7 @@ module Hackers
         "id_country"      => country,
         "app_version"     => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parseRankingGetAll
     end
@@ -1023,7 +1023,7 @@ module Hackers
         "id"                       => id,
         "app_version"              => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parseMissionsLog(0)
     end
@@ -1040,7 +1040,7 @@ module Hackers
         "text"               => Serializer.generateReadme(readme),
         "app_version"        => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -1058,7 +1058,7 @@ module Hackers
         "text"                     => Serializer.generateReadme(readme),
         "app_version"              => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -1072,7 +1072,7 @@ module Hackers
         "id_player"       => @config["id"],
         "app_version"     => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parseGoals(0)
     end
@@ -1086,7 +1086,7 @@ module Hackers
         "news_get_list" => 1,
         "app_version"   => @config["version"],
       }
-      response = @client.request(params, @sid, true, false)
+      response = @client.request_cmd(params)
       serializer = Serializer.new(response)
       return serializer.parseNewsList
     end
@@ -1100,7 +1100,7 @@ module Hackers
         "hints_get_list"  => 1,
         "app_version"     => @config["version"],
       }
-      response = @client.request(params, @sid, true, false)
+      response = @client.request_cmd(params)
       serializer = Serializer.new(response)
       return serializer.parseHintsList
     end
@@ -1112,7 +1112,7 @@ module Hackers
         "world_news_get_list" => 1,
         "app_version"         => @config["version"],
       }
-      response = @client.request(params, @sid, true, false)
+      response = @client.request_cmd(params)
       return response
     end
 
@@ -1125,7 +1125,7 @@ module Hackers
         "get_experience_list" => 1,
         "app_version"         => @config["version"],
       }
-      response = @client.request(params, @sid, true, false)
+      response = @client.request_cmd(params)
       serializer = Serializer.new(response)
       return serializer.parseExperienceList
     end
@@ -1139,7 +1139,7 @@ module Hackers
         "builders_count_get_list" => 1,
         "app_version"             => @config["version"],
       }
-      response = @client.request(params, @sid, true, false)
+      response = @client.request_cmd(params)
       serializer = Serializer.new(response)
       return serializer.parseBuildersList
     end
@@ -1153,7 +1153,7 @@ module Hackers
         "goal_types_get_list" => 1,
         "app_version"         => @config["version"],
       }
-      response = @client.request(params, @sid, true, false)
+      response = @client.request_cmd(params)
       serializer = Serializer.new(response)
       return serializer.parseGoalsTypes
     end
@@ -1167,7 +1167,7 @@ module Hackers
         "shield_types_get_list" => 1,
         "app_version"           => @config["version"],
       }
-      response = @client.request(params, @sid, true, false)
+      response = @client.request_cmd(params)
       serializer = Serializer.new(response)
       return serializer.parseShieldTypes
     end
@@ -1181,7 +1181,7 @@ module Hackers
         "rank_get_list" => 1,
         "app_version"   => @config["version"],
       }
-      response = @client.request(params, @sid, true, false)
+      response = @client.request_cmd(params)
       serializer = Serializer.new(response)
       return serializer.parseRankList
     end
@@ -1195,7 +1195,7 @@ module Hackers
         "fight_get_map"   => "",
         "app_version"     => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parseFightMap(0)
     end
@@ -1212,7 +1212,7 @@ module Hackers
         "app_version_number"  => version,
         "app_version"         => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -1229,7 +1229,7 @@ module Hackers
         "message"       => message,
         "app_version"   => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -1244,7 +1244,7 @@ module Hackers
         "tutorial"             => tutorial,
         "app_version"          => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -1259,7 +1259,7 @@ module Hackers
         "id"                  => id,
         "app_version"         => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -1276,7 +1276,7 @@ module Hackers
         "tutorial"                     => tutorial,
         "app_version"                  => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -1295,7 +1295,7 @@ module Hackers
         "platform"    => platform,
         "app_version" => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parseCpUseCode
     end
@@ -1311,7 +1311,7 @@ module Hackers
         "platform"          => platform,
         "app_version"       => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parseCpGenerateCode
     end
@@ -1327,7 +1327,7 @@ module Hackers
         "code"              => code,
         "app_version"       => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parseRedeemPromoCode
     end
@@ -1340,7 +1340,7 @@ module Hackers
         "signature"           => signature,
         "app_version"         => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -1351,7 +1351,7 @@ module Hackers
         "password"     => password,
         "app_version"  => @config["version"],
       }
-      response = @client.request(params, @sid, true, false)
+      response = @client.request_cmd(params)
       return response
     end
 
@@ -1368,7 +1368,7 @@ module Hackers
         "id_mission"                        => mission,
         "app_version"                       => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -1383,7 +1383,7 @@ module Hackers
         "id_player"           => id,
         "app_version"         => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parseLogs(0)
     end
@@ -1401,7 +1401,7 @@ module Hackers
         "name"                  => name,
         "app_version"           => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -1411,7 +1411,7 @@ module Hackers
         "token"       => token,
         "app_version" => @config["version"],
       }
-      response = @client.request(params, @sid, true, false)
+      response = @client.request_cmd(params)
       return response
     end
 
@@ -1435,7 +1435,7 @@ module Hackers
         "id_attacker"       => attacker,
         "app_version"       => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       data = {
         "nodes"     => serializer.parseNodes(0),
@@ -1464,7 +1464,7 @@ module Hackers
         "replay_version"      => data[:version],
         "app_version"         => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -1475,7 +1475,7 @@ module Hackers
         "token"                 => token,
         "app_version"           => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -1489,7 +1489,7 @@ module Hackers
         "id"                => @config["id"],
         "app_version"       => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parsePlayerGetStats
     end
@@ -1502,7 +1502,7 @@ module Hackers
         "tutorial"            => tutorial,
         "app_version"         => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -1512,7 +1512,7 @@ module Hackers
         "id_player"     => id,
         "app_version"   => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -1523,7 +1523,7 @@ module Hackers
         "id_mission"            => mission,
         "app_version"           => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -1533,7 +1533,7 @@ module Hackers
         "player_id"       => id,
         "app_version"     => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -1544,7 +1544,7 @@ module Hackers
         "id_program"                => type,
         "app_version"               => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -1555,7 +1555,7 @@ module Hackers
         "token"         => token,
         "app_version"   => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -1565,7 +1565,7 @@ module Hackers
         "id_player"       => id,
         "app_version"     => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -1576,7 +1576,7 @@ module Hackers
         "authCode"              => code,
         "app_version"           => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -1586,7 +1586,7 @@ module Hackers
         "id"                          => id,
         "app_version"                 => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -1597,7 +1597,7 @@ module Hackers
         "issue"         => issue,
         "app_version"   => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -1612,7 +1612,7 @@ module Hackers
         "id"                => id,
         "app_version"       => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parseAIProgramRevive
     end
@@ -1628,7 +1628,7 @@ module Hackers
         "id"                            => id,
         "app_version"                   => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parseAIProgramRevive
     end
@@ -1644,7 +1644,7 @@ module Hackers
         "id"                        => id,
         "app_version"               => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parseAIProgramRevive
     end
@@ -1660,7 +1660,7 @@ module Hackers
         "id"                => id,
         "app_version"       => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       serializer = Serializer.new(response)
       return serializer.parseReadme(0, 0, 0)
     end
@@ -1676,7 +1676,7 @@ module Hackers
         "id"                        => id,
         "app_version"               => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -1692,7 +1692,7 @@ module Hackers
         "programs_data"         => Serializer.generateMissionPrograms(data[:programs]),
         "app_version"           => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -1707,7 +1707,7 @@ module Hackers
         "id"          => id,
         "app_version" => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
 
@@ -1726,7 +1726,7 @@ module Hackers
         "language"        => language,
         "app_version"     => @config["version"],
       }
-      response = @client.request(params, @sid)
+      response = @client.request_session(params, @sid)
       return response
     end
   end
