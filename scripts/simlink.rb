@@ -6,13 +6,13 @@ class Simlink < Sandbox::Script
     end
 
     if @args[0] =~ /^\d+$/
-      simlink = Trickster::Hackers::SimLink.new(@args[0].to_i)
+      simlink = Hackers::SimLink.new(@args[0].to_i)
       @logger.log(simlink.generate)
     else
-      simlink = Trickster::Hackers::SimLink.new(0)
+      simlink = Hackers::SimLink.new(0)
       begin
         data = simlink.parse(@args[0])
-      rescue Trickster::Hackers::LinkError => e
+      rescue Hackers::LinkError => e
         @logger.error(e)
         return
       end

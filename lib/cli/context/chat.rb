@@ -8,7 +8,7 @@ def chat_read(shell, room)
   loop do
     begin
       messages = CHAT_ROOMS[room][:chat].read
-    rescue Trickster::Hackers::RequestError => e
+    rescue Hackers::RequestError => e
       LOGGER.error("Chat read (#{e})")
     else
       chat_log(shell, room, messages)
@@ -118,7 +118,7 @@ CONTEXT_CHAT_SAY = CONTEXT_CHAT.add_command(
 
   messages = CHAT_ROOMS[room][:chat].write(tokens[2..-1].join(' '))
   chat_log(shell, room, messages)
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("Chat write (#{e})")
 end
 
@@ -154,7 +154,7 @@ CONTEXT_CHAT_TALK = CONTEXT_CHAT.add_command(
 
     messages = CHAT_ROOMS[room][:chat].write(message)
     chat_log(shell, room, messages)
-  rescue Trickster::Hackers::RequestError => e
+  rescue Hackers::RequestError => e
     LOGGER.error("Chat write (#{e})")
   end
 end
@@ -201,7 +201,7 @@ CONTEXT_CHAT_USERS = CONTEXT_CHAT.add_command(
       )
     )
   end
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("Chat read (#{e})")
 end
 

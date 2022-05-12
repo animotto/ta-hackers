@@ -8,7 +8,7 @@ class Replay < Sandbox::Script
     id = @args[0].to_i
     begin
       replay = @game.cmdFightGetReplay(id)
-    rescue Trickster::Hackers::RequestError => e
+    rescue Hackers::RequestError => e
       @logger.error(e)
       return
     end

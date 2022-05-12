@@ -13,7 +13,7 @@ class Logs < Sandbox::Script
 
     begin
       logs = @game.cmdFightByFBFriend(id)
-    rescue Trickster::Hackers::RequestError => e
+    rescue Hackers::RequestError => e
       @logger.error(e)
       return
     end
@@ -39,9 +39,9 @@ class Logs < Sandbox::Script
     security.each do |k, v|
       @shell.puts(
         "  %s%s%s %+-3d %-10s %-19s %-10s %-5d %s" % [
-          v["success"] & Trickster::Hackers::Game::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-          v["success"] & Trickster::Hackers::Game::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-          v["success"] & Trickster::Hackers::Game::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+          v["success"] & Hackers::Game::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+          v["success"] & Hackers::Game::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+          v["success"] & Hackers::Game::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
           v["rank"],
           k,
           v["date"],
@@ -71,9 +71,9 @@ class Logs < Sandbox::Script
     hacks.each do |k, v|
       @shell.puts(
         "  %s%s%s %+-3d %-10s %-19s %-10s %-5d %s" % [
-          v["success"] & Trickster::Hackers::Game::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-          v["success"] & Trickster::Hackers::Game::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-          v["success"] & Trickster::Hackers::Game::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+          v["success"] & Hackers::Game::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+          v["success"] & Hackers::Game::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+          v["success"] & Hackers::Game::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
           v["rank"],
           k,
           v["date"],

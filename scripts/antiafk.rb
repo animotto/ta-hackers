@@ -18,7 +18,7 @@ class Antiafk < Sandbox::Script
         @game.cmdCheckCon
         checkConLast = Time.now
       end
-    rescue Trickster::Hackers::RequestError => e
+    rescue Hackers::RequestError => e
       @logger.error("#{e}")
       sleep(10)
     ensure

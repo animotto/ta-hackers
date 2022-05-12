@@ -13,7 +13,7 @@ class Network < Sandbox::Script
 
     begin
       net = @game.cmdTestFightPrepare(target)
-    rescue Trickster::Hackers::RequestError => e
+    rescue Hackers::RequestError => e
       @logger.error(e)
       return
     end

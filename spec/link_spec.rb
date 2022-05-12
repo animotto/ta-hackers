@@ -11,9 +11,9 @@ INVALID_URI = 'spec/data/invalid_uri.yml'
 invalid_links = YAML.safe_load(File.read(INVALID_LINKS))
 invalid_uri = YAML.safe_load(File.read(INVALID_URI))
 
-RSpec.describe Trickster::Hackers::SimLink do
+RSpec.describe Hackers::SimLink do
   simlinks = YAML.safe_load(File.read(SIMLINKS))
-  simlink = Trickster::Hackers::SimLink.new(0)
+  simlink = Hackers::SimLink.new(0)
 
   it 'Parses URI of simulation link' do
     simlinks.each do |link|
@@ -22,18 +22,18 @@ RSpec.describe Trickster::Hackers::SimLink do
     end
 
     invalid_links.each do |link|
-      expect { simlink.parse(link) }.to raise_error(Trickster::Hackers::LinkParserError)
+      expect { simlink.parse(link) }.to raise_error(Hackers::LinkParserError)
     end
 
     invalid_uri.each do |link|
-      expect { simlink.parse(link) }.to raise_error(Trickster::Hackers::LinkParserError)
+      expect { simlink.parse(link) }.to raise_error(Hackers::LinkParserError)
     end
   end
 end
 
-RSpec.describe Trickster::Hackers::ReplayLink do
+RSpec.describe Hackers::ReplayLink do
   replaylinks = YAML.safe_load(File.read(REPLAYLINKS))
-  replaylink = Trickster::Hackers::ReplayLink.new(0)
+  replaylink = Hackers::ReplayLink.new(0)
 
   it 'Parses URI of replay link' do
     replaylinks.each do |link|
@@ -42,11 +42,11 @@ RSpec.describe Trickster::Hackers::ReplayLink do
     end
 
     invalid_links.each do |link|
-      expect { replaylink.parse(link) }.to raise_error(Trickster::Hackers::LinkParserError)
+      expect { replaylink.parse(link) }.to raise_error(Hackers::LinkParserError)
     end
 
     invalid_uri.each do |link|
-      expect { replaylink.parse(link) }.to raise_error(Trickster::Hackers::LinkParserError)
+      expect { replaylink.parse(link) }.to raise_error(Hackers::LinkParserError)
     end
   end
 end

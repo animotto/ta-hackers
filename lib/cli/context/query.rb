@@ -42,7 +42,7 @@ CONTEXT_QUERY.add_command(
       :data => Base64.encode64(response)
     }
   )
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -78,7 +78,7 @@ CONTEXT_QUERY.add_command(
       :data => Base64.encode64(response)
     }
   )
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -119,7 +119,7 @@ CONTEXT_QUERY.add_command(
       :data => Base64.encode64(response)
     }
   )
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 

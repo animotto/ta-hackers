@@ -6,7 +6,7 @@
 This tool provides a sandbox for researching of the network API of the Hackers mobile game, originally developed by Trickster Arts
 
 ## Disclaimer
-This project is for research purposes only. All source code is provided as is. I don't condone of cheating in this game, you act at your own risk.
+This project is for research purposes only. All source code is provided as is. I don't condone of exploiting vulnerabilities or cheating in this game, you act at your own risk.
 
 ## Sandbox
 It uses my [sandbox-ruby](https://github.com/animotto/sandbox-ruby) gem

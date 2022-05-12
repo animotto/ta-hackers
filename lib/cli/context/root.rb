@@ -165,7 +165,7 @@ SHELL.add_command(
   auth = GAME.cmdAuthIdPassword
   LOGGER.log(msg)
   GAME.sid = auth['sid']
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -466,7 +466,7 @@ SHELL.add_command(
     )
     shell.puts
   end
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -645,7 +645,7 @@ SHELL.add_command(
   shell.puts("  ID: #{player['id']}")
   shell.puts("  Password: #{player['password']}")
   shell.puts("  Session ID: #{player['sid']}")
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -663,7 +663,7 @@ SHELL.add_command(
   msg = 'Player set name'
   GAME.cmdPlayerSetName(GAME.config['id'], tokens[1])
   LOGGER.log(msg)
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -696,7 +696,7 @@ SHELL.add_command(
   shell.puts(format('  %-15s %d', 'Country', profile.country))
   shell.puts(format('  %-15s %d', 'Skin', profile.skin))
   shell.puts(format('  %-15s %d', 'Level', GAME.getLevelByExp(profile.experience)))
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -753,7 +753,7 @@ SHELL.add_command(
       )
     )
   end
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -775,7 +775,7 @@ SHELL.add_command(
   msg = 'Set player HQ'
   GAME.cmdSetPlayerHqCountry(GAME.config['id'], x, y, country)
   LOGGER.log(msg)
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -793,7 +793,7 @@ SHELL.add_command(
   msg = 'Player set skin'
   GAME.cmdPlayerSetSkin(tokens[1].to_i)
   LOGGER.log(msg)
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -811,7 +811,7 @@ SHELL.add_command(
   msg = 'Player set tutorial'
   GAME.cmdPlayerSetTutorial(tokens[1].to_i)
   LOGGER.log(msg)
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -829,7 +829,7 @@ SHELL.add_command(
   msg = 'Email subscribe'
   GAME.cmdEmailSubscribe(tokens[1])
   LOGGER.log(msg)
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -898,7 +898,7 @@ SHELL.add_command(
       )
     )
   end
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -918,7 +918,7 @@ SHELL.add_command(
 
   shell.puts("\e[1;35m\u2022 Generated code\e[0m")
   shell.puts("  Code: #{code}")
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -940,7 +940,7 @@ SHELL.add_command(
   shell.puts("\e[1;35m\u2022 Account credentials\e[0m")
   shell.puts("  ID: #{data["id"]}")
   shell.puts("  Password: #{data["password"]}")
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -990,6 +990,6 @@ SHELL.add_command(
   shell.puts('  Collected:')
   shell.puts("   Money: #{stats['collect']['money']}")
   shell.puts("   Bitcoins: #{stats['collect']['bitcoins']}")
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end

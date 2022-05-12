@@ -32,7 +32,7 @@ class Autohack < Sandbox::Script
                                           bitcoin: 0,
                                           nodes: "",
                                           loots: "",
-                                          success: Trickster::Hackers::Game::SUCCESS_FAIL,
+                                          success: Hackers::Game::SUCCESS_FAIL,
                                           programs: "",
                                         })
           sleep(rand(35..95))
@@ -42,7 +42,7 @@ class Autohack < Sandbox::Script
             @game.appSettings["node types"],
             @game.appSettings["program types"],
           ].join(",")
-          success = Trickster::Hackers::Game::SUCCESS_CORE | Trickster::Hackers::Game::SUCCESS_RESOURCES | Trickster::Hackers::Game::SUCCESS_CONTROL
+          success = Hackers::Game::SUCCESS_CORE | Hackers::Game::SUCCESS_RESOURCES | Hackers::Game::SUCCESS_CONTROL
           fight = @game.cmdFight(k, {
                                    money: net["profile"].money,
                                    bitcoin: net["profile"].bitcoins,
@@ -72,7 +72,7 @@ class Autohack < Sandbox::Script
       begin
         new = @game.cmdGetNewTargets
         targets = new["targets"]
-      rescue Trickster::Hackers::RequestError => e
+      rescue Hackers::RequestError => e
         if e.type == "Net::ReadTimeout"
           @logger.error("Get new targets timeout")
           retry

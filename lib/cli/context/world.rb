@@ -46,7 +46,7 @@ CONTEXT_WORLD.add_command(
       )
     )
   end
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -90,7 +90,7 @@ CONTEXT_WORLD.add_command(
       )
     )
   end
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -130,7 +130,7 @@ CONTEXT_WORLD.add_command(
       )
     )
   end
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -150,7 +150,7 @@ CONTEXT_WORLD.add_command(
   msg = 'Bonus collect'
   GAME.cmdBonusCollect(id)
   LOGGER.log(msg)
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -196,7 +196,7 @@ CONTEXT_WORLD.add_command(
       )
     )
   end
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -217,7 +217,7 @@ CONTEXT_WORLD.add_command(
   msg = 'Goal update'
   GAME.cmdGoalUpdate(id, record)
   LOGGER.log(msg)
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -237,6 +237,6 @@ CONTEXT_WORLD.add_command(
   msg = 'Goal reject'
   GAME.cmdGoalReject(id)
   LOGGER.log(msg)
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end

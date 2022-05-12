@@ -13,7 +13,7 @@ class Missions < Sandbox::Script
 
     begin
       missions = @game.cmdPlayerMissionsGetLog(id)
-    rescue Trickster::Hackers::RequestError => e
+    rescue Hackers::RequestError => e
       @logger.error(e)
       return
     end
@@ -31,11 +31,11 @@ class Missions < Sandbox::Script
     missions.each do |k, v|
       status = String.new
       case v["finished"]
-        when Trickster::Hackers::Game::MISSION_AWAITS
+        when Hackers::Game::MISSION_AWAITS
          status = "\e[37m\u2690\e[0m"
-        when Trickster::Hackers::Game::MISSION_FINISHED
+        when Hackers::Game::MISSION_FINISHED
          status = "\e[32m\u2691\e[0m"
-        when Trickster::Hackers::Game::MISSION_REJECTED
+        when Hackers::Game::MISSION_REJECTED
          status = "\e[31m\u2691\e[0m"
       end
       @shell.puts(

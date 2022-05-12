@@ -7,7 +7,7 @@ class Promocode < Sandbox::Script
 
     begin
       code = @game.cmdRedeemPromoCode(@game.config['id'], @args[0])
-    rescue Trickster::Hackers::RequestError => e
+    rescue Hackers::RequestError => e
       @logger.log(e)
     else
       @logger.log(code['message'])

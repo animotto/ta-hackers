@@ -75,7 +75,7 @@ if options.key?(:new)
   config = Sandbox::Config.new(File.join(CONFIGS_DIR, "#{DEFAULT_CONFIG}#{CONFIG_EXT}"))
   config.load
   config.file = config_file
-  game = Trickster::Hackers::Game.new(config)
+  game = Hackers::Game.new(config)
   account = game.cmdPlayerCreate
   config['id'] = account['id']
   config['password'] = account['password']
@@ -112,7 +112,7 @@ rescue JSON::ParserError => e
   exit
 end
 
-GAME = Trickster::Hackers::Game.new(config)
+GAME = Hackers::Game.new(config)
 GAME.countriesList = Sandbox::Config.new(File.join(DATA_DIR, 'countries.conf'))
 GAME.countriesList.load
 

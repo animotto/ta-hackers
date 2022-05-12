@@ -218,7 +218,7 @@ class Telegram < Sandbox::Script
       chat[room] = @game.getChat(room)
       begin
         chat[room].read
-      rescue Trickster::Hackers::RequestError => e
+      rescue Hackers::RequestError => e
         @logger.error("Chat read (#{e})")
         return
       end
@@ -243,7 +243,7 @@ class Telegram < Sandbox::Script
       @config["relays"].each do |room, relay|
         begin
           messages = chat[room].read
-        rescue Trickster::Hackers::RequestError => e
+        rescue Hackers::RequestError => e
           @logger.error("Chat read (#{e})")
           next
         end

@@ -18,7 +18,7 @@ CONTEXT_BUY.add_command(
   msg = 'Buy skin'
   GAME.cmdPlayerBuySkin(skin)
   LOGGER.log(msg)
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -38,7 +38,7 @@ CONTEXT_BUY.add_command(
   msg = 'Buy shield'
   GAME.cmdShieldBuy(shield)
   LOGGER.log(msg)
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -55,7 +55,7 @@ CONTEXT_BUY.add_command(
   msg = 'Buy builder'
   GAME.cmdPlayerBuyBuilder
   LOGGER.log(msg)
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -73,9 +73,9 @@ CONTEXT_BUY.add_command(
   perc = tokens[1].to_i
 
   msg = 'Buy currency'
-  GAME.cmdPlayerBuyCurrencyPerc(Trickster::Hackers::Game::CURRENCY_MONEY, perc)
+  GAME.cmdPlayerBuyCurrencyPerc(Hackers::Game::CURRENCY_MONEY, perc)
   LOGGER.log(msg)
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -93,8 +93,8 @@ CONTEXT_BUY.add_command(
   perc = tokens[1].to_i
 
   msg = 'Buy currency'
-  GAME.cmdPlayerBuyCurrencyPerc(Trickster::Hackers::Game::CURRENCY_BITCOINS, perc)
+  GAME.cmdPlayerBuyCurrencyPerc(Hackers::Game::CURRENCY_BITCOINS, perc)
   LOGGER.log(msg)
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end

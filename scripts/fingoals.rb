@@ -14,7 +14,7 @@ class Fingoals < Sandbox::Script
         @logger.log("Goal #{id} finished with #{@game.goalsTypes[goal["type"]]["credits"]} credits")
         @game.cmdGoalUpdate(id, @game.goalsTypes[goal["type"]]["amount"])
       end
-    rescue Trickster::Hackers::RequestError => e
+    rescue Hackers::RequestError => e
       @logger.error(e)
     ensure
       sleep(INTERVAL_MIN + rand(INTERVAL_ADD))

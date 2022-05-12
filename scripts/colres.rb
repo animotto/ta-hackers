@@ -15,7 +15,7 @@ class Colres < Sandbox::Script
         @game.cmdCollectNode(k)
         @logger.log("Node #{k} resources collected")
       end
-    rescue Trickster::Hackers::RequestError => e
+    rescue Hackers::RequestError => e
       @logger.error("#{e}")
     ensure
       sleep(INTERVAL_MIN + rand(INTERVAL_ADD))

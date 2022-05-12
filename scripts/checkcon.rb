@@ -4,7 +4,7 @@ class Checkcon < Sandbox::Script
   def main
     loop do
       @game.cmdCheckCon
-    rescue Trickster::Hackers::RequestError => e
+    rescue Hackers::RequestError => e
       @logger.error("#{e}")
     ensure
       sleep(INTERVAL)

@@ -45,7 +45,7 @@ CONTEXT_PROG.add_command(
       )
     )
   end
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -93,7 +93,7 @@ CONTEXT_PROG.add_command(
   shell.puts
   shell.puts("  \e[35mSequence: #{GAME.syncSeq}\e[0m")
   shell.puts("  \e[35mTotal: #{GAME.timerToDHMS(total)}\e[0m") unless total.zero?
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -114,7 +114,7 @@ CONTEXT_PROG.add_command(
   id = GAME.cmdCreateProgram(type)
   LOGGER.log(msg)
   shell.puts("Program #{type} has been created")
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -134,7 +134,7 @@ CONTEXT_PROG.add_command(
   msg = 'Upgrade program'
   GAME.cmdUpgradeProgram(id)
   LOGGER.log(msg)
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -154,7 +154,7 @@ CONTEXT_PROG.add_command(
   msg = 'Finish program'
   GAME.cmdFinishProgram(id)
   LOGGER.log(msg)
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -203,7 +203,7 @@ CONTEXT_PROG.add_command(
       )
     )
   end
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -262,7 +262,7 @@ CONTEXT_PROG.add_command(
   shell.puts
   shell.puts("  \e[35mSequence: #{GAME.syncSeq}\e[0m")
   shell.puts("  \e[35mTotal: #{GAME.timerToDHMS(total)}\e[0m") unless total.zero?
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -282,6 +282,6 @@ CONTEXT_PROG.add_command(
   msg = 'AI program revive'
   id = GAME.cmdAIProgramRevive(id)
   LOGGER.log(msg)
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end

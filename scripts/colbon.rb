@@ -15,7 +15,7 @@ class Colbon < Sandbox::Script
         @game.cmdBonusCollect(k)
         @logger.log("Bonus #{k} collected with #{v["amount"]} credits")
       end
-    rescue Trickster::Hackers::RequestError => e
+    rescue Hackers::RequestError => e
       @logger.error("#{e}")
     ensure
       sleep(INTERVAL_MIN + rand(INTERVAL_ADD))

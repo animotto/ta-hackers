@@ -8,7 +8,7 @@ class Replayinfo < Sandbox::Script
 
     begin
       info = @game.cmdFightGetReplayInfo(id)
-    rescue Trickster::Hackers::RequestError => e
+    rescue Hackers::RequestError => e
       @logger.error(e)
       return
     end
@@ -22,9 +22,9 @@ class Replayinfo < Sandbox::Script
     @shell.puts(" %-15s %s" % ["Datetime", info["datetime"]])
     @shell.puts(" %-15s %s%s%s" % [
       "Success",
-      info["success"] & Trickster::Hackers::Game::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-      info["success"] & Trickster::Hackers::Game::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-      info["success"] & Trickster::Hackers::Game::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+      info["success"] & Hackers::Game::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+      info["success"] & Hackers::Game::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+      info["success"] & Hackers::Game::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
     ])
     @shell.puts(" %-15s %+d" % ["Rank", info["rank"]])
     @shell.puts(" %-15s %d" % ["Money", info["money"]])

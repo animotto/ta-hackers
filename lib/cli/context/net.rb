@@ -40,7 +40,7 @@ CONTEXT_NET.add_command(
   net['skins'].each do |skin|
     shell.puts(format('   %-3d %-15s', skin, GAME.skinTypes[skin]['name']))
   end
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -78,9 +78,9 @@ CONTEXT_NET.add_command(
     shell.puts(
       format(
         "  %s%s%s %+-3d %-10s %-19s %-10s %-5d %s",
-        v['success'] & Trickster::Hackers::Game::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-        v['success'] & Trickster::Hackers::Game::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-        v['success'] & Trickster::Hackers::Game::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+        v['success'] & Hackers::Game::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+        v['success'] & Hackers::Game::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+        v['success'] & Hackers::Game::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
         v['rank'],
         k,
         v['date'],
@@ -112,9 +112,9 @@ CONTEXT_NET.add_command(
     shell.puts(
       format(
         "  %s%s%s %+-3d %-10s %-19s %-10s %-5d %s",
-        v['success'] & Trickster::Hackers::Game::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-        v['success'] & Trickster::Hackers::Game::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-        v['success'] & Trickster::Hackers::Game::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+        v['success'] & Hackers::Game::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+        v['success'] & Hackers::Game::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+        v['success'] & Hackers::Game::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
         v['rank'],
         k,
         v['date'],
@@ -124,7 +124,7 @@ CONTEXT_NET.add_command(
       )
     )
   end
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -146,7 +146,7 @@ CONTEXT_NET.add_command(
   net['readme'].each_with_index do |message, i|
     shell.puts("  [#{i}] #{message}")
   end
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -174,7 +174,7 @@ CONTEXT_NET.add_command(
   net['readme'].each_with_index do |message, i|
     shell.puts("  [#{i}] #{message}")
   end
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -213,7 +213,7 @@ CONTEXT_NET.add_command(
   net['readme'].each_with_index do |message, i|
     shell.puts("  [#{i}] #{message}")
   end
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -235,7 +235,7 @@ CONTEXT_NET.add_command(
   net['readme'].clear
   GAME.cmdPlayerSetReadme(net['readme'])
   LOGGER.log(msg)
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -265,7 +265,7 @@ CONTEXT_NET.add_command(
     )
   )
 
-  production = GAME.nodeTypes.select { |k, v| v['titles'][0] == Trickster::Hackers::Game::PRODUCTION_TITLE }
+  production = GAME.nodeTypes.select { |k, v| v['titles'][0] == Hackers::Game::PRODUCTION_TITLE }
   net['nodes'].each do |k, v|
     timer = String.new
     if v['timer'].negative?
@@ -275,9 +275,9 @@ CONTEXT_NET.add_command(
       if production.key?(v['type'])
         level = production[v['type']]['levels'][v['level']]
         case level['data'][0]
-        when Trickster::Hackers::Game::CURRENCY_MONEY
+        when Hackers::Game::CURRENCY_MONEY
           timer += "\e[33m$ "
-        when Trickster::Hackers::Game::CURRENCY_BITCOINS
+        when Hackers::Game::CURRENCY_BITCOINS
           timer += "\e[31m\u20bf "
         end
         produced = (level['data'][2].to_f / 60 / 60 * v['timer']).to_i
@@ -297,7 +297,7 @@ CONTEXT_NET.add_command(
       )
     )
   end
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -321,7 +321,7 @@ CONTEXT_NET.add_command(
   msg = 'Create node'
   GAME.cmdCreateNodeUpdateNet(type, net['net'])
   LOGGER.log(msg)
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -341,7 +341,7 @@ CONTEXT_NET.add_command(
   msg = 'Upgrade node'
   GAME.cmdUpgradeNode(id)
   LOGGER.log(msg)
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -361,7 +361,7 @@ CONTEXT_NET.add_command(
   msg = 'Finish node'
   GAME.cmdFinishNode(id)
   LOGGER.log(msg)
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -381,7 +381,7 @@ CONTEXT_NET.add_command(
   msg = 'Cancel node'
   GAME.cmdNodeCancel(id)
   LOGGER.log(msg)
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -405,7 +405,7 @@ CONTEXT_NET.add_command(
   msg = 'Delete node'
   GAME.cmdDeleteNodeUpdateNet(id, net['net'])
   LOGGER.log(msg)
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -426,7 +426,7 @@ CONTEXT_NET.add_command(
   msg = 'Node set builders'
   GAME.cmdNodeSetBuilders(id, builders)
   LOGGER.log(msg)
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -457,7 +457,7 @@ CONTEXT_NET.add_command(
     GAME.cmdCollectNode(node)
     LOGGER.log("#{msg} (#{node})")
   end
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -509,6 +509,6 @@ CONTEXT_NET.add_command(
       )
     )
   end
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end

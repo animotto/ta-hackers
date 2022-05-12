@@ -7,7 +7,7 @@ class Readme < Sandbox::Script
 
     begin
       readme = @game.cmdPlayerGetReadme(@args[0])
-    rescue Trickster::Hackers::RequestError => e
+    rescue Hackers::RequestError => e
       @logger.error(e)
     end
     if readme.empty?

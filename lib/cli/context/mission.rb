@@ -31,11 +31,11 @@ CONTEXT_MISSION.add_command(
   missions.each do |k, v|
     status = String.new
     case v['finished']
-    when Trickster::Hackers::Game::MISSION_AWAITS
+    when Hackers::Game::MISSION_AWAITS
       status = "\e[37m\u2690\e[0m" 
-    when Trickster::Hackers::Game::MISSION_FINISHED
+    when Hackers::Game::MISSION_FINISHED
       status = "\e[32m\u2691\e[0m"
-    when Trickster::Hackers::Game::MISSION_REJECTED
+    when Hackers::Game::MISSION_REJECTED
       status = "\e[31m\u2691\e[0m"
     end
 
@@ -50,7 +50,7 @@ CONTEXT_MISSION.add_command(
       )
     )
   end
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -75,7 +75,7 @@ CONTEXT_MISSION.add_command(
   msg = 'Mission message delivered'
   GAME.cmdPlayerMissionMessageDelivered(id)
   LOGGER.log(msg)
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
@@ -99,6 +99,6 @@ CONTEXT_MISSION.add_command(
   msg = 'Mission reject'
   GAME.cmdPlayerMissionReject(id)
   LOGGER.log(msg)
-rescue Trickster::Hackers::RequestError => e
+rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end

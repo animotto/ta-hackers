@@ -6,13 +6,13 @@ class Replaylink < Sandbox::Script
     end
 
     if @args[0] =~ /^\d+$/
-      replaylink = Trickster::Hackers::ReplayLink.new(@args[0].to_i)
+      replaylink = Hackers::ReplayLink.new(@args[0].to_i)
       @logger.log(replaylink.generate)
     else
-      replaylink = Trickster::Hackers::ReplayLink.new(0)
+      replaylink = Hackers::ReplayLink.new(0)
       begin
         data = replaylink.parse(@args[0])
-      rescue Trickster::Hackers::LinkError => e
+      rescue Hackers::LinkError => e
         @logger.error(e)
         return
       end

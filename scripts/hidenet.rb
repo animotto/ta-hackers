@@ -8,7 +8,7 @@ class Hidenet < Sandbox::Script
 
     begin
       net = @game.cmdNetGetForMaint
-    rescue Trickster::Hackers::RequestError => e
+    rescue Hackers::RequestError => e
       @logger.error("#{e}")
       return
     end
@@ -22,7 +22,7 @@ class Hidenet < Sandbox::Script
 
     begin
       @game.cmdUpdateNet(net["net"])
-    rescue Trickster::Hackers::RequestError => e
+    rescue Hackers::RequestError => e
       @logger.error("#{e}")
       return
     end

@@ -35,7 +35,7 @@ class Finmission < Sandbox::Script
       data = {
         :money => money,
         :bitcoins => bitcoins,
-        :finished => Trickster::Hackers::Game::MISSION_FINISHED,
+        :finished => Hackers::Game::MISSION_FINISHED,
         :currencies => currencies,
         :programs => mission["programs"],
       }
@@ -43,7 +43,7 @@ class Finmission < Sandbox::Script
       @logger.log("Mission #{id} finished")
       @logger.log("Money: #{@game.missionsList[id]["reward"]["money"]} + #{money}")
       @logger.log("Bitcoins: #{@game.missionsList[id]["reward"]["bitcoins"]} + #{bitcoins}")
-    rescue Trickster::Hackers::RequestError => e
+    rescue Hackers::RequestError => e
       @logger.error(e)
       return
     end
