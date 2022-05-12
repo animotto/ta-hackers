@@ -15,12 +15,14 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.11.0)
     rspec-support (3.11.0)
+    sandbox-ruby (0.1)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
   rspec
+  sandbox-ruby
 
 BUNDLED WITH
    2.1.4
