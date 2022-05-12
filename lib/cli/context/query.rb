@@ -182,6 +182,8 @@ CONTEXT_QUERY_DEL = CONTEXT_QUERY.add_command(
     next
   end
 
+  next unless shell.confirm('Are you sure?')
+
   QUERY_DUMPS.delete_at(id)
   shell.puts("Dump #{id} has been deleted")
 end
@@ -272,6 +274,8 @@ CONTEXT_QUERY_EXPORT = CONTEXT_QUERY.add_command(
     next
   end
 
+  next unless shell.confirm('Are you sure?')
+
   file = File.join(DUMPS_DIR, "#{tokens[1]}#{DUMPS_EXT}")
   File.write(file, JSON.generate(QUERY_DUMPS))
   shell.puts("Dumps have been exported to file #{tokens[1]}")
@@ -293,6 +297,8 @@ CONTEXT_QUERY_IMPORT = CONTEXT_QUERY.add_command(
     shell.puts('No such file')
     next
   end
+
+  next unless shell.confirm('Are you sure?')
 
   dump = JSON.parse(File.read(file), symbolize_names: true)
   QUERY_DUMPS.clear
@@ -319,6 +325,8 @@ CONTEXT_QUERY_RM = CONTEXT_QUERY.add_command(
     shell.puts('No such file')
     next
   end
+
+  next unless shell.confirm('Are you sure?')
 
   File.delete(file)
   shell.puts("Dumps file #{tokens[1]} has been deleted")
