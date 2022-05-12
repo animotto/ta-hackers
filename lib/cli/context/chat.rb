@@ -40,7 +40,7 @@ CONTEXT_CHAT_OPEN = CONTEXT_CHAT.add_command(
   :open,
   description: 'Open room',
   params: ['<room>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty? || GAME.appSettings.empty?
     shell.puts('Not connected')
     next
@@ -58,7 +58,7 @@ CONTEXT_CHAT_OPEN = CONTEXT_CHAT.add_command(
   }
 end
 
-CONTEXT_CHAT_OPEN.completion do |shell, tokens, line|
+CONTEXT_CHAT_OPEN.completion do |line|
   GAME.countriesList.keys.grep(/^#{Regexp.escape(line)}/)
 end
 
@@ -67,7 +67,7 @@ CONTEXT_CHAT_CLOSE = CONTEXT_CHAT.add_command(
   :close,
   description: 'Close room',
   params: ['<room>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   room = tokens[1].to_i
   unless CHAT_ROOMS.key?(room)
     shell.puts('No such opened room')
@@ -78,7 +78,7 @@ CONTEXT_CHAT_CLOSE = CONTEXT_CHAT.add_command(
   CHAT_ROOMS.delete(room)
 end
 
-CONTEXT_CHAT_CLOSE.completion do |shell, tokens, line|
+CONTEXT_CHAT_CLOSE.completion do |line|
   CHAT_ROOMS.keys.map(&:to_s).grep(/^#{Regexp.escape(line)}/)
 end
 
@@ -86,7 +86,7 @@ end
 CONTEXT_CHAT.add_command(
   :list,
   description: 'List opened rooms'
-) do |shell, context, tokens|
+) do |tokens, shell|
   if CHAT_ROOMS.empty?
     shell.puts('No opened rooms')
     next
@@ -109,7 +109,7 @@ CONTEXT_CHAT_SAY = CONTEXT_CHAT.add_command(
   :say,
   description: 'Say to the room',
   params: ['<room>', '<text>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   room = tokens[1].to_i
   unless CHAT_ROOMS.key?(room)
     @shell.puts('No such opened room')
@@ -122,7 +122,7 @@ rescue Trickster::Hackers::RequestError => e
   LOGGER.error("Chat write (#{e})")
 end
 
-CONTEXT_CHAT_SAY.completion do |shell, tokens, line|
+CONTEXT_CHAT_SAY.completion do |line|
   CHAT_ROOMS.keys.map(&:to_s).grep(/^#{Regexp.escape(line)}/)
 end
 
@@ -131,7 +131,7 @@ CONTEXT_CHAT_TALK = CONTEXT_CHAT.add_command(
   :talk,
   description: 'Talk in the room',
   params: ['<room>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   room = tokens[1].to_i
   unless CHAT_ROOMS.key?(room)
     shell.puts('No such opened room')
@@ -159,7 +159,7 @@ CONTEXT_CHAT_TALK = CONTEXT_CHAT.add_command(
   end
 end
 
-CONTEXT_CHAT_TALK.completion do |shell, tokens, line|
+CONTEXT_CHAT_TALK.completion do |line|
   CHAT_ROOMS.keys.map(&:to_s).grep(/^#{Regexp.escape(line)}/)
 end
 
@@ -168,7 +168,7 @@ CONTEXT_CHAT_USERS = CONTEXT_CHAT.add_command(
   :users,
   description: 'Show users list in the room',
   params: ['<room>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty? || GAME.appSettings.empty?
     shell.puts('Not connected')
     next
@@ -205,6 +205,6 @@ rescue Trickster::Hackers::RequestError => e
   LOGGER.error("Chat read (#{e})")
 end
 
-CONTEXT_CHAT_USERS.completion do |shell, tokens, line|
+CONTEXT_CHAT_USERS.completion do |line|
   GAME.countriesList.keys.grep(/^#{Regexp.escape(line)}/)
 end

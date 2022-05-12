@@ -6,7 +6,7 @@
 CONTEXT_PROG.add_command(
   :list,
   description: 'Show programs list'
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -53,7 +53,7 @@ end
 CONTEXT_PROG.add_command(
   :queue,
   description: 'Show programs queue'
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -102,7 +102,7 @@ CONTEXT_PROG.add_command(
   :create,
   description: 'Create program',
   params: ['<type>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -123,7 +123,7 @@ CONTEXT_PROG.add_command(
   :upgrade,
   description: 'Upgrade program',
   params: ['<id>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -143,7 +143,7 @@ CONTEXT_PROG.add_command(
   :finish,
   description: 'Finish program',
   params: ['<id>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -163,7 +163,7 @@ CONTEXT_PROG.add_command(
   :edit,
   description: 'Edit programs',
   params: ['<type>', '<amount>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -212,7 +212,7 @@ CONTEXT_PROG.add_command(
   :sync,
   description: 'Set programs queue',
   params: ['<type>', '<amount>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -271,7 +271,7 @@ CONTEXT_PROG.add_command(
   :revive,
   description: 'Revive AI program',
   params: ['<id>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next

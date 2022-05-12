@@ -67,7 +67,7 @@ CONTEXT_SCRIPT_RUN = CONTEXT_SCRIPT.add_command(
   :run,
   description: 'Run the script',
   params: ['<name>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   script = tokens[1]
 
   file = File.join(SCRIPT_DIR, "#{script}#{SCRIPT_EXT}")
@@ -79,7 +79,7 @@ CONTEXT_SCRIPT_RUN = CONTEXT_SCRIPT.add_command(
   Thread.new { script_run(shell, script, tokens[2..]) }
 end
 
-CONTEXT_SCRIPT_RUN.completion do |shell, tokens, line|
+CONTEXT_SCRIPT_RUN.completion do |line|
   files = Dir.children(SCRIPT_DIR).select { |f| f.end_with?(SCRIPT_EXT) }
   files.map! { |f| f.delete_suffix(SCRIPT_EXT) }
   files.grep(/^#{Regexp.escape(line)}/)
@@ -89,7 +89,7 @@ end
 CONTEXT_SCRIPT.add_command(
   :list,
   description: 'List scripts'
-) do |shell, context, tokens|
+) do |tokens, shell|
   scripts = []
   Dir.children(SCRIPT_DIR).sort.each do |child|
     file = File.join(SCRIPT_DIR, child)
@@ -114,7 +114,7 @@ end
 CONTEXT_SCRIPT.add_command(
   :jobs,
   description: 'List active scripts'
-) do |shell, context, tokens|
+) do |tokens, shell|
   if SCRIPT_JOBS.empty?
     shell.puts('No active jobs')
     next
@@ -131,7 +131,7 @@ CONTEXT_SCRIPT_KILL = CONTEXT_SCRIPT.add_command(
   :kill,
   description: 'Kill the script',
   params: ['<id>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   job = tokens[1].to_i
 
   unless SCRIPT_JOBS.key?(job)
@@ -153,7 +153,7 @@ CONTEXT_SCRIPT_KILL = CONTEXT_SCRIPT.add_command(
   Object.send(:remove_const, name) unless SCRIPT_JOBS.each_value.detect { |j| j[:script] == script }
 end
 
-CONTEXT_SCRIPT_KILL.completion do |shell, tokens, line|
+CONTEXT_SCRIPT_KILL.completion do |line|
   jobs = SCRIPT_JOBS.keys.map(&:to_s)
   jobs.grep(/^#{Regexp.escape(line)}/)
 end
@@ -163,7 +163,7 @@ CONTEXT_SCRIPT_ADMIN = CONTEXT_SCRIPT.add_command(
   :admin,
   description: 'Administrate the script',
   params: ['<id>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   job = tokens[1].to_i
 
   unless SCRIPT_JOBS.key?(job)
@@ -202,7 +202,7 @@ CONTEXT_SCRIPT_ADMIN = CONTEXT_SCRIPT.add_command(
   end
 end
 
-CONTEXT_SCRIPT_ADMIN.completion do |shell, tokens, line|
+CONTEXT_SCRIPT_ADMIN.completion do |line|
   jobs = SCRIPT_JOBS.keys.map(&:to_s)
   jobs.grep(/^#{Regexp.escape(line)}/)
 end

@@ -6,7 +6,7 @@
 CONTEXT_WORLD.add_command(
   :targets,
   description: 'Show targets'
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -54,7 +54,7 @@ end
 CONTEXT_WORLD.add_command(
   :new,
   description: 'Get new targets'
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -98,7 +98,7 @@ end
 CONTEXT_WORLD.add_command(
   :bonuses,
   description: 'Show bonuses'
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -139,7 +139,7 @@ CONTEXT_WORLD.add_command(
   :collect,
   description: 'Collect bonus',
   params: ['<id>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -158,7 +158,7 @@ end
 CONTEXT_WORLD.add_command(
   :goals,
   description: 'Show goals'
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -205,7 +205,7 @@ CONTEXT_WORLD.add_command(
   :update,
   description: 'Update goal',
   params: ['<id>', '<record>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -226,7 +226,7 @@ CONTEXT_WORLD.add_command(
   :reject,
   description: 'Reject goal',
   params: ['<id>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next

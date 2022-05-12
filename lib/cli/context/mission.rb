@@ -6,7 +6,7 @@
 CONTEXT_MISSION.add_command(
   :list,
   description: 'Show missions log'
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -59,7 +59,7 @@ CONTEXT_MISSION.add_command(
   :start,
   description: 'Start mission',
   params: ['<id>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -84,7 +84,7 @@ CONTEXT_MISSION.add_command(
   :reject,
   description: 'Reject mission',
   params: ['<id>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next

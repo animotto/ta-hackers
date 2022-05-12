@@ -15,7 +15,7 @@ CONTEXT_QUERY.add_command(
   :qr,
   description: 'Raw query',
   params: ['<args>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   data = {}
   tokens[1..-1].each do |token|
     GAME.config.each do |k, v|
@@ -51,7 +51,7 @@ CONTEXT_QUERY.add_command(
   :qc,
   description: 'Hashed query',
   params: ['<args>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   data = {}
   tokens[1..-1].each do |token|
     GAME.config.each do |k, v|
@@ -87,7 +87,7 @@ CONTEXT_QUERY.add_command(
   :qs,
   description: 'Session query',
   params: ['<args>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -127,7 +127,7 @@ end
 CONTEXT_QUERY.add_command(
   :dumps,
   description: 'List dumps'
-) do |shell, context, tokens|
+) do |tokens, shell|
   if QUERY_DUMPS.empty?
     shell.puts('No dumps')
     next
@@ -151,7 +151,7 @@ CONTEXT_QUERY_SHOW = CONTEXT_QUERY.add_command(
   :show,
   description: 'Show dump',
   params: ['<id>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   id = tokens[1].to_i
   if QUERY_DUMPS[id].nil?
     shell.puts('No such dump')
@@ -164,7 +164,7 @@ CONTEXT_QUERY_SHOW = CONTEXT_QUERY.add_command(
   end
 end
 
-CONTEXT_QUERY_SHOW.completion do |shell, tokens, line|
+CONTEXT_QUERY_SHOW.completion do
   list = []
   list += (0..(QUERY_DUMPS.length - 1)).to_a.map(&:to_s) unless QUERY_DUMPS.empty?
   list
@@ -175,7 +175,7 @@ CONTEXT_QUERY_DEL = CONTEXT_QUERY.add_command(
   :del,
   description: 'Delete dump',
   params: ['<id>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   id = tokens[1].to_i
   if QUERY_DUMPS[id].nil?
     shell.puts('No such dump')
@@ -186,7 +186,7 @@ CONTEXT_QUERY_DEL = CONTEXT_QUERY.add_command(
   shell.puts("Dump #{id} has been deleted")
 end
 
-CONTEXT_QUERY_DEL.completion do |shell, tokens, line|
+CONTEXT_QUERY_DEL.completion do
   list = []
   list += (0..(QUERY_DUMPS.length - 1)).to_a.map(&:to_s) unless QUERY_DUMPS.empty?
   list
@@ -197,7 +197,7 @@ CONTEXT_QUERY_RENAME = CONTEXT_QUERY.add_command(
   :rename,
   description: 'Rename dump',
   params: ['<id>', '<name>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   id = tokens[1].to_i
   if QUERY_DUMPS[id].nil?
     shell.puts('No such dump')
@@ -209,7 +209,7 @@ CONTEXT_QUERY_RENAME = CONTEXT_QUERY.add_command(
   shell.puts("Dump #{id} has been renamed")
 end
 
-CONTEXT_QUERY_RENAME.completion do |shell, tokens, line|
+CONTEXT_QUERY_RENAME.completion do
   list = []
   list += (0..(QUERY_DUMPS.length - 1)).to_a.map(&:to_s) unless QUERY_DUMPS.empty?
   list
@@ -220,7 +220,7 @@ CONTEXT_QUERY_NOTE = CONTEXT_QUERY.add_command(
   :note,
   description: 'Set a note for the dump',
   params: ['<id>', '<name>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   id = tokens[1].to_i
   if QUERY_DUMPS[id].nil?
     shell.puts('No such dump')
@@ -232,7 +232,7 @@ CONTEXT_QUERY_NOTE = CONTEXT_QUERY.add_command(
   shell.puts("Dump note #{id} has been setted")
 end
 
-CONTEXT_QUERY_NOTE.completion do |shell, tokens, line|
+CONTEXT_QUERY_NOTE.completion do
   list = []
   list += (0..(QUERY_DUMPS.length - 1)).to_a.map(&:to_s) unless QUERY_DUMPS.empty?
   list
@@ -242,7 +242,7 @@ end
 CONTEXT_QUERY.add_command(
   :list,
   description: 'List dump files'
-) do |shell, context, tokens|
+) do |tokens, shell|
   files = []
   Dir.children(DUMPS_DIR).sort.each do |child|
     next unless File.file?(File.join(DUMPS_DIR, child)) && child.end_with?(DUMPS_EXT)
@@ -266,7 +266,7 @@ CONTEXT_QUERY_EXPORT = CONTEXT_QUERY.add_command(
   :export,
   description: 'Export dumps to the file',
   params: ['<file>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if QUERY_DUMPS.empty?
     shell.puts('No dumps')
     next
@@ -277,7 +277,7 @@ CONTEXT_QUERY_EXPORT = CONTEXT_QUERY.add_command(
   shell.puts("Dumps have been exported to file #{tokens[1]}")
 end
 
-CONTEXT_QUERY_EXPORT.completion do |shell, tokens, line|
+CONTEXT_QUERY_EXPORT.completion do
   list = Dir.children(DUMPS_DIR).select { |f| File.file?(File.join(DUMPS_DIR, f)) && f.end_with?(DUMPS_EXT) }
   list.map { |f| f.delete_suffix(DUMPS_EXT) }
 end
@@ -287,7 +287,7 @@ CONTEXT_QUERY_IMPORT = CONTEXT_QUERY.add_command(
   :import,
   description: 'Import dumps from the file',
   params: ['<file>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   file = File.join(DUMPS_DIR, "#{tokens[1]}#{DUMPS_EXT}")
   unless File.file?(file)
     shell.puts('No such file')
@@ -302,7 +302,7 @@ rescue JSON::ParserError
   shell.puts('Invalid dump format')
 end
 
-CONTEXT_QUERY_IMPORT.completion do |shell, tokens, line|
+CONTEXT_QUERY_IMPORT.completion do
   list = Dir.children(DUMPS_DIR).select { |f| File.file?(File.join(DUMPS_DIR, f)) && f.end_with?(DUMPS_EXT) }
   list.map { |f| f.delete_suffix(DUMPS_EXT) }
 end
@@ -312,7 +312,7 @@ CONTEXT_QUERY_RM = CONTEXT_QUERY.add_command(
   :rm,
   description: 'Delete dump file',
   params: ['<file>']
-) do |shell, context, tokens|
+) do |tokens, shell|
 
   file = File.join(DUMPS_DIR, "#{tokens[1]}#{DUMPS_EXT}")
   unless File.file?(file)
@@ -324,7 +324,7 @@ CONTEXT_QUERY_RM = CONTEXT_QUERY.add_command(
   shell.puts("Dumps file #{tokens[1]} has been deleted")
 end
 
-CONTEXT_QUERY_RM.completion do |shell, tokens, line|
+CONTEXT_QUERY_RM.completion do
   list = Dir.children(DUMPS_DIR).select { |f| File.file?(File.join(DUMPS_DIR, f)) && f.end_with?(DUMPS_EXT) }
   list.map { |f| f.delete_suffix(DUMPS_EXT) }
 end

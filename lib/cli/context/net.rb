@@ -3,7 +3,10 @@
 ## Commands
 
 # profile
-CONTEXT_NET.add_command(:profile, description: 'Show profile') do |shell, context, tokens|
+CONTEXT_NET.add_command(
+  :profile,
+  description: 'Show profile'
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -42,7 +45,10 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # logs
-CONTEXT_NET.add_command(:logs, description: 'Show logs') do |shell, context, tokens|
+CONTEXT_NET.add_command(
+  :logs,
+  description: 'Show logs'
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -123,7 +129,10 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # readme
-CONTEXT_NET.add_command(:readme, description: 'Show readme') do |shell, context, tokens|
+CONTEXT_NET.add_command(
+  :readme,
+  description: 'Show readme'
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -146,7 +155,7 @@ CONTEXT_NET.add_command(
   :write,
   description: 'Write message to readme',
   params: ['<message>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -174,7 +183,7 @@ CONTEXT_NET.add_command(
   :remove,
   description: 'Remove message from readme',
   params: ['<id>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if tokens[1].nil?
     shell.puts('Specify message ID')
     next
@@ -209,7 +218,10 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # clear
-CONTEXT_NET.add_command(:clear, description: 'Clear readme') do |shell, context, tokens|
+CONTEXT_NET.add_command(
+  :clear,
+  description: 'Clear readme'
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -228,7 +240,10 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # nodes
-CONTEXT_NET.add_command(:nodes, description: 'Show nodes') do |shell, context, tokens|
+CONTEXT_NET.add_command(
+  :nodes,
+  description: 'Show nodes'
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -291,7 +306,7 @@ CONTEXT_NET.add_command(
   :create,
   description: 'Create node',
   params: ['<type>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -315,7 +330,7 @@ CONTEXT_NET.add_command(
   :upgrade,
   description: 'Upgrade node',
   params: ['<id>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -335,7 +350,7 @@ CONTEXT_NET.add_command(
   :finish,
   description: 'Finish node',
   params: ['<id>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     SHELL.puts('No session ID')
     next
@@ -355,7 +370,7 @@ CONTEXT_NET.add_command(
   :cancel,
   description: 'Cancel node upgrade',
   params: ['<id>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -375,7 +390,7 @@ CONTEXT_NET.add_command(
   :delete,
   description: 'Delete node',
   params: ['<id>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -399,7 +414,7 @@ CONTEXT_NET.add_command(
   :builders,
   description: 'Set node builders',
   params: ['<id>', '<amount>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -420,7 +435,7 @@ CONTEXT_NET.add_command(
   :collect,
   description: 'Collect node resources',
   params: ['[id]']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -447,7 +462,10 @@ rescue Trickster::Hackers::RequestError => e
 end
 
 # net
-CONTEXT_NET.add_command(:net, description: 'Show network structure') do |shell, context, tokens|
+CONTEXT_NET.add_command(
+  :net,
+  description: 'Show network structure'
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next

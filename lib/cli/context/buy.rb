@@ -7,7 +7,7 @@ CONTEXT_BUY.add_command(
   :skin,
   description: 'Buy skin',
   params: ['<type>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -27,7 +27,7 @@ CONTEXT_BUY.add_command(
   :shield,
   description: 'Buy shield',
   params: ['<type>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -46,7 +46,7 @@ end
 CONTEXT_BUY.add_command(
   :builder,
   description: 'Buy builder'
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -64,7 +64,7 @@ CONTEXT_BUY.add_command(
   :money,
   description: 'Buy money',
   params: ['<perc>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
@@ -84,7 +84,7 @@ CONTEXT_BUY.add_command(
   :bitcoins,
   description: 'Buy bitcoins',
   params: ['<perc>']
-) do |shell, context, tokens|
+) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
