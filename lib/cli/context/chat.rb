@@ -14,7 +14,7 @@ def chat_read(shell, room)
       chat_log(shell, room, messages)
     end
 
-    sleep(GAME.appSettings['chat_refresh_interval'].to_i)
+    sleep(GAME.app_settings.get('chat_refresh_interval').to_i)
   end
 end
 
@@ -41,7 +41,7 @@ CONTEXT_CHAT_OPEN = CONTEXT_CHAT.add_command(
   description: 'Open room',
   params: ['<room>']
 ) do |tokens, shell|
-  if GAME.sid.empty? || GAME.appSettings.empty?
+  if GAME.sid.empty? || !GAME.app_settings.loaded?
     shell.puts('Not connected')
     next
   end
@@ -169,7 +169,7 @@ CONTEXT_CHAT_USERS = CONTEXT_CHAT.add_command(
   description: 'Show users list in the room',
   params: ['<room>']
 ) do |tokens, shell|
-  if GAME.sid.empty? || GAME.appSettings.empty?
+  if GAME.sid.empty? || !GAME.app_settings.loaded?
     shell.puts('Not connected')
     next
   end

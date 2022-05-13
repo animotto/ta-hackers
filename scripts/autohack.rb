@@ -39,8 +39,8 @@ class Autohack < Sandbox::Script
 
           version = [
             @game.config["version"],
-            @game.appSettings["node types"],
-            @game.appSettings["program types"],
+            @game.app_settings.get('node types'),
+            @game.app_settings.get('program types'),
           ].join(",")
           success = Hackers::Game::SUCCESS_CORE | Hackers::Game::SUCCESS_RESOURCES | Hackers::Game::SUCCESS_CONTROL
           fight = @game.cmdFight(k, {

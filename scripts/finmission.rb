@@ -6,7 +6,7 @@ class Finmission < Sandbox::Script
     end
 
     id = @args[0].to_i
-    unless @game.missionsList.key?(id)
+    unless @game.missions_list.exist?(id)
       @logger.log("No such mission")
       return
     end
@@ -23,8 +23,8 @@ class Finmission < Sandbox::Script
         return
       end
 
-      money = @game.missionsList[id]["money"] - log[id]["money"]
-      bitcoins = @game.missionsList[id]["bitcoins"] - log[id]["bitcoins"]
+      money = @game.missions_list.money(id) - log[id]["money"]
+      bitcoins = @game.missions_list.bitcoins(id) - log[id]["bitcoins"]
 
       mission = @game.cmdGetMissionFight(id)
       currencies = Hash.new
@@ -41,8 +41,8 @@ class Finmission < Sandbox::Script
       }
       @game.cmdPlayerMissionUpdate(id, data)
       @logger.log("Mission #{id} finished")
-      @logger.log("Money: #{@game.missionsList[id]["reward"]["money"]} + #{money}")
-      @logger.log("Bitcoins: #{@game.missionsList[id]["reward"]["bitcoins"]} + #{bitcoins}")
+      @logger.log("Money: #{@game.missions_list.reward_money(id)} + #{money}")
+      @logger.log("Bitcoins: #{@game.missions_list.reward_bitcoins(id)} + #{bitcoins}")
     rescue Hackers::RequestError => e
       @logger.error(e)
       return

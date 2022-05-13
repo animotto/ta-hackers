@@ -114,27 +114,27 @@ SHELL.add_command(
   description: 'Connect to the server'
 ) do |tokens, shell|
   msg = 'Language translations'
-  GAME.transLang = GAME.cmdTransLang
+  GAME.language_translations.load
   LOGGER.log(msg)
 
   msg = 'Application settings'
-  GAME.appSettings = GAME.cmdAppSettings
+  GAME.app_settings.load
   LOGGER.log(msg)
 
-  msg = 'Node types and levels'
-  GAME.nodeTypes = GAME.cmdGetNodeTypes
+  msg = 'Node types'
+  GAME.node_types.load
   LOGGER.log(msg)
 
-  msg = 'Program types and levels'
-  GAME.programTypes = GAME.cmdGetProgramTypes
+  msg = 'Program types'
+  GAME.program_types.load
   LOGGER.log(msg)
 
   msg = 'Missions list'
-  GAME.missionsList = GAME.cmdGetMissionsList
+  GAME.missions_list.load
   LOGGER.log(msg)
 
   msg = 'Skin types'
-  GAME.skinTypes = GAME.cmdSkinTypesGetList
+  GAME.skin_types.load
   LOGGER.log(msg)
 
   msg = 'Hints list'
@@ -149,7 +149,7 @@ SHELL.add_command(
   GAME.buildersList = GAME.cmdBuildersCountGetList
   LOGGER.log(msg)
 
-  msg = 'Goals types'
+  msg = 'Goal types'
   GAME.goalsTypes = GAME.cmdGoalTypesGetList
   LOGGER.log(msg)
 
@@ -187,18 +187,18 @@ SHELL.add_command(
   :trans,
   description: 'Language translations'
 ) do |tokens, shell|
-  if GAME.transLang.empty?
+  unless GAME.language_translations.loaded?
     shell.puts('No language translations')
     next
   end
 
   shell.puts('Language translations:')
-  GAME.transLang.each do |k, v|
+  GAME.language_translations.each do |k|
     shell.puts(
       format(
         ' %-32s .. %s',
         k,
-        v
+        GAME.language_translations.get(k)
       )
     )
   end
@@ -209,18 +209,18 @@ SHELL.add_command(
   :settings,
   description: 'Application settings'
 ) do |tokens, shell|
-  if GAME.appSettings.empty?
+  unless GAME.app_settings.loaded?
     shell.puts('No application settings')
     next
   end
 
   shell.puts('Application settings:')
-  GAME.appSettings.each do |k, v|
+  GAME.app_settings.each do |k|
     shell.puts(
       format(
         ' %-32s .. %s',
         k,
-        v
+        GAME.app_settings.get(k)
       )
     )
   end
@@ -232,19 +232,19 @@ SHELL.add_command(
   description: 'Node types',
   params: ['[id]']
 ) do |tokens, shell|
-  if GAME.nodeTypes.empty?
+  unless GAME.node_types.loaded?
     shell.puts('No node types')
     next
   end
 
   unless tokens[1].nil?
     id = tokens[1].to_i
-    unless GAME.nodeTypes.key?(id)
+    unless GAME.node_types.exist?(id)
       shell.puts('No such node type')
       next
     end
 
-    shell.puts("#{GAME.nodeTypes[id]['name']}:")
+    shell.puts("#{GAME.node_types.name(id)}:")
     shell.puts(
       format(
         ' %-5s %-10s %-4s %-5s %-7s %-5s %-5s %-5s %-5s',
@@ -259,23 +259,19 @@ SHELL.add_command(
         'Limit'
       )
     )
-    GAME.nodeTypes[id]['levels'].each do |k, v|
-      limit = GAME.nodeTypes[id]['limits'].dig(k)
-      if limit.nil?
-        limits = GAME.nodeTypes[id]['limits'].sort_by {|k, v| v}
-        limit = limits.dig(-1, 1) || '-'
-      end
+    GAME.node_types.levels(id).each do |level|
+      limit = GAME.node_types.limit(id, level)
       shell.puts(
         format(
           ' %-5d %-10d %-4d %-5d %-7d %-5d %-5d %-8d %-5s',
-          k,
-          v['cost'],
-          v['core'],
-          v['experience'],
-          v['upgrade'],
-          v['connections'],
-          v['slots'],
-          v['firewall'],
+          level,
+          GAME.node_types.cost(id, level),
+          GAME.node_types.core(id, level),
+          GAME.node_types.experience(id, level),
+          GAME.node_types.upgrade(id, level),
+          GAME.node_types.connections(id, level),
+          GAME.node_types.slots(id, level),
+          GAME.node_types.firewall(id, level),
           limit
         )
       )
@@ -284,12 +280,12 @@ SHELL.add_command(
   end
 
   shell.puts('Node types:')
-  GAME.nodeTypes.each do |k, v|
+  GAME.node_types.each do |k|
     shell.puts(
       format(
         ' %-2s .. %s',
         k,
-        v["name"]
+        GAME.node_types.name(k)
       )
     )
   end
@@ -301,19 +297,19 @@ SHELL.add_command(
   description: 'Program types',
   params: ['[id]']
 ) do |tokens, shell|
-  if GAME.programTypes.empty?
+  unless GAME.program_types.loaded?
     shell.puts('No program types')
     next
   end
 
   unless tokens[1].nil?
     id = tokens[1].to_i
-    unless GAME.programTypes.key?(id)
+    unless GAME.program_types.exist?(id)
       shell.puts('No such program type')
       next
     end
 
-    shell.puts("#{GAME.programTypes[id]["name"]}:")
+    shell.puts("#{GAME.program_types.name(id)}:")
     shell.puts(
       format(
         ' %-5s %-6s %-4s %-5s %-7s %-4s %-7s %-7s %-4s %-8s %-7s',
@@ -330,21 +326,22 @@ SHELL.add_command(
         'Evolver'
       )
     )
-    GAME.programTypes[id]['levels'].each do |k, v|
+
+    GAME.program_types.levels(id).each do |level|
       shell.puts(
         format(
           ' %-5d %-6d %-4d %-5d %-7d %-4d %-7d %-7d %-4d %-8d %-7d',
-          k,
-          v['cost'],
-          v['experience'],
-          v['price'],
-          v['compile'],
-          v['disk'],
-          v['install'],
-          v['upgrade'],
-          v['rate'],
-          v['strength'],
-          v['evolver']
+          level,
+          GAME.program_types.cost(id, level),
+          GAME.program_types.experience(id, level),
+          GAME.program_types.price(id, level),
+          GAME.program_types.compile(id, level),
+          GAME.program_types.disk(id, level),
+          GAME.program_types.install(id, level),
+          GAME.program_types.upgrade(id, level),
+          GAME.program_types.rate(id, level),
+          GAME.program_types.strength(id, level),
+          GAME.program_types.evolver(id, level)
         )
       )
     end
@@ -352,12 +349,12 @@ SHELL.add_command(
   end
 
   shell.puts('Program types:')
-  GAME.programTypes.each do |k, v|
+  GAME.program_types.each do |k|
     shell.puts(
       format(
         ' %-2s .. %s',
         k,
-        v["name"]
+        GAME.program_types.name(k)
       )
     )
   end
@@ -369,49 +366,49 @@ SHELL.add_command(
   description: 'Missions list',
   params: ['[id]']
 ) do |tokens, shell|
-  if GAME.missionsList.empty?
+  unless GAME.missions_list.loaded?
     shell.puts('No missions list')
     next
   end
 
   unless tokens[1].nil?
     id = tokens[1].to_i
-    unless GAME.missionsList.key?(id)
+    unless GAME.missions_list.exist?(id)
       shell.puts('No such mission')
       next
     end
 
     shell.puts(format('%-20s %d', 'ID', id))
-    shell.puts(format('%-20s %s', 'Group', GAME.missionsList[id]['group']))
-    shell.puts(format('%-20s %s', 'Name', GAME.missionsList[id]['name']))
-    shell.puts(format('%-20s %s', 'Target', GAME.missionsList[id]['target']))
-    shell.puts(format('%-20s %d, %d', 'Coordinates', GAME.missionsList[id]['x'], GAME.missionsList[id]['y']))
-    shell.puts(format('%-20s %d (%s)', 'Country', GAME.missionsList[id]['country'], GAME.getCountryNameByID(GAME.missionsList[id]['country'])))
-    shell.puts(format('%-20s %d', 'Money', GAME.missionsList[id]['money']))
-    shell.puts(format('%-20s %d', 'Bitcoins', GAME.missionsList[id]['bitcoins']))
+    shell.puts(format('%-20s %s', 'Group', GAME.missions_list.group(id)))
+    shell.puts(format('%-20s %s', 'Name', GAME.missions_list.name(id)))
+    shell.puts(format('%-20s %s', 'Target', GAME.missions_list.target(id)))
+    shell.puts(format('%-20s %d, %d', 'Coordinates', GAME.missions_list.x(id), GAME.missions_list.y(id)))
+    shell.puts(format('%-20s %d (%s)', 'Country', GAME.missions_list.country(id), GAME.getCountryNameByID(GAME.missions_list.country(id))))
+    shell.puts(format('%-20s %d', 'Money', GAME.missions_list.money(id)))
+    shell.puts(format('%-20s %d', 'Bitcoins', GAME.missions_list.bitcoins(id)))
     shell.puts(format('Requirements'))
-    shell.puts(format(' %-20s %s', 'Mission', GAME.missionsList[id]['requirements']['mission']))
-    shell.puts(format(' %-20s %d', 'Core', GAME.missionsList[id]['requirements']['core']))
-    shell.puts(format('%-20s %s', 'Goals', GAME.missionsList[id]['goals'].join(', ')))
+    shell.puts(format(' %-20s %s', 'Mission', GAME.missions_list.required_mission(id)))
+    shell.puts(format(' %-20s %d', 'Core', GAME.missions_list.required_core(id)))
+    shell.puts(format('%-20s %s', 'Goals', GAME.missions_list.goals(id).join(', ')))
     shell.puts(format('Reward'))
-    shell.puts(format(' %-20s %d', 'Money', GAME.missionsList[id]['reward']['money']))
-    shell.puts(format(' %-20s %d', 'Bitcoins', GAME.missionsList[id]['reward']['bitcoins']))
+    shell.puts(format(' %-20s %d', 'Money', GAME.missions_list.reward_money(id)))
+    shell.puts(format(' %-20s %d', 'Bitcoins', GAME.missions_list.reward_bitcoins(id)))
     shell.puts(format('Messages'))
-    shell.puts(format(' %-20s %s', 'Begin', GAME.missionsList[id]['messages']['begin']))
-    shell.puts(format(' %-20s %s', 'End', GAME.missionsList[id]['messages']['end']))
-    shell.puts(format(' %-20s %s', 'News', GAME.missionsList[id]['messages']['news']))
+    shell.puts(format(' %-20s %s', 'Begin', GAME.missions_list.message_begin(id)))
+    shell.puts(format(' %-20s %s', 'End', GAME.missions_list.message_end(id)))
+    shell.puts(format(' %-20s %s', 'News', GAME.missions_list.message_news(id)))
     next
   end
 
   shell.puts('Missions list:')
-  GAME.missionsList.each do |k, v|
+  GAME.missions_list.each do |k|
     shell.puts(
       format(
         ' %-4d .. %-15s %-15s %s',
         k,
-        v['group'],
-        v['name'],
-        v['target']
+        GAME.missions_list.group(k),
+        GAME.missions_list.name(k),
+        GAME.missions_list.target(k)
       )
     )
   end
@@ -422,20 +419,20 @@ SHELL.add_command(
   :skins,
   description: 'Skin types'
 ) do |tokens, shell|
-  if GAME.skinTypes.empty?
+  unless GAME.skin_types.loaded?
     shell.puts('No skin types')
     next
   end
 
   shell.puts('Skin types:')
-  GAME.skinTypes.each do |k, v|
+  GAME.skin_types.each do |skin|
     shell.puts(
       format(
         ' %-7d .. %s, %d, %d',
-        k,
-        v['name'],
-        v['price'],
-        v['rank']
+        skin,
+        GAME.skin_types.name(skin),
+        GAME.skin_types.price(skin),
+        GAME.skin_types.rank(skin)
       )
     )
   end
@@ -749,7 +746,7 @@ SHELL.add_command(
         v['type'],
         v['level'],
         v['timer'],
-        GAME.nodeTypes[v['type']]['name']
+        GAME.node_types.name(v['type'])
       )
     )
   end

@@ -38,7 +38,7 @@ CONTEXT_NET.add_command(
   end
   shell.puts('  Skins:') unless net['skins'].empty?
   net['skins'].each do |skin|
-    shell.puts(format('   %-3d %-15s', skin, GAME.skinTypes[skin]['name']))
+    shell.puts(format('   %-3d %-15s', skin, GAME.skin_types.name(skin)))
   end
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
@@ -265,32 +265,32 @@ CONTEXT_NET.add_command(
     )
   )
 
-  production = GAME.nodeTypes.select { |k, v| v['titles'][0] == Hackers::Game::PRODUCTION_TITLE }
   net['nodes'].each do |k, v|
     timer = String.new
     if v['timer'].negative?
       timer += "\e[32m" + "\u25b0" * v['builders'] + "\e[37m" + "\u25b1" * (net['profile'].builders - v['builders']) + "\e[0m " unless v['builders'].nil?
       timer += GAME.timerToDHMS(v['timer'] * -1)
     else
-      if production.key?(v['type'])
-        level = production[v['type']]['levels'][v['level']]
-        case level['data'][0]
+      if GAME.node_types.production?(v['type'])
+        data = GAME.node_types.data(v['type'], v['level'])
+        case data[0]
         when Hackers::Game::CURRENCY_MONEY
           timer += "\e[33m$ "
         when Hackers::Game::CURRENCY_BITCOINS
           timer += "\e[31m\u20bf "
         end
-        produced = (level['data'][2].to_f / 60 / 60 * v['timer']).to_i
-        timer += produced < level['data'][1] ? produced.to_s : level['data'][1].to_s
-        timer += '/' + level['data'][1].to_s
+        produced = (data[2].to_f / 60 / 60 * v['timer']).to_i
+        timer += produced < data[1] ? produced.to_s : data[1].to_s
+        timer += '/' + data[1].to_s
         timer += "\e[0m"
       end
     end
+
     shell.puts(
       format(
         '  %-12d %-12s %-4d %-5d %-17s',
         k,
-        GAME.nodeTypes[v['type']]['name'],
+        GAME.node_types.name(v['type']),
         v['type'],
         v['level'],
         timer
@@ -500,7 +500,7 @@ CONTEXT_NET.add_command(
         '  %-5d %-12d %-12s %-5d %-+4d %-+4d %-+4d %s',
         i,
         id,
-        GAME.nodeTypes[type]['name'],
+        GAME.node_types.name(type),
         type,
         net['net'][i]['x'],
         net['net'][i]['y'],

@@ -67,7 +67,7 @@ CONTEXT_MISSION.add_command(
 
   id = tokens[1].to_i
 
-  unless GAME.missionsList.key?(id)
+  unless GAME.missions_list.exist?(id)
     shell.puts('No such mission')
     next
   end
@@ -91,7 +91,7 @@ CONTEXT_MISSION.add_command(
   end
 
   id = tokens[1].to_i
-  unless GAME.missionsList.key?(id)
+  unless GAME.missions_list.exist?(id)
     shell.puts('No such mission')
     next
   end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Hackers
   ##
   # Game API implementation
@@ -14,11 +16,12 @@ module Hackers
     CURRENCY_MONEY = 0
     CURRENCY_BITCOINS = 1
 
-    PRODUCTION_TITLE = "CurrencyProduction"
+    attr_reader :api, :app_settings, :node_types,
+                :language_translations, :program_types,
+                :missions_list, :skin_types
 
-    attr_accessor :config, :appSettings, :transLang,
-      :nodeTypes, :programTypes, :missionsList,
-      :skinTypes, :hintsList, :experienceList,
+    attr_accessor :config,
+      :hintsList, :experienceList,
       :buildersList, :goalsTypes, :shieldTypes,
       :rankList, :countriesList, :sid, :syncSeq,
       :client
@@ -26,12 +29,6 @@ module Hackers
     def initialize(config)
       @config = config
       @sid = String.new
-      @appSettings = Hash.new
-      @transLang = Hash.new
-      @nodeTypes = Hash.new
-      @programTypes = Hash.new
-      @missionsList = Hash.new
-      @skinTypes = Hash.new
       @hintsList = Hash.new
       @experienceList = Hash.new
       @buildersList = Hash.new
@@ -47,6 +44,27 @@ module Hackers
         @config["url"], 
         @config["salt"], 
       )
+
+      #### NOTE: REFACTORING!
+
+      api_config = {}
+      api_config[:host] = @config['host'] if @config.key?('host')
+      api_config[:port] = @config['port'] if @config.key?('port')
+      api_config[:ssl] = @config.key?('ssl')
+      api_config[:path] = @config['url'] if @config.key?('url')
+      api_config[:salt] = @config['salt'] if @config.key?('salt')
+      api_config[:version] = @config['version'] if @config.key?('version')
+      api_config[:language] = @config['language'] if @config.key?('language')
+      api_config[:platform] = @config['platform'] if @config.key?('platform')
+
+      @api = API.new(**api_config)
+
+      @app_settings = AppSettings.new(@api)
+      @language_translations = LanguageTranslations.new(@api)
+      @node_types = NodeTypes.new(@api)
+      @program_types = ProgramTypes.new(@api)
+      @missions_list = MissionsList.new(@api)
+      @skin_types = SkinTypes.new(@api)
     end
 
     ##
@@ -90,77 +108,6 @@ module Hackers
     #   room = Room ID
     def getChat(room)
       Chat.new(self, room)
-    end
-
-    ##
-    # Gets translations by specified language
-    #
-    # Returns Serializer#parseTransLang
-    def cmdTransLang
-      params = {
-        "i18n_translations_get_language"  => 1,
-        "language_code"                   => @config["language"],
-        "app_version"                     => @config["version"],
-      }
-      response = @client.request_cmd(params)
-      serializer = Serializer.new(response)
-      return serializer.parseTransLang(0)
-    end
-
-    ##
-    # Gets application settings
-    #
-    # Returns Serializer#parseAppSettings
-    def cmdAppSettings
-      params = {
-        "app_setting_get_list"  => 1,
-        "app_version"           => @config["version"],
-      }
-      response = @client.request_cmd(params)
-      serializer = Serializer.new(response)
-      return serializer.parseAppSettings(0)
-    end
-
-    ##
-    # Gets node types list
-    #
-    # Returns Serializer#parseNodeTypes
-    def cmdGetNodeTypes
-      params = {
-        "get_node_types_and_levels" => 1,
-        "app_version"               => @config["version"],
-      }
-      response = @client.request_cmd(params)
-      serializer = Serializer.new(response)
-      return serializer.parseNodeTypes
-    end
-
-    ##
-    # Gets program types list
-    #
-    # Returns Serializer#parseProgramTypes
-    def cmdGetProgramTypes
-      params = {
-        "get_program_types_and_levels"  => 1,
-        "app_version"                   => @config["version"],
-      }
-      response = @client.request_cmd(params)
-      serializer = Serializer.new(response)
-      return serializer.parseProgramTypes
-    end
-
-    ##
-    # Gets missions list
-    #
-    # Returns Serializer#parseMissionsList
-    def cmdGetMissionsList
-      params = {
-        "missions_get_list" => 1,
-        "app_version"       => @config["version"],
-      }
-      response = @client.request_cmd(params)
-      serializer = Serializer.new(response)
-      return serializer.parseMissionsList
     end
 
     ##
@@ -944,20 +891,6 @@ module Hackers
       }
       response = @client.request_session(params, @sid)
       return response
-    end
-
-    ##
-    # Gets skin types list
-    #
-    # Returns Serializer#parseSkinTypes
-    def cmdSkinTypesGetList
-      params = {
-        "skin_types_get_list" => "",
-        "app_version"         => @config["version"],
-      }
-      response = @client.request_cmd(params)
-      serializer = Serializer.new(response)
-      return serializer.parseSkinTypes
     end
 
     ##

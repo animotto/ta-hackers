@@ -18,14 +18,14 @@ class Replay < Sandbox::Script
 
     @logger.log("\u25cf Programs")
     replay["programs"].each do |program|
-      @logger.log("#{@game.programTypes[program["type"]]["name"]}: #{program["amount"]} (#{program["level"]})")
+      @logger.log("#{@game.program_types.name(program["type"])}: #{program["amount"]} (#{program["level"]})")
     end
 
     @logger.log("\u25cf Trace")
     replay["trace"].each do |t|
       m = "#{t["type"]}: #{t["time"]}"
       m += " -> #{t["node"]}" unless t["node"].nil?
-      m += " (#{@game.programTypes[t["program"]]["name"]})" unless t["program"].nil?
+      m += " (#{@game.program_types.name(t["program"])})" unless t["program"].nil?
       m += " (#{t["index"]})" unless t["index"].nil?
       @logger.log(m)
     end

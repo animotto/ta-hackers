@@ -38,7 +38,7 @@ class Network < Sandbox::Script
         "  %-5d %-12d %-12s %-5d %-+4d %-+4d %-+4d %s" % [
           i,
           id,
-          @game.nodeTypes[type]["name"],
+          @game.node_types.name(type),
           type,
           net["net"][i]["x"],
           net["net"][i]["y"],
