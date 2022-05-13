@@ -46,9 +46,9 @@ def script_run(shell, script, args)
   end
 
   SCRIPT_JOBS.delete(job)
-  return if !SCRIPT_JOBS.each_value.detect { |j| j[:script] == script } && Object.const_defined?(name)
+  return if SCRIPT_JOBS.values.detect { |j| j[:script] == script }
 
-  Object.send(:remove_const, name)
+  Object.send(:remove_const, name) if Object.const_defined?(name)
 end
 
 def script_log_backtrace(script, job, e)

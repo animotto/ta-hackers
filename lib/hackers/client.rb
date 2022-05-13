@@ -19,8 +19,8 @@ module Hackers
 
     ##
     # Creates a new client
-    def initialize(host, port, ssl, uri, salt, amount = 5)
-      @uri = uri
+    def initialize(host, port, ssl, path, salt, amount = 5)
+      @path = path
       @salt = salt
       @clients = {}
       amount.times do
@@ -33,7 +33,7 @@ module Hackers
     ##
     # Generates a raw URI
     def generate_uri_raw(params)
-      "#{@uri}?#{URI.encode_www_form(params)}"
+      "#{@path}?#{URI.encode_www_form(params)}"
     end
 
     ##
@@ -114,7 +114,7 @@ module Hackers
     ##
     # Creates a new exception
     def initialize(type = nil, description = nil)
-      super
+      super(nil)
       @type = type&.strip
       @description = description&.strip
     end

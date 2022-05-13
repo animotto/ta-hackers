@@ -23,16 +23,21 @@ The sandbox consists of the following contexts:
 
 ## How to run it
 
+Clone the repository to your local machine and prepare the environment:
 ```console
 git clone https://github.com/animotto/ta-hackers
 cd ta-hackers
 bundle install
 export RUBYLIB=$PWD/lib
+```
 
-# Create a new account and write the credentials to the config named 'my'
+Create a new account and write the credentials to the config named *my*:
+```console
 ./bin/sandbox -n my
+```
 
-# Run the sandbox with the config 'my'
+Run the sandbox with the config *my*:
+```console
 ./bin/sandbox -c my
 ```
 
