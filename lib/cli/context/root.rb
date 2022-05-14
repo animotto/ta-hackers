@@ -214,13 +214,15 @@ SHELL.add_command(
     next
   end
 
+  shell.puts("Datetime: #{GAME.app_settings.datetime}")
+
   shell.puts('Application settings:')
-  GAME.app_settings.each do |k|
+  GAME.app_settings.each do |name|
     shell.puts(
       format(
         ' %-32s .. %s',
-        k,
-        GAME.app_settings.get(k)
+        name,
+        GAME.app_settings.get(name)
       )
     )
   end

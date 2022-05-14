@@ -78,14 +78,12 @@ module Hackers
     ##
     # Gets application settings
     def app_settings
-      params = {
-        'app_setting_get_list' => 1,
-        'app_version' => @version
-      }
-
-      response = @client.request_cmd(params)
-      serializer = Serializer.new(response)
-      serializer.parseAppSettings(0)
+      response = @client.request_cmd(
+        {
+          'app_setting_get_list' => 1,
+          'app_version' => @version
+        }
+      )
     end
 
     ##

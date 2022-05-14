@@ -14,7 +14,7 @@ def chat_read(shell, room)
       chat_log(shell, room, messages)
     end
 
-    sleep(GAME.app_settings.get('chat_refresh_interval').to_i)
+    sleep(GAME.app_settings.get('chat_refresh_interval'))
   end
 end
 
