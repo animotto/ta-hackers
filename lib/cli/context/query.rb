@@ -17,7 +17,7 @@ CONTEXT_QUERY.add_command(
   params: ['<args>']
 ) do |tokens, shell|
   params = {}
-  tokens[1..-1].each do |token|
+  tokens[1..].each do |token|
     GAME.config.each do |k, v|
       token.gsub!("%#{k}%", v.to_s)
     end
@@ -34,11 +34,11 @@ CONTEXT_QUERY.add_command(
 
   QUERY_DUMPS.append(
     {
-      :name => "Dump#{QUERY_DUMPS.length}",
-      :note => '',
-      :datetime => Time.now.to_s,
-      :query => query,
-      :data => Base64.encode64(response)
+      name: "Dump#{QUERY_DUMPS.length}",
+      note: '',
+      datetime: Time.now.to_s,
+      query: query,
+      data: Base64.encode64(response)
     }
   )
 rescue Hackers::RequestError => e
@@ -52,7 +52,7 @@ CONTEXT_QUERY.add_command(
   params: ['<args>']
 ) do |tokens, shell|
   params = {}
-  tokens[1..-1].each do |token|
+  tokens[1..].each do |token|
     GAME.config.each do |k, v|
       token.gsub!("%#{k}%", v.to_s)
     end
@@ -69,11 +69,11 @@ CONTEXT_QUERY.add_command(
 
   QUERY_DUMPS.append(
     {
-      :name => "Dump#{QUERY_DUMPS.length}",
-      :note => '',
-      :datetime => Time.now.to_s,
-      :query => query,
-      :data => Base64.encode64(response)
+      name: "Dump#{QUERY_DUMPS.length}",
+      note: '',
+      datetime: Time.now.to_s,
+      query: query,
+      data: Base64.encode64(response)
     }
   )
 rescue Hackers::RequestError => e
@@ -92,7 +92,7 @@ CONTEXT_QUERY.add_command(
   end
 
   params = {}
-  tokens[1..-1].each do |token|
+  tokens[1..].each do |token|
     GAME.config.each do |k, v|
       token.gsub!("%#{k}%", v.to_s)
     end
@@ -109,11 +109,11 @@ CONTEXT_QUERY.add_command(
 
   QUERY_DUMPS.append(
     {
-      :name => "Dump#{QUERY_DUMPS.length}",
-      :note => '',
-      :datetime => Time.now.to_s,
-      :query => query,
-      :data => Base64.encode64(response)
+      name: "Dump#{QUERY_DUMPS.length}",
+      note: '',
+      datetime: Time.now.to_s,
+      query: query,
+      data: Base64.encode64(response)
     }
   )
 rescue Hackers::RequestError => e
@@ -124,13 +124,13 @@ end
 CONTEXT_QUERY.add_command(
   :dumps,
   description: 'List dumps'
-) do |tokens, shell|
+) do |_tokens, shell|
   if QUERY_DUMPS.empty?
     shell.puts('No dumps')
     next
   end
 
-  shell.puts("Dumps:")
+  shell.puts('Dumps:')
   QUERY_DUMPS.each_with_index do |dump, i|
     shell.puts(
       format(
@@ -203,7 +203,7 @@ CONTEXT_QUERY_RENAME = CONTEXT_QUERY.add_command(
     next
   end
 
-  name = tokens[2..-1].join(' ')
+  name = tokens[2..].join(' ')
   QUERY_DUMPS[id][:name] = name
   shell.puts("Dump #{id} has been renamed")
 end
@@ -226,7 +226,7 @@ CONTEXT_QUERY_NOTE = CONTEXT_QUERY.add_command(
     next
   end
 
-  note = tokens[2..-1].join(' ')
+  note = tokens[2..].join(' ')
   QUERY_DUMPS[id][:note] = note
   shell.puts("Dump note #{id} has been setted")
 end
@@ -241,10 +241,11 @@ end
 CONTEXT_QUERY.add_command(
   :list,
   description: 'List dump files'
-) do |tokens, shell|
+) do |_tokens, shell|
   files = []
   Dir.children(DUMPS_DIR).sort.each do |child|
     next unless File.file?(File.join(DUMPS_DIR, child)) && child.end_with?(DUMPS_EXT)
+
     child.delete_suffix!(DUMPS_EXT)
     files << child
   end
@@ -316,7 +317,6 @@ CONTEXT_QUERY_RM = CONTEXT_QUERY.add_command(
   description: 'Delete dump file',
   params: ['<file>']
 ) do |tokens, shell|
-
   file = File.join(DUMPS_DIR, "#{tokens[1]}#{DUMPS_EXT}")
   unless File.file?(file)
     shell.puts('No such file')
@@ -332,4 +332,39 @@ end
 CONTEXT_QUERY_RM.completion do
   list = Dir.children(DUMPS_DIR).select { |f| File.file?(File.join(DUMPS_DIR, f)) && f.end_with?(DUMPS_EXT) }
   list.map { |f| f.delete_suffix(DUMPS_EXT) }
+end
+
+# format
+CONTEXT_QUERY_FORMAT = CONTEXT_QUERY.add_command(
+  :format,
+  description: 'Print formatted dump data',
+  params: ['<id>', '[section]', '[record]']
+) do |tokens, shell|
+  id = tokens[1].to_i
+  if QUERY_DUMPS[id].nil?
+    shell.puts('No such dump')
+    next
+  end
+
+  serializer = Hackers::Serializer.new(Base64.decode64(QUERY_DUMPS[id][:data]))
+
+  serializer.fields.each_with_index do |section, i|
+    next if !tokens[2].nil? && tokens[2].to_i != i
+
+    shell.puts("{#{i}}")
+    section.each_with_index do |record, j|
+      next if !tokens[3].nil? && tokens[3].to_i != j
+
+      shell.puts(" (#{j})")
+      record.each_with_index do |field, k|
+        shell.puts("  [#{k}] #{field}")
+      end
+    end
+  end
+end
+
+CONTEXT_QUERY_FORMAT.completion do
+  list = []
+  list += (0..(QUERY_DUMPS.length - 1)).to_a.map(&:to_s) unless QUERY_DUMPS.empty?
+  list
 end
