@@ -98,14 +98,12 @@ module Hackers
     ##
     # Gets program types
     def program_types
-      params = {
-        'get_program_types_and_levels' => 1,
-        'app_version' => @version
-      }
-
-      response = @client.request_cmd(params)
-      serializer = Serializer.new(response)
-      serializer.parseProgramTypes
+      @client.request_cmd(
+        {
+          'get_program_types_and_levels' => 1,
+          'app_version' => @version
+        }
+      )
     end
 
     ##

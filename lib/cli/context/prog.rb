@@ -37,7 +37,7 @@ CONTEXT_PROG.add_command(
       format(
         '  %-12d %-12s %-4d %-6d %-5d %-12s',
         k,
-        GAME.program_types.name(v['type']),
+        GAME.program_types.get(v['type']).name,
         v['type'],
         v['amount'],
         v['level'],
@@ -77,12 +77,13 @@ CONTEXT_PROG.add_command(
   total = 0
   net['queue'].each do |queue|
     id, program = net['programs'].detect { |k, v| v['type'] == queue['type']}
-    compile = GAME.program_types.compile(queue['type'], program['level'])
+    program_type = GAME.program_types.get(queue['type'])
+    compile = program_type.compilation_time(program['level'])
     total += queue['amount'] * compile - queue['timer']
     shell.puts(
       format(
         '  %-12s %-4d %-6d %-5d',
-        GAME.program_types.name(queue['type']),
+        program_type.name,
         queue['type'],
         queue['amount'],
         compile - queue['timer']
@@ -197,7 +198,7 @@ CONTEXT_PROG.add_command(
     shell.puts(
       format(
         '  %-12s %-4d %-6d',
-        GAME.program_types.name(k),
+        GAME.program_types.get(k).name,
         k,
         v["amount"]
       )
@@ -246,12 +247,13 @@ CONTEXT_PROG.add_command(
   total = 0
   sync['queue'].each do |queue|
     id, program = sync['programs'].detect { |k, v| v['type'] == queue['type'] }
-    compile = GAME.program_types.compile(queue['type'], program['level'])
+    program_type = GAME.program_types.get(queue['type'])
+    compile = program_type.compilation_time(program['level'])
     total += queue['amount'] * compile - queue['timer']
     shell.puts(
       format(
         '  %-12s %-4d %-6d %-5d',
-        GAME.program_types.name(queue['type']),
+        program_type.name,
         queue['type'],
         queue['amount'],
         compile - queue['timer']

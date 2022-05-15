@@ -309,39 +309,37 @@ SHELL.add_command(
       next
     end
 
-    shell.puts("#{GAME.program_types.name(id)}:")
+    program_type = GAME.program_types.get(id)
+
+    shell.puts("#{program_type.name}:")
     shell.puts(
       format(
-        ' %-5s %-6s %-4s %-5s %-7s %-4s %-7s %-7s %-4s %-8s %-7s',
+        ' %-5s %-8s %-4s %-5s %-7s %-4s %-7s %-8s %-7s',
         'Level',
-        'Cost',
+        'Upgrade',
         'Exp',
         'Price',
         'Compile',
         'Disk',
         'Install',
-        'Upgrade',
-        'Rate',
-        'Strength',
+        'Research',
         'Evolver'
       )
     )
 
-    GAME.program_types.levels(id).each do |level|
+    program_type.levels.each do |level|
       shell.puts(
         format(
-          ' %-5d %-6d %-4d %-5d %-7d %-4d %-7d %-7d %-4d %-8d %-7d',
+          ' %-5d %-8d %-4d %-5d %-7d %-4d %-7.1f %-8s %-7d',
           level,
-          GAME.program_types.cost(id, level),
-          GAME.program_types.experience(id, level),
-          GAME.program_types.price(id, level),
-          GAME.program_types.compile(id, level),
-          GAME.program_types.disk(id, level),
-          GAME.program_types.install(id, level),
-          GAME.program_types.upgrade(id, level),
-          GAME.program_types.rate(id, level),
-          GAME.program_types.strength(id, level),
-          GAME.program_types.evolver(id, level)
+          program_type.upgrade_cost(level),
+          program_type.experience_gained(level),
+          program_type.compilation_price(level),
+          program_type.compilation_time(level),
+          program_type.disk_space(level),
+          program_type.install_time(level),
+          program_type.research_time(level),
+          program_type.required_evolver_level(level)
         )
       )
     end
@@ -349,12 +347,12 @@ SHELL.add_command(
   end
 
   shell.puts('Program types:')
-  GAME.program_types.each do |k|
+  GAME.program_types.each do |program|
     shell.puts(
       format(
         ' %-2s .. %s',
-        k,
-        GAME.program_types.name(k)
+        program.type,
+        program.name
       )
     )
   end

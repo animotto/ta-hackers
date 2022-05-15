@@ -273,7 +273,7 @@ CONTEXT_NET.add_command(
       timer += "\e[32m" + "\u25b0" * v['builders'] + "\e[37m" + "\u25b1" * (net['profile'].builders - v['builders']) + "\e[0m " unless v['builders'].nil?
       timer += GAME.timerToDHMS(v['timer'] * -1)
     else
-      if node_type.kind_of?(Hackers::ProductionNode)
+      if node_type.kind_of?(Hackers::NodeTypes::Production)
         case node_type.production_currency(v['level'])
         when Hackers::Game::CURRENCY_MONEY
           timer += "\e[33m$ "

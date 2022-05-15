@@ -61,8 +61,8 @@ module Hackers
 
       @app_settings = AppSettings.new(@api)
       @language_translations = LanguageTranslations.new(@api)
-      @node_types = NodeTypes.new(@api)
-      @program_types = ProgramTypes.new(@api)
+      @node_types = NodeTypes::List.new(@api)
+      @program_types = ProgramTypes::List.new(@api)
       @missions_list = MissionsList.new(@api)
       @skin_types = SkinTypes.new(@api)
     end

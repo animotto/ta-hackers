@@ -10,7 +10,7 @@ raw_data = Base64.decode64(data['raw_data'])
 
 RSpec.describe Hackers::NodeTypes do
   api = Hackers::API.new
-  node_types = described_class.new(api)
+  node_types = described_class::List.new(api)
   node_types.raw_data = raw_data
   node_types.send(:parse)
 
@@ -21,10 +21,6 @@ RSpec.describe Hackers::NodeTypes do
 
     it "Name #{k}" do
       expect(node_types.send(k.to_sym).name).to eq(v['name'])
-    end
-
-    it "Production #{k}" do
-      expect(node_types.send(k.to_sym).production?).to eq(v['production'])
     end
 
     it "Levels #{k}" do
@@ -106,7 +102,7 @@ RSpec.describe Hackers::NodeTypes do
     it "Production currency #{k}" do
       next unless v.key?('production_currency')
 
-      next unless node_types.send(k.to_sym).kind_of?(Hackers::ProductionNode)
+      next unless node_types.send(k.to_sym).kind_of?(described_class::Production)
 
       v['production_currency'].each do |level, currency|
         expect(node_types.send(k.to_sym).production_currency(level)).to eq(currency)
@@ -116,7 +112,7 @@ RSpec.describe Hackers::NodeTypes do
     it "Production limit #{k}" do
       next unless v.key?('production_limit')
 
-      next unless node_types.send(k.to_sym).kind_of?(Hackers::ProductionNode)
+      next unless node_types.send(k.to_sym).kind_of?(described_class::Production)
 
       v['production_limit'].each do |level, limit|
         expect(node_types.send(k.to_sym).production_limit(level)).to eq(limit)
@@ -126,7 +122,7 @@ RSpec.describe Hackers::NodeTypes do
     it "Production speed #{k}" do
       next unless v.key?('production_speed')
 
-      next unless node_types.send(k.to_sym).kind_of?(Hackers::ProductionNode)
+      next unless node_types.send(k.to_sym).kind_of?(described_class::Production)
 
       v['production_speed'].each do |level, speed|
         expect(node_types.send(k.to_sym).production_speed(level)).to eq(speed)
@@ -136,7 +132,7 @@ RSpec.describe Hackers::NodeTypes do
     it "Exfiltration amount #{k}" do
       next unless v.key?('exfiltration_amount')
 
-      next unless node_types.send(k.to_sym).kind_of?(Hackers::BusinessNode)
+      next unless node_types.send(k.to_sym).kind_of?(described_class::Business)
 
       v['exfiltration_amount'].each do |level, amount|
         expect(node_types.send(k.to_sym).exfiltration_amount(level)).to eq(amount)

@@ -1,67 +1,344 @@
 # frozen_string_literal: true
 
 module Hackers
-  ##
-  # Program types
-  class ProgramTypes < Dataset
-    def load
-      @raw_data = @api.program_types
+  module ProgramTypes
+    ION_CANON = 3
+    SHURIKEN = 4
+    WORMS = 5
+    BLASTER = 6
+    SHOCK = 7
+    DATA_LEECH = 8
+    BATTERING_RAM = 9
+    MANIAC = 10
+    ICE_WALL = 11
+    PROTECTOR = 12
+    SENTRY = 13
+    BLACK_ICE = 14
+    GUARDIAN = 15
+    CODE_GATE = 16
+    TURRET = 17
+    ACCESS = 18
+    PORTAL = 19
+    WRAITH = 20
+    KRAKEN = 21
+    AI_OFFENSIVE = 22
+    AI_DEFENSIVE = 23
+    AI_STEALTH = 24
+
+    ##
+    # List
+    class List < Dataset
+
+      attr_reader :ion_canon, :shuriken, :worms, :blaster,
+                  :shock, :data_leech, :battering_ram,
+                  :maniac, :ice_wall, :protector, :sentry,
+                  :black_ice, :guardian, :code_gate, :turret,
+                  :access, :portal, :wraith, :kraken,
+                  :ai_offensive, :ai_defensive, :ai_stealth
+
+      def initialize(*)
+        super
+
+        @programs = []
+      end
+
+      def load
+        @raw_data = @api.program_types
+        parse
+      end
+
+      def exist?(type)
+        @programs.any? { |p| p.type == type }
+      end
+
+      def each(&block)
+        @programs.each(&block)
+      end
+
+      def get(type)
+        @programs.detect { |p| p.type == type }
+      end
+
+      private
+
+      def parse
+        data = Serializer.parseData(@raw_data)
+
+        @programs.clear
+        @programs << @ion_canon = IonCannon.new(data)
+        @programs << @shuriken = Shuriken.new(data)
+        @programs << @worms = Worms.new(data)
+        @programs << @blaster = Blaster.new(data)
+        @programs << @shock = Shock.new(data)
+        @programs << @data_leech = DataLeech.new(data)
+        @programs << @battering_ram = BatteringRam.new(data)
+        @programs << @maniac = Maniac.new(data)
+        @programs << @ice_wall = IceWall.new(data)
+        @programs << @protector = Protector.new(data)
+        @programs << @sentry = Sentry.new(data)
+        @programs << @black_ice = BlackIce.new(data)
+        @programs << @guardian = Guardian.new(data)
+        @programs << @code_gate = CodeGate.new(data)
+        @programs << @turret = Turret.new(data)
+        @programs << @access = Access.new(data)
+        @programs << @portal = Portal.new(data)
+        @programs << @wraith = Wraith.new(data)
+        @programs << @kraken = Kraken.new(data)
+        @programs << @ai_offensive = AIOffensive.new(data)
+        @programs << @ai_defensive = AIDefensive.new(data)
+        @programs << @ai_stealth = AIStealth.new(data)
+      end
     end
 
-    def exist?(type)
-      @raw_data.key?(type)
+    ##
+    # Type
+    class Type
+      def initialize(data)
+        @data = data
+      end
+
+      def type
+        self.class::ID
+      end
+
+      def levels
+        records = @data[1].select { |r| r[1].to_i == type }
+        records.map { |r| r[2].to_i }
+      end
+
+      def name
+        record = find_record_general
+        record[2]
+      end
+
+      def upgrade_cost(level)
+        record = find_record_level(level)
+        record[3].to_i
+      end
+
+      def experience_gained(level)
+        record = find_record_level(level)
+        record[4].to_i
+      end
+
+      def compilation_price(level)
+        record = find_record_level(level)
+        record[5].to_i
+      end
+
+      def compilation_time(level)
+        record = find_record_level(level)
+        record[6].to_i
+      end
+
+      def disk_space(level)
+        record = find_record_level(level)
+        record[7].to_i
+      end
+
+      def install_time(level)
+        record = find_record_level(level)
+        record[8].to_i / 10.0
+      end
+
+      def research_time(level)
+        record = find_record_level(level)
+        record[9].to_i
+      end
+
+      def required_evolver_level(level)
+        record = find_record_level(level)
+        record[17].to_i
+      end
+
+      private
+
+      def find_record_general
+        @data[0].detect { |r| r[0].to_i == type }
+      end
+
+      def find_record_level(level)
+        @data[1].detect { |r| r[1].to_i == type && r[2].to_i == level }
+      end
     end
 
-    def each(&block)
-      @raw_data.keys.each(&block)
+    ##
+    # Offensive
+    class Offensive < Type
+      def strength(level)
+        record = find_record_level(level)
+        record[11].to_i
+      end
+
+      def attack_speed(level)
+        record = find_record_level(level)
+        record[10].to_i / 10.0
+      end
     end
 
-    def levels(type)
-      @raw_data[type]['levels'].keys
+    ##
+    # Defensive
+    class Defensive < Type
+      def buffer(level)
+        record = find_record_level(level)
+        record[11].to_i
+      end
     end
 
-    def name(type)
-      @raw_data[type]['name']
+    ##
+    # Stealth
+    class Stealth < Type
+      def visibility(level)
+        record = find_record_level(level)
+        record[13].to_i
+      end
     end
 
-    def cost(type, level)
-      @raw_data[type]['levels'][level]['cost']
+    ##
+    # AI
+    class AI < Type
     end
 
-    def experience(type, level)
-      @raw_data[type]['levels'][level]['experience']
+    ##
+    # Node
+    class Node < Type
     end
 
-    def price(type, level)
-      @raw_data[type]['levels'][level]['price']
+    ##
+    # Ion Canon
+    class IonCannon < Offensive
+      ID = ProgramTypes::ION_CANON
     end
 
-    def compile(type, level)
-      @raw_data[type]['levels'][level]['compile']
+    ##
+    # Shuriken
+    class Shuriken < Offensive
+      ID = ProgramTypes::SHURIKEN
     end
 
-    def disk(type, level)
-      @raw_data[type]['levels'][level]['disk']
+    ##
+    # Worms
+    class Worms < Offensive
+      ID = ProgramTypes::WORMS
     end
 
-    def install(type, level)
-      @raw_data[type]['levels'][level]['install']
+    ##
+    # Blaster
+    class Blaster < Offensive
+      ID = ProgramTypes::BLASTER
     end
 
-    def upgrade(type, level)
-      @raw_data[type]['levels'][level]['upgrade']
+    ##
+    # Shock
+    class Shock < Offensive
+      ID = ProgramTypes::SHOCK
     end
 
-    def rate(type, level)
-      @raw_data[type]['levels'][level]['rate']
+    ##
+    # Battering Ram
+    class BatteringRam < Offensive
+      ID = ProgramTypes::BATTERING_RAM
     end
 
-    def strength(type, level)
-      @raw_data[type]['levels'][level]['strength']
+    ##
+    # Maniac
+    class Maniac < Offensive
+      ID = ProgramTypes::MANIAC
     end
 
-    def evolver(type, level)
-      @raw_data[type]['levels'][level]['evolver']
+    ##
+    # Kraken
+    class Kraken < Offensive
+      ID = ProgramTypes::KRAKEN
+    end
+
+    ##
+    # Ice Wall
+    class IceWall < Defensive
+      ID = ProgramTypes::ICE_WALL
+    end
+
+    ##
+    # Protector
+    class Protector < Defensive
+      ID = ProgramTypes::PROTECTOR
+    end
+
+    ##
+    # Data Leech
+    class DataLeech < Stealth
+      ID = ProgramTypes::DATA_LEECH
+
+      def download_boost(level)
+        record = find_record_level(level)
+        record[14].to_i
+      end
+    end
+
+    ##
+    # Access
+    class Access < Stealth
+      ID = ProgramTypes::ACCESS
+    end
+
+    ##
+    # Portal
+    class Portal < Stealth
+      ID = ProgramTypes::PORTAL
+    end
+
+    ##
+    # Wraith
+    class Wraith < Stealth
+      ID = ProgramTypes::WRAITH
+    end
+
+    ##
+    # AI Offensive
+    class AIOffensive < AI
+      ID = ProgramTypes::AI_OFFENSIVE
+    end
+
+    ##
+    # AI Defensive
+    class AIDefensive < AI
+      ID = ProgramTypes::AI_DEFENSIVE
+    end
+
+    ##
+    # AI Stealth
+    class AIStealth < AI
+      ID = ProgramTypes::AI_STEALTH
+    end
+
+    ##
+    # Sentry
+    class Sentry < Node
+      ID = ProgramTypes::SENTRY
+    end
+
+    ##
+    # Black Ice
+    class BlackIce < Node
+      ID = ProgramTypes::BLACK_ICE
+    end
+
+    ##
+    # Guardian
+    class Guardian < Node
+      ID = ProgramTypes::GUARDIAN
+    end
+
+    ##
+    # Code Gate
+    class CodeGate < Node
+      ID = ProgramTypes::CODE_GATE
+    end
+
+    ##
+    # Turret
+    class Turret < Node
+      ID = ProgramTypes::TURRET
     end
   end
 end
