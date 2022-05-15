@@ -21,6 +21,33 @@ module Hackers
     AI_DEFENSIVE = 28
     AI_STEALTH = 29
 
+    NODES = {
+      CORE => Nodes::Core,
+      CONNECTION => Nodes::Connection,
+      FARM => Nodes::Farm,
+      DATABASE => Nodes::Database,
+      BITCOIN_MINE => Nodes::BitcoinMine,
+      BITCOIN_MIXER => Nodes::BitcoinMixer,
+      SENTRY => Nodes::Sentry,
+      BLACK_ICE => Nodes::BlackIce,
+      GUARDIAN => Nodes::Guardian,
+      SCANNER => Nodes::Scanner,
+      CODE_GATE => Nodes::CodeGate,
+      COMPILER => Nodes::Compiler,
+      EVOLVER => Nodes::Evolver,
+      LIBRARY => Nodes::Library,
+      TURRENT => Nodes::Turret,
+      AI_OFFENSIVE => Nodes::AIOffensive,
+      AI_DEFENSIVE => Nodes::AIDefensive,
+      AI_STEALTH => Nodes::AIStealth
+    }.freeze
+
+    ##
+    # Returns node class by id
+    def self.node(id)
+      NODES[id]
+    end
+
     ##
     # List
     class List < Dataset

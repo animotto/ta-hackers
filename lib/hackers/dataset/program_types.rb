@@ -25,6 +25,37 @@ module Hackers
     AI_DEFENSIVE = 23
     AI_STEALTH = 24
 
+    PROGRAMS = {
+      ION_CANON => Programs::IonCanon,
+      SHURIKEN => Programs::Shuriken,
+      WORMS => Programs::Worms,
+      BLASTER => Programs::Blaster,
+      SHOCK => Programs::Shock,
+      DATA_LEECH => Programs::DataLeech,
+      BATTERING_RAM => Programs::BatteringRam,
+      MANIAC => Programs::Maniac,
+      ICE_WALL => Programs::IceWall,
+      PROTECTOR => Programs::Protector,
+      SENTRY => Programs::Sentry,
+      BLACK_ICE => Programs::BlackIce,
+      GUARDIAN => Programs::Guardian,
+      CODE_GATE => Programs::CodeGate,
+      TURRET => Programs::Turret,
+      ACCESS => Programs::Access,
+      PORTAL => Programs::Portal,
+      WRAITH => Programs::Wraith,
+      KRAKEN => Programs::Kraken,
+      AI_OFFENSIVE => Programs::AIOffensive,
+      AI_DEFENSIVE => Programs::AIDefensive,
+      AI_STEALTH => Programs::AIStealth
+    }.freeze
+
+    ##
+    # Returns program class by id
+    def self.program(id)
+      PROGRAMS[id]
+    end
+
     ##
     # List
     class List < Dataset

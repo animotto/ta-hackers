@@ -203,15 +203,14 @@ module Hackers
     ##
     # Gets player network
     def net(id = @id)
-      params = {
-        'net_get_for_maintenance' => 1,
-        'id_player' => id,
-        'app_version' => @version
-      }
-
-      response = @client.request_session(params, @sid)
-      serializer = Serializer.new(response)
-      serializer.parseNetGetForMaint
+      @client.request_session(
+        {
+          'net_get_for_maintenance' => 1,
+          'id_player' => id,
+          'app_version' => @version
+        },
+        @sid
+      )
     end
 
     ##
@@ -385,18 +384,18 @@ module Hackers
     ##
     # Synchronizes programs queue
     def queue_sync(programs, seq = @sync_seq, id = @id)
-      params = {
-        'queue_sync_new' => 1,
-        'id_player' => id,
-        'data' => Serializer.generatePrograms(programs),
-        'seq' => seq,
-        'app_version' => @version
-      }
-
       @sync_seq += 1
-      response = @client.request_session(params, @sid)
-      serializer = Serializer.new(response)
-      serializer.parseQueueSync
+
+      @client.request_session(
+        {
+          'queue_sync_new' => 1,
+          'id_player' => id,
+          'data' => programs,
+          'seq' => seq,
+          'app_version' => @version
+        },
+        @sid
+      )
     end
 
     ##
@@ -831,12 +830,12 @@ module Hackers
 
     ##
     # Sets player readme
-    def set_readme(readme, id = @id)
+    def set_readme(data, id = @id)
       @client.request_session(
         {
           'player_set_readme' => '',
           'id' => id,
-          'text' => Serializer.generateReadme(readme),
+          'text' => data,
           'app_version' => @version
         },
         @sid
@@ -1191,22 +1190,15 @@ module Hackers
     ##
     # Gets network structure for test fight
     def attack_net_test(target, attacker = @id)
-      params = {
-        'testfight_prepare' => '',
-        'id_target' => target,
-        'id_attacker' => attacker,
-        'app_version' => @version
-      }
-
-      response = @client.request_session(params, @sid)
-      serializer = Serializer.new(response)
-      {
-        'nodes' => serializer.parseNodes(0),
-        'net' => serializer.parseNetwork(1, 0, 1),
-        'profile' => serializer.parseProfile(2, 0),
-        'programs' => serializer.parsePrograms(3),
-        'readme' => serializer.parseReadme(5, 0, 0)
-      }
+      @client.request_session(
+        {
+          'testfight_prepare' => '',
+          'id_target' => target,
+          'id_attacker' => attacker,
+          'app_version' => @version
+        },
+        @sid
+      )
     end
 
     ##

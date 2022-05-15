@@ -1,52 +1,53 @@
 class Network < Sandbox::Script
   def main
     if @game.sid.empty?
-      @logger.log("No session ID")
+      @logger.log('No session ID')
       return
     end
 
     if @args[0].nil?
-      @logger.log("Specify player ID")
+      @logger.log('Specify player ID')
       return
     end
-    target = @args[0].to_i
+
+    id = @args[0].to_i
 
     begin
-      net = @game.cmdTestFightPrepare(target)
+      target = @game.attack_test(id)
     rescue Hackers::RequestError => e
       @logger.error(e)
       return
     end
 
-    @shell.puts("\u2022 Network structure for #{net["profile"].name}")
+    @shell.puts("\u2022 Network structure for #{target.profile.name}")
     @shell.puts(
-      "  %-5s %-12s %-12s %-5s %-4s %-4s %-4s %s" % [
-        "Index",
-        "ID",
-        "Name",
-        "Type",
-        "X",
-        "Y",
-        "Z",
-        "Relations",
-      ]
+      format(
+        '  %-12s %-12s %-5s %-6s %-4s %-4s %-4s %s',
+        'ID',
+        'Name',
+        'Type',
+        'Level',
+        'X',
+        'Y',
+        'Z',
+        'Relations'
+      )
     )
-    net["net"].each_index do |i|
-      id = net["net"][i]["id"]
-      type = net["nodes"][id]["type"]
+
+    target.net.each do |node|
       @shell.puts(
-        "  %-5d %-12d %-12s %-5d %-+4d %-+4d %-+4d %s" % [
-          i,
-          id,
-          @game.node_types.get(type).name,
-          type,
-          net["net"][i]["x"],
-          net["net"][i]["y"],
-          net["net"][i]["z"],
-          net["net"][i]["rels"],
-        ]
+        format(
+          '  %-12d %-12s %-5d %-6d %-+4d %-+4d %-+4d %s',
+          node.id,
+          @game.node_types.get(node.type).name,
+          node.type,
+          node.level,
+          node.x,
+          node.y,
+          node.z,
+          node.relations
+        )
       )
     end
   end
 end
-

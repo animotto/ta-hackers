@@ -162,9 +162,11 @@ SHELL.add_command(
   LOGGER.log(msg)
 
   msg = 'Authenticate'
-  auth = GAME.cmdAuthIdPassword
+  # auth = GAME.cmdAuthIdPassword
+  auth = GAME.auth
   LOGGER.log(msg)
   GAME.sid = auth['sid']
+  GAME.api.sid = auth['sid']
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end

@@ -18,7 +18,7 @@ module Hackers
 
     attr_reader :api, :app_settings, :node_types,
                 :language_translations, :program_types,
-                :missions_list, :skin_types
+                :missions_list, :skin_types, :player
 
     attr_accessor :config,
       :hintsList, :experienceList,
@@ -45,8 +45,6 @@ module Hackers
         @config["salt"], 
       )
 
-      #### NOTE: REFACTORING!
-
       api_config = {}
       api_config[:host] = @config['host'] if @config.key?('host')
       api_config[:port] = @config['port'] if @config.key?('port')
@@ -58,6 +56,8 @@ module Hackers
       api_config[:platform] = @config['platform'] if @config.key?('platform')
 
       @api = API.new(**api_config)
+      @api.id = @config['id']
+      @api.password = @config['password']
 
       @app_settings = AppSettings.new(@api)
       @language_translations = LanguageTranslations.new(@api)
@@ -65,6 +65,21 @@ module Hackers
       @program_types = ProgramTypes::List.new(@api)
       @missions_list = MissionsList.new(@api)
       @skin_types = SkinTypes.new(@api)
+      @player = Network::Player.new(@api)
+    end
+
+    ##
+    # Authenticates by id and password
+    def auth
+      @api.auth
+    end
+
+    ##
+    # Attacks target in test mode
+    def attack_test(id)
+      target = Network::Target.new(@api)
+      target.attack_test(id)
+      target
     end
 
     ##

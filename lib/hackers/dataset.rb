@@ -2,7 +2,7 @@
 
 module Hackers
   ##
-  # Data set
+  # Dataset
   class Dataset
     attr_accessor :raw_data
 
@@ -24,7 +24,10 @@ end
 
 require_relative 'dataset/app_settings'
 require_relative 'dataset/language_translations'
+require_relative 'dataset/nodes'
 require_relative 'dataset/node_types'
+require_relative 'dataset/programs'
 require_relative 'dataset/program_types'
 require_relative 'dataset/missions_list'
 require_relative 'dataset/skin_types'
+require_relative 'dataset/network'

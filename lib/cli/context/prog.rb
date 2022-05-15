@@ -13,8 +13,11 @@ CONTEXT_PROG.add_command(
   end
 
   msg = 'Network maintenance'
-  net = GAME.cmdNetGetForMaint
+  GAME.player.load
   LOGGER.log(msg)
+
+  player = GAME.player
+  programs = player.programs
 
   shell.puts("\e[1;35m\u2022 Programs\e[0m")
   shell.puts(
@@ -29,18 +32,18 @@ CONTEXT_PROG.add_command(
     )
   )
 
-  net['programs'].each do |k, v|
+  programs.each do |program|
     timer = String.new
-    timer = GAME.timerToDHMS(v['timer'] * -1) if v['timer'].negative?
+    timer = GAME.timerToDHMS(program.timer * -1) if program.timer.negative?
 
     shell.puts(
       format(
         '  %-12d %-12s %-4d %-6d %-5d %-12s',
-        k,
-        GAME.program_types.get(v['type']).name,
-        v['type'],
-        v['amount'],
-        v['level'],
+        program.id,
+        GAME.program_types.get(program.type).name,
+        program.type,
+        program.amount,
+        program.level,
         timer
       )
     )
@@ -60,8 +63,12 @@ CONTEXT_PROG.add_command(
   end
 
   msg = 'Network maintenance'
-  net = GAME.cmdNetGetForMaint
+  GAME.player.load
   LOGGER.log(msg)
+
+  player = GAME.player
+  programs = player.programs
+  queue = player.queue
 
   shell.puts("\e[1;35m\u2022 Programs queue\e[0m")
   shell.puts(
@@ -75,18 +82,18 @@ CONTEXT_PROG.add_command(
   )
 
   total = 0
-  net['queue'].each do |queue|
-    id, program = net['programs'].detect { |k, v| v['type'] == queue['type']}
-    program_type = GAME.program_types.get(queue['type'])
-    compile = program_type.compilation_time(program['level'])
-    total += queue['amount'] * compile - queue['timer']
+  queue.each do |item|
+    program = programs.detect { |p| p.type == item.type }
+    program_type = GAME.program_types.get(item.type)
+    compile = program_type.compilation_time(program.level)
+    total += item.amount * compile - item.timer
     shell.puts(
       format(
         '  %-12s %-4d %-6d %-5d',
         program_type.name,
-        queue['type'],
-        queue['amount'],
-        compile - queue['timer']
+        item.type,
+        item.amount,
+        compile - item.timer
       )
     )
   end
@@ -224,13 +231,16 @@ CONTEXT_PROG.add_command(
     next
   end
 
-  programs = {}
+  player = GAME.player
+  programs = player.programs
+  queue = player.queue
+
   0.step(tokens.length - 1, 2) do |i|
-    programs[tokens[i + 1].to_i] = tokens[i + 2].to_i
+    queue.add(tokens[i + 1].to_i, tokens[i + 2].to_i)
   end
 
   msg = 'Sync queue'
-  sync = GAME.cmdQueueSync(programs)
+  GAME.player.queue_sync
   LOGGER.log(msg)
 
   shell.puts("\e[1;35m\u2022 Programs queue\e[0m")
@@ -245,18 +255,18 @@ CONTEXT_PROG.add_command(
   )
 
   total = 0
-  sync['queue'].each do |queue|
-    id, program = sync['programs'].detect { |k, v| v['type'] == queue['type'] }
-    program_type = GAME.program_types.get(queue['type'])
-    compile = program_type.compilation_time(program['level'])
-    total += queue['amount'] * compile - queue['timer']
+  queue.each do |item|
+    program = programs.detect { |p| p.type == item.type }
+    program_type = GAME.program_types.get(item.type)
+    compile = program_type.compilation_time(program.level)
+    total += item.amount * compile - item.timer
     shell.puts(
       format(
         '  %-12s %-4d %-6d %-5d',
         program_type.name,
-        queue['type'],
-        queue['amount'],
-        compile - queue['timer']
+        item.type,
+        item.amount,
+        compile - item.timer
       )
     )
   end
