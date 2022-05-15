@@ -37,8 +37,7 @@ module Hackers
     private
 
     def parse
-      serializer = Serializer.new(@raw_data)
-      data = serializer.fields
+      data = Serializer.parseData(@raw_data)
 
       data[0][0..10].each do |record|
         @settings[record[1]] = record[2] =~ /^\d+$/ ? record[2].to_i : record[2]

@@ -266,22 +266,23 @@ CONTEXT_NET.add_command(
   )
 
   net['nodes'].each do |k, v|
+    node_type = GAME.node_types.get(v['type'])
+
     timer = String.new
     if v['timer'].negative?
       timer += "\e[32m" + "\u25b0" * v['builders'] + "\e[37m" + "\u25b1" * (net['profile'].builders - v['builders']) + "\e[0m " unless v['builders'].nil?
       timer += GAME.timerToDHMS(v['timer'] * -1)
     else
-      if GAME.node_types.production?(v['type'])
-        data = GAME.node_types.data(v['type'], v['level'])
-        case data[0]
+      if node_type.kind_of?(Hackers::ProductionNode)
+        case node_type.production_currency(v['level'])
         when Hackers::Game::CURRENCY_MONEY
           timer += "\e[33m$ "
         when Hackers::Game::CURRENCY_BITCOINS
           timer += "\e[31m\u20bf "
         end
-        produced = (data[2].to_f / 60 / 60 * v['timer']).to_i
-        timer += produced < data[1] ? produced.to_s : data[1].to_s
-        timer += '/' + data[1].to_s
+        produced = (node_type.production_speed(v['level']).to_f / 60 / 60 * v['timer']).to_i
+        timer += produced < node_type.production_limit(v['level']) ? produced.to_s : node_type.production_limit(v['level']).to_s
+        timer += '/' + node_type.production_limit(v['level']).to_s
         timer += "\e[0m"
       end
     end
@@ -290,7 +291,7 @@ CONTEXT_NET.add_command(
       format(
         '  %-12d %-12s %-4d %-5d %-17s',
         k,
-        GAME.node_types.name(v['type']),
+        node_type.name,
         v['type'],
         v['level'],
         timer
@@ -500,7 +501,7 @@ CONTEXT_NET.add_command(
         '  %-5d %-12d %-12s %-5d %-+4d %-+4d %-+4d %s',
         i,
         id,
-        GAME.node_types.name(type),
+        GAME.node_types.get(type).name,
         type,
         net['net'][i]['x'],
         net['net'][i]['y'],

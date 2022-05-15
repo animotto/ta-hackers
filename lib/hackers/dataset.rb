@@ -4,7 +4,7 @@ module Hackers
   ##
   # Data set
   class Dataset
-    attr_reader :raw_data
+    attr_accessor :raw_data
 
     def initialize(api)
       @api = api
@@ -15,6 +15,10 @@ module Hackers
     end
 
     def load; end
+
+    private
+
+    def parse; end
   end
 end
 

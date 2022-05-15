@@ -4,16 +4,33 @@ module Hackers
   ##
   # Language translations
   class LanguageTranslations < Dataset
+    def initialize(*)
+      super
+
+      @translations = {}
+    end
+
     def load
       @raw_data = @api.language_translations
+      parse
     end
 
     def get(key)
-      @raw_data[key]
+      @translations[key]
     end
 
     def each(&block)
-      @raw_data.keys.each(&block)
+      @translations.keys.each(&block)
+    end
+
+    private
+
+    def parse
+      data = Serializer.parseData(@raw_data)
+
+      data[0].each do |record|
+        @translations[record[0]] = record[1]
+      end
     end
   end
 end

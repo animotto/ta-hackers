@@ -64,15 +64,13 @@ module Hackers
     ##
     # Gets translations by specified language
     def language_translations(language = @language)
-      params = {
-        'i18n_translations_get_language' => 1,
-        'language_code' => language,
-        'app_version' => @version
-      }
-
-      response = @client.request_cmd(params)
-      serializer = Serializer.new(response)
-      serializer.parseTransLang(0)
+      @client.request_cmd(
+        {
+          'i18n_translations_get_language' => 1,
+          'language_code' => language,
+          'app_version' => @version
+        }
+      )
     end
 
     ##
@@ -89,14 +87,12 @@ module Hackers
     ##
     # Gets node types
     def node_types
-      params = {
-        'get_node_types_and_levels' => 1,
-        'app_version' => @version
-      }
-
-      response = @client.request_cmd(params)
-      serializer = Serializer.new(response)
-      serializer.parseNodeTypes
+      @client.request_cmd(
+        {
+          'get_node_types_and_levels' => 1,
+          'app_version' => @version
+        }
+      )
     end
 
     ##
@@ -768,14 +764,12 @@ module Hackers
     ##
     # Gets skin types list
     def skin_types
-      params = {
-        'skin_types_get_list' => '',
-        'app_version' => @version
-      }
-
-      response = @client.request_cmd(params)
-      serializer = Serializer.new(response)
-      serializer.parseSkinTypes
+      @client.request_cmd(
+        {
+          'skin_types_get_list' => '',
+          'app_version' => @version
+        }
+      )
     end
 
     ##

@@ -182,9 +182,9 @@ SHELL.add_command(
   shell.puts("SID: #{GAME.sid}")
 end
 
-# trans
+# translations
 SHELL.add_command(
-  :trans,
+  :translations,
   description: 'Language translations'
 ) do |tokens, shell|
   unless GAME.language_translations.loaded?
@@ -246,48 +246,46 @@ SHELL.add_command(
       next
     end
 
-    shell.puts("#{GAME.node_types.name(id)}:")
+    node = GAME.node_types.get(id)
+    shell.puts("#{node.name}:")
     shell.puts(
       format(
-        ' %-5s %-10s %-4s %-5s %-7s %-5s %-5s %-5s %-5s',
+        ' %-5s %-10s %-5s %-7s %-5s %-5s %-5s',
         'Level',
         'Cost',
-        'Core',
         'Exp',
         'Upgrade',
         'Conns',
         'Slots',
         'Firewall',
-        'Limit'
       )
     )
-    GAME.node_types.levels(id).each do |level|
-      limit = GAME.node_types.limit(id, level)
+
+    node.levels.each do |level|
       shell.puts(
         format(
-          ' %-5d %-10d %-4d %-5d %-7d %-5d %-5d %-8d %-5s',
+          ' %-5d %-10d %-5d %-7d %-5d %-5d %-8d',
           level,
-          GAME.node_types.cost(id, level),
-          GAME.node_types.core(id, level),
-          GAME.node_types.experience(id, level),
-          GAME.node_types.upgrade(id, level),
-          GAME.node_types.connections(id, level),
-          GAME.node_types.slots(id, level),
-          GAME.node_types.firewall(id, level),
-          limit
+          node.upgrade_cost(level),
+          node.experience_gained(level),
+          node.completion_time(level),
+          node.node_connections(level),
+          node.program_slots(level),
+          node.firewall(level)
         )
       )
     end
+
     next
   end
 
   shell.puts('Node types:')
-  GAME.node_types.each do |k|
+  GAME.node_types.each do |node|
     shell.puts(
       format(
         ' %-2s .. %s',
-        k,
-        GAME.node_types.name(k)
+        node.type,
+        node.name
       )
     )
   end
@@ -748,7 +746,7 @@ SHELL.add_command(
         v['type'],
         v['level'],
         v['timer'],
-        GAME.node_types.name(v['type'])
+        GAME.node_types.get(v['type']).name
       )
     )
   end
