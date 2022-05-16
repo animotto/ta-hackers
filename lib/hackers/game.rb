@@ -21,15 +21,13 @@ module Hackers
                 :missions_list, :skin_types, :player,
                 :chat, :hints_list, :experience_list,
                 :builders_list, :goal_types, :shield_types,
-                :rank_list
+                :rank_list, :countries_list
 
-    attr_accessor :config, :countriesList, :sid,
-      :syncSeq, :client
+    attr_accessor :config, :sid, :syncSeq, :client
 
     def initialize(config)
       @config = config
       @sid = String.new
-      @countriesList = Hash.new
       @syncSeq = 0
       @client = Client.new(
         @config["host"], 
@@ -53,6 +51,7 @@ module Hackers
       @api.id = @config['id']
       @api.password = @config['password']
 
+      @countries_list = CountriesList.new(@api)
       @app_settings = AppSettings.new(@api)
       @language_translations = LanguageTranslations.new(@api)
       @node_types = NodeTypes::List.new(@api)
@@ -81,15 +80,6 @@ module Hackers
       target = Network::Target.new(@api)
       target.attack_test(id)
       target
-    end
-
-    ##
-    # Gets country name by ID:
-    #   id = Country ID
-    #
-    # Returns country name as string
-    def getCountryNameByID(id)
-      @countriesList.fetch(id.to_s, "Unknown")
     end
 
     ##

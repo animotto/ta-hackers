@@ -17,6 +17,8 @@ CONFIGS_DIR = 'configs'
 DEFAULT_CONFIG = 'default'
 CONFIG_EXT = '.conf'
 
+COUNTRIES_FILE = 'countries.conf'
+
 BANNER = <<~BANNER_TEXT
   Trickster Arts Hackers sandbox
 BANNER_TEXT
@@ -113,8 +115,8 @@ rescue JSON::ParserError => e
 end
 
 GAME = Hackers::Game.new(config)
-GAME.countriesList = Sandbox::Config.new(File.join(DATA_DIR, 'countries.conf'))
-GAME.countriesList.load
+GAME.countries_list.raw_data = File.read(File.join(DATA_DIR, COUNTRIES_FILE))
+GAME.countries_list.load
 
 SHELL = Sandbox::Shell.new(
   prompt: " \e[1;35m\u25b8\e[0m ",

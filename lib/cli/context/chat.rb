@@ -23,7 +23,7 @@ def chat_log(shell, room, messages)
     shell.puts(
       format(
         "\e[1;33m\u2764 \e[22;34m[%s:%d] \e[22;31m%d \e[1;35m%s \e[22;33m%s\e[0m",
-        GAME.getCountryNameByID(room),
+        GAME.countries_list.name(room),
         room,
         GAME.experience_list.level(message.experience),
         message.name,
@@ -57,7 +57,8 @@ CONTEXT_CHAT_OPEN = CONTEXT_CHAT.add_command(
 end
 
 CONTEXT_CHAT_OPEN.completion do |line|
-  GAME.countriesList.keys.grep(/^#{Regexp.escape(line)}/)
+  countries = GAME.countries_list.select { |c| c.id.to_s =~ /^#{Regexp.escape(line)}/ }
+  countries.map { |c| c.id.to_s }
 end
 
 # close
@@ -97,7 +98,7 @@ CONTEXT_CHAT.add_command(
       format(
       " \e[1;33m\u2022\e[0m %-4d (%s)",
       k,
-      GAME.getCountryNameByID(k)
+      GAME.countries_list.name(k)
       )
     )
   end
@@ -139,7 +140,7 @@ CONTEXT_CHAT_TALK = CONTEXT_CHAT.add_command(
 
   shell.puts('Enter ! or press ^D to quit')
   loop do
-    prompt = "#{GAME.getCountryNameByID(room)}:#{room} \e[1;33m\u2765\e[0m "
+    prompt = "#{GAME.countries_list.name(room)}:#{room} \e[1;33m\u2765\e[0m "
     message = shell.readline(prompt, true)
     if message.nil?
       shell.puts
@@ -188,7 +189,7 @@ CONTEXT_CHAT_USERS = CONTEXT_CHAT.add_command(
     format(
       'Users in room %d (%s)',
       room,
-      GAME.getCountryNameByID(room)
+      GAME.countries_list.name(room)
     )
   )
 
@@ -206,5 +207,6 @@ rescue Hackers::RequestError => e
 end
 
 CONTEXT_CHAT_USERS.completion do |line|
-  GAME.countriesList.keys.grep(/^#{Regexp.escape(line)}/)
+  countries = GAME.countries_list.select { |c| c.id.to_s =~ /^#{Regexp.escape(line)}/ }
+  countries.map { |c| c.id.to_s }
 end

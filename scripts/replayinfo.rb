@@ -33,12 +33,12 @@ class Replayinfo < Sandbox::Script
     @shell.puts(" Attacker:")
     @shell.puts("  %-15s %d" % ["ID", info["attacker"]["id"]])
     @shell.puts("  %-15s %s" % ["Name", info["attacker"]["name"]])
-    @shell.puts("  %-15s %d (%s)" % ["Country", info["attacker"]["country"], @game.getCountryNameByID(info["attacker"]["country"])])
+    @shell.puts("  %-15s %d (%s)" % ["Country", info["attacker"]["country"], @game.countries_list.name(info["attacker"]["country"])])
     @shell.puts("  %-15s %d" % ["Level", info["attacker"]["level"]])
     @shell.puts(" Target:")
     @shell.puts("  %-15s %d" % ["ID", info["target"]["id"]])
     @shell.puts("  %-15s %s" % ["Name", info["target"]["name"]])
-    @shell.puts("  %-15s %d (%s)" % ["Country", info["target"]["country"], @game.getCountryNameByID(info["target"]["country"])])
+    @shell.puts("  %-15s %d (%s)" % ["Country", info["target"]["country"], @game.countries_list.name(info["target"]["country"])])
     @shell.puts("  %-15s %d" % ["Level", info["target"]["level"]])
   end
 end

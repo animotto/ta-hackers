@@ -386,7 +386,7 @@ SHELL.add_command(
     shell.puts(format('%-20s %s', 'Group', mission.group))
     shell.puts(format('%-20s %s', 'Name', mission.name))
     shell.puts(format('%-20s %s', 'Giver name', mission.giver_name))
-    shell.puts(format('%-20s %s (%d)', 'Country', GAME.getCountryNameByID(mission.country), mission.country))
+    shell.puts(format('%-20s %s (%d)', 'Country', GAME.countries_list.name(mission.country), mission.country))
     shell.puts(format('%-20s %d, %d', 'Coordinates', mission.x, mission.y))
     shell.puts(format('%-20s %d', 'Reward money', mission.reward_money))
     shell.puts(format('%-20s %d', 'Reward bitcoins', mission.reward_bitcoins))
@@ -633,17 +633,18 @@ SHELL.add_command(
   :countries,
   description: 'Contries list'
 ) do |tokens, shell|
-  if GAME.countriesList.empty?
+  unless GAME.countries_list.loaded?
     shell.puts('No countries list')
     next
   end
 
-  GAME.countriesList.each do |k, v|
+  shell.puts('Countries list:')
+  GAME.countries_list.each do |country|
     shell.puts(
       format(
-        ' %-3d .. %s',
-        k,
-        v
+        ' %-4d %s',
+        country.id,
+        country.name
       )
     )
   end

@@ -88,12 +88,12 @@ CONTEXT_NET.add_command(
     shell.puts(" Attacker ID: #{record.attacker_id}")
     shell.puts(" Attacker name: #{record.attacker_name}")
     shell.puts(" Attacker level: #{record.attacker_level}")
-    shell.puts(" Attacker country: #{GAME.getCountryNameByID(record.attacker_country)} (#{record.attacker_country})")
+    shell.puts(" Attacker country: #{GAME.countries_list.name(record.attacker_country)} (#{record.attacker_country})")
 
     shell.puts(" Target ID: #{record.target_id}")
     shell.puts(" Target name: #{record.target_name}")
     shell.puts(" Target level: #{record.target_level}")
-    shell.puts(" Target country: #{GAME.getCountryNameByID(record.target_country)} (#{record.target_country})")
+    shell.puts(" Target country: #{GAME.countries_list.name(record.target_country)} (#{record.target_country})")
 
     shell.puts(" Money: #{record.money}")
     shell.puts(" Bitcoins: #{record.bitcoins}")
