@@ -41,7 +41,7 @@ CONTEXT_NET.add_command(
   shell.puts(format('  %-15s %d', 'Tutorial', player.tutorial))
 
   if shield.installed?
-    shell.puts(format('  %-15s %s (%d)', 'Shield', GAME.shieldTypes[player.shield.type]['name'], shield.time))
+    shell.puts(format('  %-15s %s (%d)', 'Shield', GAME.shield_types.get(player.shield.type).title, shield.time))
   end
 
   unless skins.empty?

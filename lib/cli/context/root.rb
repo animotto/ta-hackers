@@ -154,7 +154,7 @@ SHELL.add_command(
   LOGGER.log(msg)
 
   msg = 'Shield types'
-  GAME.shieldTypes = GAME.cmdShieldTypesGetList
+  GAME.shield_types.load
   LOGGER.log(msg)
 
   msg = 'Rank list'
@@ -583,19 +583,20 @@ SHELL.add_command(
   :shields,
   description: 'Shield types'
 ) do |tokens, shell|
-  if GAME.shieldTypes.empty?
+  unless GAME.shield_types.loaded?
     shell.puts('No shield types')
     next
   end
 
-  GAME.shieldTypes.each do |k, v|
+  shell.puts('Shield types:')
+  GAME.shield_types.each do |shield|
     shell.puts(
       format(
-        ' %-7d .. %d, %s, %s',
-        k,
-        v['price'],
-        v['name'],
-        v['description']
+        ' %-3d %-3d %-4d %s',
+        shield.id,
+        shield.hours,
+        shield.price,
+        shield.title
       )
     )
   end

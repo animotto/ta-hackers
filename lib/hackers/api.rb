@@ -937,14 +937,12 @@ module Hackers
     ##
     # Gets shield types list
     def shield_types
-      params = {
-        'shield_types_get_list' => 1,
-        'app_version' => @version
-      }
-
-      response = @client.request_cmd(params)
-      serializer = Serializer.new(response)
-      serializer.parseShieldTypes
+      @client.request_cmd(
+        {
+          'shield_types_get_list' => 1,
+          'app_version' => @version
+        }
+      )
     end
 
     ##
