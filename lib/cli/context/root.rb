@@ -146,7 +146,7 @@ SHELL.add_command(
   LOGGER.log(msg)
 
   msg = 'Builders list'
-  GAME.buildersList = GAME.cmdBuildersCountGetList
+  GAME.builders_list.load
   LOGGER.log(msg)
 
   msg = 'Goal types'
@@ -509,6 +509,7 @@ SHELL.add_command(
     next
   end
 
+  shell.puts('Experience list:')
   experience_list.each do |level|
     shell.puts(
       format(
@@ -525,17 +526,18 @@ SHELL.add_command(
   :builders,
   description: 'Builders list'
 ) do |tokens, shell|
-  if GAME.buildersList.empty?
+  unless GAME.builders_list.loaded?
     shell.puts('No builders list')
     next
   end
 
-  GAME.buildersList.each do |k, v|
+  shell.puts('Builders list:')
+  GAME.builders_list.each do |builder|
     shell.puts(
       format(
-        '%-7d .. %s',
-        k,
-        v['price']
+        ' %-3d %d',
+        builder.amount,
+        builder.price
       )
     )
   end

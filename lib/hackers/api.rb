@@ -915,14 +915,12 @@ module Hackers
     ##
     # Gets builders list
     def builders_list
-      params = {
-        'builders_count_get_list' => 1,
-        'app_version' => @version
-      }
-
-      response = @client.request_cmd(params)
-      serializer = Serializer.new(response)
-      serializer.parseBuildersList
+      @client.request_cmd(
+        {
+          'builders_count_get_list' => 1,
+          'app_version' => @version
+        }
+      )
     end
 
     ##
