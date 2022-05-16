@@ -138,7 +138,7 @@ SHELL.add_command(
   LOGGER.log(msg)
 
   msg = 'Hints list'
-  GAME.hintsList = GAME.cmdHintsGetList
+  GAME.hints_list.load
   LOGGER.log(msg)
 
   msg = 'Experience list'
@@ -473,17 +473,17 @@ SHELL.add_command(
   :hints,
   description: 'Hints list'
 ) do |tokens, shell|
-  if GAME.hintsList.empty?
+  unless GAME.hints_list.loaded?
     shell.puts('No hints list')
     next
   end
 
-  GAME.hintsList.each do |k, v|
+  GAME.hints_list.each do |hint|
     shell.puts(
       format(
-        ' %-7d .. %s',
-        k,
-        v['description']
+        ' %-4d %s',
+        hint.id,
+        hint.description
       )
     )
   end

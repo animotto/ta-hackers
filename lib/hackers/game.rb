@@ -19,10 +19,9 @@ module Hackers
     attr_reader :api, :app_settings, :node_types,
                 :language_translations, :program_types,
                 :missions_list, :skin_types, :player,
-                :chat
+                :chat, :hints_list
 
-    attr_accessor :config,
-      :hintsList, :experienceList,
+    attr_accessor :config, :experienceList,
       :buildersList, :goalsTypes, :shieldTypes,
       :rankList, :countriesList, :sid, :syncSeq,
       :client
@@ -30,7 +29,6 @@ module Hackers
     def initialize(config)
       @config = config
       @sid = String.new
-      @hintsList = Hash.new
       @experienceList = Hash.new
       @buildersList = Hash.new
       @goalsTypes = Hash.new
@@ -66,6 +64,7 @@ module Hackers
       @program_types = ProgramTypes::List.new(@api)
       @missions_list = MissionsList.new(@api)
       @skin_types = SkinTypes.new(@api)
+      @hints_list = HintsList.new(@api)
       @player = Network::Player.new(@api)
       @chat = Chat.new(@api)
     end

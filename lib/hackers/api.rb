@@ -882,14 +882,12 @@ module Hackers
     ##
     # Gets hints list
     def hints_list
-      params = {
-        'hints_get_list' => 1,
-        'app_version' => @version
-      }
-
-      response = @client.request_cmd(params)
-      serializer = Serializer.new(response)
-      serializer.parseHintsList
+      @client.request_cmd(
+        {
+          'hints_get_list' => 1,
+          'app_version' => @version
+        }
+      )
     end
 
     ##
