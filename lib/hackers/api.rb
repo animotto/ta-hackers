@@ -904,14 +904,12 @@ module Hackers
     ##
     # Gets experience list
     def experience_list
-      params = {
-        'get_experience_list' => 1,
-        'app_version' => @version
-      }
-
-      response = @client.request_cmd(params)
-      serializer = Serializer.new(response)
-      serializer.parseExperienceList
+      @client.request_cmd(
+        {
+          'get_experience_list' => 1,
+          'app_version' => @version
+        }
+      )
     end
 
     ##

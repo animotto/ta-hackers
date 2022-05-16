@@ -25,7 +25,7 @@ def chat_log(shell, room, messages)
         "\e[1;33m\u2764 \e[22;34m[%s:%d] \e[22;31m%d \e[1;35m%s \e[22;33m%s\e[0m",
         GAME.getCountryNameByID(room),
         room,
-        GAME.getLevelByExp(message.experience),
+        GAME.experience_list.level(message.experience),
         message.name,
         message.message
       )

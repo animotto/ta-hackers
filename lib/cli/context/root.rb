@@ -142,7 +142,7 @@ SHELL.add_command(
   LOGGER.log(msg)
 
   msg = 'Experience list'
-  GAME.experienceList = GAME.cmdGetExperienceList
+  GAME.experience_list.load
   LOGGER.log(msg)
 
   msg = 'Builders list'
@@ -492,19 +492,29 @@ end
 # experience
 SHELL.add_command(
   :experience,
-  description: 'Experience list'
+  description: 'Experience list',
+  params: ['[experience]']
 ) do |tokens, shell|
-  if GAME.experienceList.empty?
+  unless GAME.experience_list.loaded?
     shell.puts('No experience list')
     next
   end
 
-  GAME.experienceList.each do |k, v|
+  experience_list = GAME.experience_list
+
+  unless tokens[1].nil?
+    experience = tokens[1].to_i
+    shell.puts("Level: #{experience_list.level(experience)}")
+
+    next
+  end
+
+  experience_list.each do |level|
     shell.puts(
       format(
-        ' %-7d .. %s',
-        k,
-        v['experience']
+        ' %-3d %d',
+        level.level,
+        level.experience
       )
     )
   end
@@ -693,7 +703,7 @@ SHELL.add_command(
   shell.puts(format('  %-15s %d', 'Y', profile.y))
   shell.puts(format('  %-15s %d', 'Country', profile.country))
   shell.puts(format('  %-15s %d', 'Skin', profile.skin))
-  shell.puts(format('  %-15s %d', 'Level', GAME.getLevelByExp(profile.experience)))
+  shell.puts(format('  %-15s %d', 'Level', GAME.experience_list.level(profile.experience)))
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
@@ -726,7 +736,7 @@ SHELL.add_command(
   shell.puts(format('  %-15s %d', 'Y', detail['profile'].y))
   shell.puts(format('  %-15s %d', 'Country', detail['profile'].country))
   shell.puts(format('  %-15s %d', 'Skin', detail['profile'].skin))
-  shell.puts(format('  %-15s %d', 'Level', GAME.getLevelByExp(detail['profile'].experience)))
+  shell.puts(format('  %-15s %d', 'Level', GAME.experience_list.level(detail['profile'].experience)))
 
   shell.puts
   shell.puts(
@@ -959,7 +969,7 @@ SHELL.add_command(
   shell.puts("\e[1;35m\u2022 Player statistics\e[0m")
   shell.puts("  Rank: #{stats['rank']}")
   shell.puts("  Experience: #{stats['experience']}")
-  shell.puts("  Level: #{GAME.getLevelByExp(stats['experience'])}")
+  shell.puts("  Level: #{GAME.experience_list.level(stats['experience'])}")
   shell.puts('  Hacks:')
   shell.puts("   Successful: #{stats['hacks']['success']}")
   shell.puts("   Failed: #{stats['hacks']['fail']}")

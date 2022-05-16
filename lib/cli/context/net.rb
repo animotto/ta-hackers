@@ -37,7 +37,7 @@ CONTEXT_NET.add_command(
   shell.puts(format('  %-15s %d', 'Y', profile.y))
   shell.puts(format('  %-15s %d', 'Country', profile.country))
   shell.puts(format('  %-15s %d', 'Skin', profile.skin))
-  shell.puts(format('  %-15s %d', 'Level', GAME.getLevelByExp(profile.experience)))
+  shell.puts(format('  %-15s %d', 'Level', GAME.experience_list.level(profile.experience)))
   shell.puts(format('  %-15s %d', 'Tutorial', player.tutorial))
 
   if shield.installed?

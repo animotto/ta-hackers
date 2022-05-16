@@ -38,7 +38,7 @@ CONTEXT_WORLD.add_command(
       format(
         '  %-12d %-6d %+-8d %+-8d %-8d %s',
         k,
-        GAME.getLevelByExp(v['experience']),
+        GAME.experience_list.level(v['experience']),
         v['x'],
         v['y'],
         v['country'],
@@ -82,7 +82,7 @@ CONTEXT_WORLD.add_command(
       format(
         '  %-12d %-6d %+-8d %+-8d %-8d %s',
         k,
-        GAME.getLevelByExp(v['experience']),
+        GAME.experience_list.level(v['experience']),
         v['x'],
         v['y'],
         v['country'],

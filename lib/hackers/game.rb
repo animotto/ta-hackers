@@ -19,9 +19,9 @@ module Hackers
     attr_reader :api, :app_settings, :node_types,
                 :language_translations, :program_types,
                 :missions_list, :skin_types, :player,
-                :chat, :hints_list
+                :chat, :hints_list, :experience_list
 
-    attr_accessor :config, :experienceList,
+    attr_accessor :config,
       :buildersList, :goalsTypes, :shieldTypes,
       :rankList, :countriesList, :sid, :syncSeq,
       :client
@@ -29,7 +29,6 @@ module Hackers
     def initialize(config)
       @config = config
       @sid = String.new
-      @experienceList = Hash.new
       @buildersList = Hash.new
       @goalsTypes = Hash.new
       @shieldTypes = Hash.new
@@ -65,6 +64,7 @@ module Hackers
       @missions_list = MissionsList.new(@api)
       @skin_types = SkinTypes.new(@api)
       @hints_list = HintsList.new(@api)
+      @experience_list = ExperienceList.new(@api)
       @player = Network::Player.new(@api)
       @chat = Chat.new(@api)
     end
@@ -81,19 +81,6 @@ module Hackers
       target = Network::Target.new(@api)
       target.attack_test(id)
       target
-    end
-
-    ##
-    # Gets level by experience:
-    #   experience = Experience
-    #
-    # Returns level as number
-    def getLevelByExp(experience)
-      level = 0
-      @experienceList.each do |k, v|
-        level = v["level"] if experience >= v["experience"]
-      end
-      return level
     end
 
     ##
