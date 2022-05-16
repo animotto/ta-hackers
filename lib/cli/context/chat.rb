@@ -176,9 +176,10 @@ CONTEXT_CHAT_USERS = CONTEXT_CHAT.add_command(
 
   room = tokens[1].to_i
 
-  GAME.chat.open(room) unless CHAT_ROOMS.key?(room)
-  messages = GAME.chat.read(room)
-  GAME.chat.close(room) unless CHAT_ROOMS.key?(room)
+  chat = Hackers::Chat.new(GAME.api)
+  chat.open(room)
+  messages = chat.read(room)
+  chat.close(room)
   if messages.empty?
     shell.puts("No users in room #{room}")
     next
