@@ -109,14 +109,12 @@ module Hackers
     ##
     # Gets missions list
     def missions_list
-      params = {
-        'missions_get_list' => 1,
-        'app_version' => @version
-      }
-
-      response = @client.request_cmd(params)
-      serializer = Serializer.new(response)
-      serializer.parseMissionsList
+      @client.request_cmd(
+        {
+          'missions_get_list' => 1,
+          'app_version' => @version
+        }
+      )
     end
 
     ##

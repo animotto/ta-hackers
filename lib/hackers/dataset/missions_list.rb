@@ -4,80 +4,82 @@ module Hackers
   ##
   # Missions list
   class MissionsList < Dataset
+    include Enumerable
+
+    Mission = Struct.new(
+      :id,
+      :giver_name,
+      :name,
+      :message_info,
+      :goals,
+      :x,
+      :y,
+      :country,
+      :required_missions,
+      :required_core_level,
+      :reward_money,
+      :reward_bitcoins,
+      :message_completion,
+      :message_news,
+      :topology,
+      :nodes,
+      :additional_money,
+      :additional_bitcoins,
+      :group
+    )
+
+    def initialize(*)
+      super
+
+      @missions = []
+    end
+
     def load
       @raw_data = @api.missions_list
+      parse
     end
 
     def exist?(mission)
-      @raw_data.key?(mission)
+      @missions.any? { |m| m.id == mission }
+    end
+
+    def get(mission)
+      @missions.detect { |m| m.id == mission }
     end
 
     def each(&block)
-      @raw_data.keys.each(&block)
+      @missions.each(&block)
     end
 
-    def name(mission)
-      @raw_data[mission]['name']
-    end
+    private
 
-    def group(mission)
-      @raw_data[mission]['group']
-    end
+    def parse
+      data = Serializer.parseData(@raw_data)
 
-    def target(mission)
-      @raw_data[mission]['target']
-    end
-
-    def x(mission)
-      @raw_data[mission]['x']
-    end
-
-    def y(mission)
-      @raw_data[mission]['y']
-    end
-
-    def country(mission)
-      @raw_data[mission]['country']
-    end
-
-    def money(mission)
-      @raw_data[mission]['money']
-    end
-
-    def bitcoins(mission)
-      @raw_data[mission]['bitcoins']
-    end
-
-    def required_mission(mission)
-      @raw_data[mission]['requirements']['mission']
-    end
-
-    def required_core(mission)
-      @raw_data[mission]['requirements']['core']
-    end
-
-    def goals(mission)
-      @raw_data[mission]['goals']
-    end
-
-    def reward_money(mission)
-      @raw_data[mission]['reward']['money']
-    end
-
-    def reward_bitcoins(mission)
-      @raw_data[mission]['reward']['bitcoins']
-    end
-
-    def message_begin(mission)
-      @raw_data[mission]['messages']['begin']
-    end
-
-    def message_end(mission)
-      @raw_data[mission]['messages']['end']
-    end
-
-    def message_news(mission)
-      @raw_data[mission]['messages']['news']
+      @missions.clear
+      data[0].each do |record|
+        @missions << Mission.new(
+          record[0].to_i,
+          record[1],
+          Serializer.normalizeData(record[2]),
+          record[3],
+          Serializer.normalizeData(record[4]).split(','),
+          record[5].to_i,
+          record[6].to_i,
+          record[7].to_i,
+          Serializer.normalizeData(record[9]).split(','),
+          record[12].to_i,
+          record[13].to_i,
+          record[14].to_i,
+          Serializer.normalizeData(record[17]),
+          Serializer.normalizeData(record[19]),
+          Serializer.normalizeData(record[21]),
+          Serializer.normalizeData(record[22]),
+          record[24].to_i,
+          record[25].to_i,
+          record[28]
+        )
+      end
     end
   end
 end

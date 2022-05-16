@@ -4,6 +4,8 @@ module Hackers
   ##
   # Application settings
   class AppSettings < Dataset
+    include Enumerable
+
     attr_reader :datetime
 
     def initialize(*)

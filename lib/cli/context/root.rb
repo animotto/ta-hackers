@@ -371,44 +371,45 @@ SHELL.add_command(
     next
   end
 
+  missions_list = GAME.missions_list
+
   unless tokens[1].nil?
     id = tokens[1].to_i
-    unless GAME.missions_list.exist?(id)
+    unless missions_list.exist?(id)
       shell.puts('No such mission')
       next
     end
 
-    shell.puts(format('%-20s %d', 'ID', id))
-    shell.puts(format('%-20s %s', 'Group', GAME.missions_list.group(id)))
-    shell.puts(format('%-20s %s', 'Name', GAME.missions_list.name(id)))
-    shell.puts(format('%-20s %s', 'Target', GAME.missions_list.target(id)))
-    shell.puts(format('%-20s %d, %d', 'Coordinates', GAME.missions_list.x(id), GAME.missions_list.y(id)))
-    shell.puts(format('%-20s %d (%s)', 'Country', GAME.missions_list.country(id), GAME.getCountryNameByID(GAME.missions_list.country(id))))
-    shell.puts(format('%-20s %d', 'Money', GAME.missions_list.money(id)))
-    shell.puts(format('%-20s %d', 'Bitcoins', GAME.missions_list.bitcoins(id)))
-    shell.puts(format('Requirements'))
-    shell.puts(format(' %-20s %s', 'Mission', GAME.missions_list.required_mission(id)))
-    shell.puts(format(' %-20s %d', 'Core', GAME.missions_list.required_core(id)))
-    shell.puts(format('%-20s %s', 'Goals', GAME.missions_list.goals(id).join(', ')))
-    shell.puts(format('Reward'))
-    shell.puts(format(' %-20s %d', 'Money', GAME.missions_list.reward_money(id)))
-    shell.puts(format(' %-20s %d', 'Bitcoins', GAME.missions_list.reward_bitcoins(id)))
-    shell.puts(format('Messages'))
-    shell.puts(format(' %-20s %s', 'Begin', GAME.missions_list.message_begin(id)))
-    shell.puts(format(' %-20s %s', 'End', GAME.missions_list.message_end(id)))
-    shell.puts(format(' %-20s %s', 'News', GAME.missions_list.message_news(id)))
+    mission = missions_list.get(id)
+
+    shell.puts(format('%-20s %d', 'ID', mission.id))
+    shell.puts(format('%-20s %s', 'Group', mission.group))
+    shell.puts(format('%-20s %s', 'Name', mission.name))
+    shell.puts(format('%-20s %s', 'Giver name', mission.giver_name))
+    shell.puts(format('%-20s %s (%d)', 'Country', GAME.getCountryNameByID(mission.country), mission.country))
+    shell.puts(format('%-20s %d, %d', 'Coordinates', mission.x, mission.y))
+    shell.puts(format('%-20s %d', 'Reward money', mission.reward_money))
+    shell.puts(format('%-20s %d', 'Reward bitcoins', mission.reward_bitcoins))
+    shell.puts(format('%-20s %d', 'Additional money', mission.additional_money))
+    shell.puts(format('%-20s %d', 'Additional bitcoins', mission.additional_bitcoins))
+    shell.puts(format('%-20s %s', 'Required missions', mission.required_missions))
+    shell.puts(format('%-20s %d', 'Required core level', mission.required_core_level))
+    shell.puts(format('%-20s %s', 'Goals', mission.goals))
+    shell.puts(format('%-20s %s', 'Message info', mission.message_info))
+    shell.puts(format('%-20s %s', 'Message completion', mission.message_completion))
+    shell.puts(format('%-20s %s', 'Message news', mission.message_news))
     next
   end
 
   shell.puts('Missions list:')
-  GAME.missions_list.each do |k|
+  missions_list.each do |mission|
     shell.puts(
       format(
-        ' %-4d .. %-15s %-15s %s',
-        k,
-        GAME.missions_list.group(k),
-        GAME.missions_list.name(k),
-        GAME.missions_list.target(k)
+        ' %-4d .. %-10s %-13s %s',
+        mission.id,
+        mission.group,
+        mission.giver_name,
+        mission.name
       )
     )
   end
