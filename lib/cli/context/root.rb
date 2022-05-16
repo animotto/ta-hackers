@@ -158,7 +158,7 @@ SHELL.add_command(
   LOGGER.log(msg)
 
   msg = 'Rank list'
-  GAME.rankList = GAME.cmdRankGetList
+  GAME.rank_list.load
   LOGGER.log(msg)
 
   msg = 'Authenticate'
@@ -607,17 +607,22 @@ SHELL.add_command(
   :ranks,
   description: 'Rank list'
 ) do |tokens, shell|
-  if GAME.rankList.empty?
+  unless GAME.rank_list.loaded?
     shell.puts('No rank list')
     next
   end
 
-  GAME.rankList.each do |k, v|
+  shell.puts('Rank list:')
+  GAME.rank_list.each do |rank|
     shell.puts(
       format(
-        ' %-7d .. %d',
-        k,
-        v['rank']
+        ' %-3d %-14s %-5d %-5d %-7d %-7d',
+        rank.id,
+        rank.title,
+        rank.rank_gain,
+        rank.rank_maintain,
+        rank.bonus_money,
+        rank.bonus_bitcoins
       )
     )
   end

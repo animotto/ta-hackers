@@ -948,14 +948,12 @@ module Hackers
     ##
     # Gets rank list
     def rank_list
-      params = {
-        'rank_get_list' => 1,
-        'app_version' => @version
-      }
-
-      response = @client.request_cmd(params)
-      serializer = Serializer.new(response)
-      serializer.parseRankList
+      @client.request_cmd(
+        {
+          'rank_get_list' => 1,
+          'app_version' => @version
+        }
+      )
     end
 
     ##
