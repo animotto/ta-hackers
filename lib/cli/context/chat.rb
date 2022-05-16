@@ -7,7 +7,7 @@ CHAT_ROOMS = {}
 def chat_read(shell, room)
   loop do
     begin
-      messages = CHAT_ROOMS[room][:chat].read
+      messages = GAME.chat.read(room)
     rescue Hackers::RequestError => e
       LOGGER.error("Chat read (#{e})")
     else
@@ -23,10 +23,10 @@ def chat_log(shell, room, messages)
     shell.puts(
       format(
         "\e[1;33m\u2764 \e[22;34m[%s:%d] \e[22;31m%d \e[1;35m%s \e[22;33m%s\e[0m",
-        GAME.getCountryNameByID(room.to_s),
+        GAME.getCountryNameByID(room),
         room,
         GAME.getLevelByExp(message.experience),
-        message.nick,
+        message.name,
         message.message
       )
     )
@@ -52,10 +52,8 @@ CONTEXT_CHAT_OPEN = CONTEXT_CHAT.add_command(
     next
   end
 
-  CHAT_ROOMS[room] = {
-    :chat => GAME.getChat(room),
-    :thread => Thread.new { chat_read(shell, room) }
-  }
+  GAME.chat.open(room)
+  CHAT_ROOMS[room] = Thread.new { chat_read(shell, room) }
 end
 
 CONTEXT_CHAT_OPEN.completion do |line|
@@ -74,8 +72,9 @@ CONTEXT_CHAT_CLOSE = CONTEXT_CHAT.add_command(
     next
   end
 
-  CHAT_ROOMS[room][:thread].kill
+  CHAT_ROOMS[room].kill
   CHAT_ROOMS.delete(room)
+  GAME.chat.close(room)
 end
 
 CONTEXT_CHAT_CLOSE.completion do |line|
@@ -98,7 +97,7 @@ CONTEXT_CHAT.add_command(
       format(
       " \e[1;33m\u2022\e[0m %-4d (%s)",
       k,
-      GAME.getCountryNameByID(k.to_s),
+      GAME.getCountryNameByID(k)
       )
     )
   end
@@ -116,7 +115,7 @@ CONTEXT_CHAT_SAY = CONTEXT_CHAT.add_command(
     next
   end
 
-  messages = CHAT_ROOMS[room][:chat].write(tokens[2..-1].join(' '))
+  messages = GAME.chat.write(room, tokens[2..].join(' '))
   chat_log(shell, room, messages)
 rescue Hackers::RequestError => e
   LOGGER.error("Chat write (#{e})")
@@ -138,9 +137,9 @@ CONTEXT_CHAT_TALK = CONTEXT_CHAT.add_command(
     next
   end
 
-  shell.puts('Enter ! or ^D to quit')
+  shell.puts('Enter ! or press ^D to quit')
   loop do
-    prompt = "#{GAME.getCountryNameByID(room.to_s)}:#{room} \e[1;33m\u2765\e[0m "
+    prompt = "#{GAME.getCountryNameByID(room)}:#{room} \e[1;33m\u2765\e[0m "
     message = shell.readline(prompt, true)
     if message.nil?
       shell.puts
@@ -152,7 +151,7 @@ CONTEXT_CHAT_TALK = CONTEXT_CHAT.add_command(
 
     break if message == '!'
 
-    messages = CHAT_ROOMS[room][:chat].write(message)
+    messages = GAME.chat.write(room, message)
     chat_log(shell, room, messages)
   rescue Hackers::RequestError => e
     LOGGER.error("Chat write (#{e})")
@@ -176,8 +175,9 @@ CONTEXT_CHAT_USERS = CONTEXT_CHAT.add_command(
 
   room = tokens[1].to_i
 
-  chat = GAME.getChat(room)
-  messages = chat.read
+  GAME.chat.open(room) unless CHAT_ROOMS.key?(room)
+  messages = GAME.chat.read(room)
+  GAME.chat.close(room) unless CHAT_ROOMS.key?(room)
   if messages.empty?
     shell.puts("No users in room #{room}")
     next
@@ -188,7 +188,7 @@ CONTEXT_CHAT_USERS = CONTEXT_CHAT.add_command(
     format(
       'Users in room %d (%s)',
       room,
-      GAME.getCountryNameByID(room.to_s)
+      GAME.getCountryNameByID(room)
     )
   )
 
@@ -196,7 +196,7 @@ CONTEXT_CHAT_USERS = CONTEXT_CHAT.add_command(
     shell.puts(
       format(
         ' %-30s .. %d',
-        message.nick,
+        message.name,
         message.id
       )
     )

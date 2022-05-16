@@ -18,7 +18,8 @@ module Hackers
 
     attr_reader :api, :app_settings, :node_types,
                 :language_translations, :program_types,
-                :missions_list, :skin_types, :player
+                :missions_list, :skin_types, :player,
+                :chat
 
     attr_accessor :config,
       :hintsList, :experienceList,
@@ -66,6 +67,7 @@ module Hackers
       @missions_list = MissionsList.new(@api)
       @skin_types = SkinTypes.new(@api)
       @player = Network::Player.new(@api)
+      @chat = Chat.new(@api)
     end
 
     ##
@@ -116,13 +118,6 @@ module Hackers
       dhms.push("%02d" % [timer / 60 % 60])
       dhms.push("%02d" % [timer % 60])
       return dhms.join(":")
-    end
-
-    ##
-    # Gets chat instance:
-    #   room = Room ID
-    def getChat(room)
-      Chat.new(self, room)
     end
 
     ##
@@ -558,58 +553,6 @@ module Hackers
       }
       response = @client.request_session(params, @sid)
       return response
-    end
-
-    ##
-    # Reads the chat:
-    #   room = Room ID
-    #   last = Read from the datetime
-    #
-    # Returns array:
-    #   [
-    #     *ChatMessage*,
-    #     *ChatMessage*,
-    #     *ChatMessage*,
-    #     ...
-    #   ]
-    def cmdChatDisplay(room, last = "")
-      params = {
-        "chat_display"  => "",
-        "room"          => room,
-        "last_message"  => last,
-        "app_version"   => @config["version"],
-      }
-      response = @client.request_session(params, @sid)
-      serializer = Serializer.new(response)
-      return serializer.parseChat
-    end
-
-    ##
-    # Sends message to chat:
-    #   room    = Room ID
-    #   message = Message
-    #   last    = Read from the datetime
-    #
-    # Returns array:
-    #   [
-    #     *ChatMessage*,
-    #     *ChatMessage*,
-    #     *ChatMessage*,
-    #     ...
-    #   ]
-    def cmdChatSend(room, message, last = "")
-      message = Serializer.normalizeData(message, false)
-      params = {
-        "chat_send"     => "",
-        "room"          => room,
-        "last_message"  => last,
-        "message"       => message,
-        "id_player"     => @config["id"],
-        "app_version"   => @config["version"],
-      }
-      response = @client.request_session(params, @sid)
-      serializer = Serializer.new(response)
-      return serializer.parseChat
     end
 
     ##

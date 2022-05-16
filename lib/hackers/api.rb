@@ -486,34 +486,31 @@ module Hackers
     ##
     # Reads the chat
     def read_chat(room, last = '')
-      params = {
-        'chat_display' => '',
-        'room' => room,
-        'last_message' => last,
-        'app_version' => @version
-      }
-
-      response = @client.request_session(params, @sid)
-      serializer = Serializer.new(response)
-      serializer.parseChat
+      @client.request_session(
+        {
+          'chat_display' => '',
+          'room' => room,
+          'last_message' => last,
+          'app_version' => @version
+        },
+        @sid
+      )
     end
 
     ##
     # Writes a message to the chat
     def write_chat(room, message, last = '', id = @id)
-      message = Serializer.normalizeData(message, false)
-      params = {
-        'chat_send' => '',
-        'room' => room,
-        'last_message' => last,
-        'message' => message,
-        'id_player' => id,
-        'app_version' => @version
-      }
-
-      response = @client.request_session(params, @sid)
-      serializer = Serializer.new(response)
-      serializer.parseChat
+      @client.request_session(
+        {
+          'chat_send' => '',
+          'room' => room,
+          'last_message' => last,
+          'message' => message,
+          'id_player' => id,
+          'app_version' => @version
+        },
+        @sid
+      )
     end
 
     ##
