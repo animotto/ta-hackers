@@ -405,7 +405,7 @@ SHELL.add_command(
   missions_list.each do |mission|
     shell.puts(
       format(
-        ' %-4d .. %-10s %-13s %s',
+        ' %-4d %-10s %-13s %s',
         mission.id,
         mission.group,
         mission.giver_name,
@@ -429,11 +429,11 @@ SHELL.add_command(
   GAME.skin_types.each do |skin|
     shell.puts(
       format(
-        ' %-7d .. %s, %d, %d',
-        skin,
-        GAME.skin_types.name(skin),
-        GAME.skin_types.price(skin),
-        GAME.skin_types.rank(skin)
+        ' %-4d %-5d %-4d %s',
+        skin.id,
+        skin.price,
+        skin.rank,
+        skin.name
       )
     )
   end

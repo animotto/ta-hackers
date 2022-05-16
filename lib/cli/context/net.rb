@@ -47,7 +47,7 @@ CONTEXT_NET.add_command(
   unless skins.empty?
     shell.puts('  Skins:')
     skins.each do |skin|
-      shell.puts(format('   %-3d %-15s', skin.type, GAME.skin_types.name(skin.type)))
+      shell.puts(format('   %-3d %-15s', skin.type, GAME.skin_types.get(skin.type).name))
     end
   end
 rescue Hackers::RequestError => e

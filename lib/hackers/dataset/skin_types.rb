@@ -4,10 +4,14 @@ module Hackers
   ##
   # Skin types
   class SkinTypes < Dataset
+    include Enumerable
+
+    Skin = Struct.new(:id, :name, :price, :rank)
+
     def initialize(*)
       super
 
-      @skins = {}
+      @skins = []
     end
 
     def load
@@ -15,24 +19,16 @@ module Hackers
       parse
     end
 
-    def exist?(type)
-      @skins.key?(type)
+    def exist?(skin)
+      @skins.any? { |s| s.id == skin }
+    end
+
+    def get(skin)
+      @skins.detect { |s| s.id == skin }
     end
 
     def each(&block)
-      @skins.keys.each(&block)
-    end
-
-    def name(type)
-      @skins[type][:name]
-    end
-
-    def price(type)
-      @skins[type][:price]
-    end
-
-    def rank(type)
-      @skins[type][:rank]
+      @skins.each(&block)
     end
 
     private
@@ -40,12 +36,14 @@ module Hackers
     def parse
       data = Serializer.parseData(@raw_data)
 
+      @skins.clear
       data[0].each do |record|
-        @skins[record[0].to_i] = {
-          name: record[1],
-          price: record[2].to_i,
-          rank: record[3].to_i
-        }
+        @skins << Skin.new(
+          record[0].to_i,
+          record[1],
+          record[2].to_i,
+          record[3].to_i
+        )
       end
     end
   end
