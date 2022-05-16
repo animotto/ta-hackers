@@ -926,14 +926,12 @@ module Hackers
     ##
     # Gets goals types list
     def goal_types
-      params = {
-        'goal_types_get_list' => 1,
-        'app_version' => @version
-      }
-
-      response = @client.request_cmd(params)
-      serializer = Serializer.new(response)
-      serializer.parseGoalsTypes
+      @client.request_cmd(
+        {
+          'goal_types_get_list' => 1,
+          'app_version' => @version
+        }
+      )
     end
 
     ##

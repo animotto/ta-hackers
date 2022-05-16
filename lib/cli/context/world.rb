@@ -185,14 +185,15 @@ CONTEXT_WORLD.add_command(
   )
 
   world['goals'].each do |id, goal|
+    goal_type = GAME.goal_types.get(goal['type'])
     shell.puts(
       format(
         '  %-12d %-7d %-8d %-4d %s',
         id,
-        GAME.goalsTypes[goal['type']]['credits'],
+        goal_type.credits,
         goal['finished'],
         goal['type'],
-        GAME.goalsTypes[goal['type']]['name']
+        goal_type.name
       )
     )
   end

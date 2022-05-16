@@ -11,8 +11,9 @@ class Fingoals < Sandbox::Script
     loop do
       goals = @game.cmdGoalByPlayer
       goals.each do |id, goal|
-        @logger.log("Goal #{id} finished with #{@game.goalsTypes[goal["type"]]["credits"]} credits")
-        @game.cmdGoalUpdate(id, @game.goalsTypes[goal["type"]]["amount"])
+        goal_type = GAME.goal_types.get(goal['type'])
+        @game.cmdGoalUpdate(id, goal_type.amount)
+        @logger.log("Goal #{id} finished with #{goal_type.credits} credits")
       end
     rescue Hackers::RequestError => e
       @logger.error(e)

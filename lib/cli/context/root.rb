@@ -150,7 +150,7 @@ SHELL.add_command(
   LOGGER.log(msg)
 
   msg = 'Goal types'
-  GAME.goalsTypes = GAME.cmdGoalTypesGetList
+  GAME.goal_types.load
   LOGGER.log(msg)
 
   msg = 'Shield types'
@@ -548,30 +548,31 @@ SHELL.add_command(
   :goals,
   description: 'Goals types'
 ) do |tokens, shell|
-  if GAME.goalsTypes.empty?
+  unless GAME.goal_types.loaded?
     shell.puts('No goals types')
     next
   end
 
+  shell.puts('Goal types:')
   shell.puts(
     format(
-      ' %-4s %-20s %-6s %-7s %s',
-      'Type',
+      ' %-3s %-20s %-6s %-7s %s',
+      'ID',
       'Name',
       'Amount',
       'Credits',
-      'Title'
+      'Description'
     )
   )
-  GAME.goalsTypes.each do |type, goal|
+  GAME.goal_types.each do |goal|
     shell.puts(
       format(
-        ' %-4d %-20s %-6d %-7d %s',
-        type,
-        goal['name'],
-        goal['amount'],
-        goal['credits'],
-        goal['title']
+        ' %-3d %-20s %-6d %-7d %s',
+        goal.id,
+        goal.name,
+        goal.amount,
+        goal.credits,
+        goal.description
       )
     )
   end
