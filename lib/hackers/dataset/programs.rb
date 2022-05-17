@@ -3,24 +3,36 @@
 module Hackers
   module Programs
     ##
-    # Programs
+    # Program
     class Program
-      attr_reader :id, :type, :level, :amount, :timer
+      attr_reader :id, :type, :level, :timer
 
-      def initialize(data)
-        @data = data
+      attr_accessor :amount
 
-        parse
+      def initialize(api, programs, id = 0, type = 0, level = 0, amount= 0, timer = 0)
+        @api = api
+        @programs = api
+        @id = id
+        @type = type
+        @level = level
+        @amount = amount
+        @timer = timer
       end
 
-      private
+      def upgrade
+        @api.upgrade_program(@id)
+      end
 
-      def parse
-        @id = @data[0].to_i
-        @type = @data[2].to_i
-        @level = @data[3].to_i
-        @amount = @data[4].to_i
-        @timer = @data[5].to_i
+      def finish
+        @api.finish_program(@id)
+      end
+
+      def parse(data)
+        @id = data[0].to_i
+        @type = data[2].to_i
+        @level = data[3].to_i
+        @amount = data[4].to_i
+        @timer = data[5].to_i
       end
     end
 
@@ -42,6 +54,12 @@ module Hackers
     ##
     # AI
     class AI < Program
+      def revive
+        raw_data = @api.revive_ai(@id)
+        data = Serializer.parseData(raw_data)
+
+        @programs.parse(data[0])
+      end
     end
 
     ##

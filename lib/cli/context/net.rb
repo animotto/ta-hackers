@@ -226,7 +226,7 @@ CONTEXT_NET.add_command(
   readme.write(tokens[1])
 
   msg = 'Set readme'
-  player.update_readme
+  readme.update
   LOGGER.log(msg)
 
   shell.puts("\e[1;35m\u2022 Readme\e[0m")
@@ -269,7 +269,7 @@ CONTEXT_NET.add_command(
   readme.remove(id)
 
   msg = 'Set readme'
-  player.update_readme
+  readme.update
   LOGGER.log(msg)
 
   shell.puts("\e[1;35m\u2022 Readme\e[0m")
@@ -299,7 +299,7 @@ CONTEXT_NET.add_command(
   readme.clear
 
   msg = 'Set readme'
-  player.update_readme
+  readme.update
   LOGGER.log(msg)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")

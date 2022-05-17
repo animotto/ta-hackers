@@ -99,7 +99,7 @@ CONTEXT_PROG.add_command(
   end
 
   shell.puts
-  shell.puts("  \e[35mSequence: #{GAME.syncSeq}\e[0m")
+  shell.puts("  \e[35mSequence: #{queue.sequence}\e[0m")
   shell.puts("  \e[35mTotal: #{GAME.timerToDHMS(total)}\e[0m") unless total.zero?
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
@@ -119,9 +119,10 @@ CONTEXT_PROG.add_command(
   type = tokens[1].to_i
 
   msg = 'Create program'
-  id = GAME.cmdCreateProgram(type)
+  GAME.player.programs.create(type)
   LOGGER.log(msg)
-  shell.puts("Program #{type} has been created")
+
+  shell.puts("Program #{GAME.program_types.get(type).name} (#{type}) has been created")
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
@@ -139,8 +140,21 @@ CONTEXT_PROG.add_command(
 
   id = tokens[1].to_i
 
+  unless GAME.player.loaded?
+    msg = 'Network maintenance'
+    GAME.player.load
+    LOGGER.log(msg)
+  end
+
+  programs = GAME.player.programs
+
+  unless programs.exist?(id)
+    shell.puts('No such program')
+    next
+  end
+
   msg = 'Upgrade program'
-  GAME.cmdUpgradeProgram(id)
+  programs.get(id).upgrade
   LOGGER.log(msg)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
@@ -159,8 +173,21 @@ CONTEXT_PROG.add_command(
 
   id = tokens[1].to_i
 
+  unless GAME.player.loaded?
+    msg = 'Network maintenance'
+    GAME.player.load
+    LOGGER.log(msg)
+  end
+
+  programs = GAME.player.programs
+
+  unless programs.exist?(id)
+    shell.puts('No such program')
+    next
+  end
+
   msg = 'Finish program'
-  GAME.cmdFinishProgram(id)
+  programs.get(id).finish
   LOGGER.log(msg)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
@@ -182,32 +209,48 @@ CONTEXT_PROG.add_command(
     next
   end
 
-  programs = {}
+  unless GAME.player.loaded?
+    msg = 'Network maintenance'
+    GAME.player.load
+    LOGGER.log(msg)
+  end
+
+  programs = GAME.player.programs
+
   0.step(tokens.length - 1, 2) do |i|
-    programs[tokens[i + 1].to_i] = tokens[i + 2].to_i
+    programs.edit(tokens[i + 1].to_i, tokens[i + 2].to_i)
   end
 
   msg = 'Delete program'
-  programs = GAME.cmdDeleteProgram(programs)
+  programs.update
   LOGGER.log(msg)
 
   shell.puts("\e[1;35m\u2022 Programs\e[0m")
   shell.puts(
     format(
-      "  \e[35m%-12s %-4s %-6s\e[0m",
+      "  \e[35m%-12s %-12s %-4s %-6s %-5s %-12s\e[0m",
+      'ID',
       'Name',
       'Type',
-      'Amount'
+      'Amount',
+      'Level',
+      'Timer'
     )
   )
 
-  programs.each do |k, v|
+  programs.each do |program|
+    timer = String.new
+    timer = GAME.timerToDHMS(program.timer * -1) if program.timer.negative?
+
     shell.puts(
       format(
-        '  %-12s %-4d %-6d',
-        GAME.program_types.get(k).name,
-        k,
-        v["amount"]
+        '  %-12d %-12s %-4d %-6d %-5d %-12s',
+        program.id,
+        GAME.program_types.get(program.type).name,
+        program.type,
+        program.amount,
+        program.level,
+        timer
       )
     )
   end
@@ -240,7 +283,7 @@ CONTEXT_PROG.add_command(
   end
 
   msg = 'Sync queue'
-  GAME.player.queue_sync
+  queue.sync
   LOGGER.log(msg)
 
   shell.puts("\e[1;35m\u2022 Programs queue\e[0m")
@@ -272,7 +315,7 @@ CONTEXT_PROG.add_command(
   end
 
   shell.puts
-  shell.puts("  \e[35mSequence: #{GAME.syncSeq}\e[0m")
+  shell.puts("  \e[35mSequence: #{queue.sequence}\e[0m")
   shell.puts("  \e[35mTotal: #{GAME.timerToDHMS(total)}\e[0m") unless total.zero?
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
@@ -291,8 +334,21 @@ CONTEXT_PROG.add_command(
 
   id = tokens[1].to_i
 
+  unless GAME.player.loaded?
+    msg = 'Network maintenance'
+    GAME.player.load
+    LOGGER.log(msg)
+  end
+
+  programs = GAME.player.programs
+
+  unless programs.exist?(id)
+    shell.puts('No such program')
+    next
+  end
+
   msg = 'AI program revive'
-  id = GAME.cmdAIProgramRevive(id)
+  programs.get(id).revive
   LOGGER.log(msg)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")

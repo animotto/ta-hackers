@@ -15,7 +15,7 @@ module Hackers
 
     attr_accessor :host, :port, :path, :salt,
                   :ssl, :id, :password, :language,
-                  :platform, :version, :sid, :sync_seq
+                  :platform, :version, :sid
 
     ##
     # Creates a new instance of the API
@@ -39,8 +39,6 @@ module Hackers
       @platform = platform
 
       @client = Client.new(@host, @port, @ssl, @path, @salt)
-
-      @sync_seq = 0
     end
 
     ##
@@ -193,7 +191,6 @@ module Hackers
       }
 
       response = @client.request_cmd(params)
-      @sync_seq = 0
       serializer = Serializer.new(response)
       serializer.parseAuthIdPassword
     end
@@ -327,15 +324,15 @@ module Hackers
     ##
     # Creates a program
     def create_program(type, id = @id)
-      params = {
-        'create_program' => 1,
-        'id_player' => id,
-        'id_program' => type,
-        'app_version' => @version
-      }
-
-      response = @client.request_session(params, @sid)
-      response.to_i
+      @client.request_session(
+        {
+          'create_program' => 1,
+          'id_player' => id,
+          'id_program' => type,
+          'app_version' => @version
+        },
+        @sid
+      )
     end
 
     ##
@@ -367,24 +364,21 @@ module Hackers
     ##
     # Deletes a program
     def delete_program(programs, id = @id)
-      params = {
-        'program_delete' => '',
-        'id_player' => id,
-        'data' => Serializer.generatePrograms(programs),
-        'app_version' => @version
-      }
-
-      response = @client.request_session(params, @sid)
-      serializer = Serializer.new(response)
-      serializer.parseDeleteProgram
+      @client.request_session(
+        {
+          'program_delete' => '',
+          'id_player' => id,
+          'data' => programs,
+          'app_version' => @version
+        },
+        @sid
+      )
     end
 
     ##
     # Synchronizes programs queue
-    def queue_sync(programs, seq = @sync_seq, id = @id)
-      @sync_seq += 1
-
-      @client.request_session(
+    def queue_sync(programs, seq, id = @id)
+      response = @client.request_session(
         {
           'queue_sync_new' => 1,
           'id_player' => id,
@@ -1376,16 +1370,15 @@ module Hackers
 
     ##
     # Revives AI program
-    def revive_ai(prog)
-      params = {
-        'ai_program_revive' => 1,
-        'id' => prog,
-        'app_version' => @version
-      }
-
-      response = @client.request_session(params, @sid)
-      serializer = Serializer.new(response)
-      serializer.parseAIProgramRevive
+    def revive_ai(program)
+      @client.request_session(
+        {
+          'ai_program_revive' => 1,
+          'id' => program,
+          'app_version' => @version
+        },
+        @sid
+      )
     end
 
     ##

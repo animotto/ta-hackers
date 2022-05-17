@@ -14,30 +14,17 @@ module Hackers
 
         @net = Network.new
         @profile = Profile.new
-        @programs = Programs.new
-        @queue = Queue.new
+        @programs = Programs.new(@api)
+        @queue = Queue.new(@api, self)
         @skins = Skins.new
         @shield = Shield.new
         @logs = Logs.new(self)
-        @readme = ReadmePlayer.new
+        @readme = ReadmePlayer.new(@api)
       end
 
       def load
         @raw_data = @api.net
         parse
-      end
-
-      def queue_sync
-        raw_data = @api.queue_sync(@queue.generate)
-        data = Serializer.parseData(raw_data)
-
-        @programs.parse(data.dig(0))
-        @queue.parse(data.dig(1))
-        @profile.bitcoins = data.dig(2, 0, 0)
-      end
-
-      def update_readme
-        @api.set_readme(@readme.generate)
       end
 
       private
@@ -69,7 +56,7 @@ module Hackers
 
         @net = Network.new
         @profile = Profile.new
-        @readme = Readme.new
+        @readme = Readme.new(@api)
       end
 
       def attack(id)
@@ -144,7 +131,9 @@ module Hackers
     class Programs
       include Enumerable
 
-      def initialize
+      def initialize(api)
+        @api = api
+
         @programs = []
       end
 
@@ -152,11 +141,50 @@ module Hackers
         @programs.each(&block)
       end
 
+      def exist?(program)
+        @programs.any? { |p| p.id == program }
+      end
+
+      def get(program)
+        @programs.detect { |p| p.id == program }
+      end
+
+      def edit(type, amount)
+        program = @programs.detect { |p| p.type == type }
+        return if program.nil?
+
+        program.amount = amount
+      end
+
+      def create(type)
+        raw_data = @api.create_program(type)
+        data = Serializer.parseData(raw_data)
+
+        id = data.dig(0, 0, 0).to_i
+        program = ProgramTypes.program(type)
+        @programs << program.new(@api, self, id, type)
+      end
+
+      def update
+        raw_data = @api.delete_program(generate)
+        raw_data.split(';') do |data|
+          type, amount = data.split(',', 2).map(&:to_i)
+          each do |p|
+            p.amount = amount if p.type == type
+          end
+        end
+      end
+
+      def generate
+        @programs.map { |p| "#{p.type},#{p.amount};" }.join
+      end
+
       def parse(data)
         @programs.clear
         data.each do |record|
           program = ProgramTypes.program(record[2].to_i)
-          @programs << program.new(record)
+          @programs << program.new(@api, self)
+          @programs.last.parse(record)
         end
       end
     end
@@ -278,7 +306,9 @@ module Hackers
     class Readme
       include Enumerable
 
-      def initialize
+      def initialize(api)
+        @api = api
+
         @messages = []
       end
 
@@ -326,6 +356,9 @@ module Hackers
     ##
     # Readme player
     class ReadmePlayer < Readme
+      def update
+        @api.set_readme(generate)
+      end
     end
 
     ##
@@ -333,10 +366,16 @@ module Hackers
     class Queue
       include Enumerable
 
+      attr_reader :sequence
+
       Item = Struct.new(:type, :amount, :timer)
 
-      def initialize
+      def initialize(api, player)
+        @api = api
+        @player = player
+
         @queue = []
+        @sequence = 0
       end
 
       def each(&block)
@@ -352,8 +391,19 @@ module Hackers
         @queue.delete_if { |i| i.type == type }
       end
 
+      def sync
+        raw_data = @api.queue_sync(generate, @sequence)
+        data = Serializer.parseData(raw_data)
+
+        @player.programs.parse(data.dig(0))
+        parse(data.dig(1))
+        @player.profile.bitcoins = data.dig(2, 0, 0)
+
+        @sequence += 1
+      end
+
       def generate
-        @queue.map { |i| "#{i.type},#{i.amount}" }.join(';')
+        @queue.map { |i| "#{i.type},#{i.amount};" }.join
       end
 
       def parse(data)
