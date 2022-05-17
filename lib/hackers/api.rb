@@ -8,8 +8,8 @@ module Hackers
     PORT = 443
     SSL = true
     PATH = '/req.php'
-    SALT = 'WGmHVNph'
-    VERSION = 1220
+    SALT = 'ZqQxXFFy'
+    VERSION = 1224
     LANGUAGE = 'en'
     PLATFORM = 'google'
 
