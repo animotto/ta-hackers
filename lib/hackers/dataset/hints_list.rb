@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 module Hackers
+  ##
+  # Hints list
   class HintsList < Dataset
     include Enumerable
 

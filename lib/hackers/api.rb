@@ -414,30 +414,28 @@ module Hackers
     ##
     # Gets world data
     def world(country, id = @id)
-      params = {
-        'player_get_world' => 1,
-        'id' => id,
-        'id_country' => country,
-        'app_version' => @version
-      }
-
-      response = @client.request_session(params, @sid)
-      serializer = Serializer.new(response)
-      serializer.parsePlayerWorld
+      @client.request_session(
+        {
+          'player_get_world' => 1,
+          'id' => id,
+          'id_country' => country,
+          'app_version' => @version
+        },
+        @sid
+      )
     end
 
     ##
     # Gets new targets
     def new_targets(id = @id)
-      params = {
-        'player_get_new_targets' => 1,
-        'id' => id,
-        'app_version' => @version
-      }
-
-      response = @client.request_session(params, @sid)
-      serializer = Serializer.new(response)
-      serializer.parseGetNewTargets
+      @client.request_session(
+        {
+          'player_get_new_targets' => 1,
+          'id' => id,
+          'app_version' => @version
+        },
+        @sid
+      )
     end
 
     ##
@@ -456,16 +454,15 @@ module Hackers
     ##
     # Updates goal
     def update_goal(goal, record)
-      params = {
-        'goal_update' => '',
-        'id' => goal,
-        'record' => record,
-        'app_version' => @version
-      }
-
-      response = @client.request_session(params, @sid)
-      serializer = Serializer.new(response)
-      serializer.parseGoalUpdate
+      @client.request_session(
+        {
+          'goal_update' => '',
+          'id' => goal,
+          'record' => record,
+          'app_version' => @version
+        },
+        @sid
+      )
     end
 
     ##

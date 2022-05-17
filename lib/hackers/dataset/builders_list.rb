@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 module Hackers
+  ##
+  # Builders list
   class BuildersList < Dataset
     include Enumerable
 

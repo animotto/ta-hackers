@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 module Hackers
+  ##
+  # Shield types
   class ShieldTypes < Dataset
     include Enumerable
 

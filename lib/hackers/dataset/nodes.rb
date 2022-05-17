@@ -24,10 +24,12 @@ module Hackers
         @timer = @data[4].to_i
         @builders = @data.dig(5).to_i
 
-        @relations = @topology[@id][:rels]
-        @x = @topology[@id][:x]
-        @y = @topology[@id][:y]
-        @z = @topology[@id][:z]
+        unless @topology.empty?
+          @relations = @topology[@id][:rels]
+          @x = @topology[@id][:x]
+          @y = @topology[@id][:y]
+          @z = @topology[@id][:z]
+        end
       end
     end
 

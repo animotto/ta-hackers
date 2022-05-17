@@ -3,6 +3,8 @@
 require 'json'
 
 module Hackers
+  ##
+  # Countries list
   class CountriesList < Dataset
     include Enumerable
 

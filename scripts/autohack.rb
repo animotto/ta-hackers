@@ -1,65 +1,74 @@
 class Autohack < Sandbox::Script
   BLACKLIST = [
-    127,
+    127
   ]
 
   def main
     if @args[0].nil?
-      @logger.log("Specify the number of hosts")
+      @logger.log('Specify the number of hosts')
       return
     end
 
     if @game.sid.empty?
-      @logger.log("No session ID")
+      @logger.log('No session ID')
       return
     end
-    
+
     n = 0
-    world = @game.cmdPlayerWorld(0)
-    targets = world["targets"]
+    @game.world.load
+    targets = @game.world.targets
 
     loop do
-      targets.each do |k, v|
+      targets.each do |target|
         next if BLACKLIST.include?(k)
-        @logger.log("Attack #{k} / #{v["name"]}")
+        @logger.log("Attack #{target.id} / #{target.name}")
 
         begin
-          net = @game.cmdNetGetForAttack(k)
+          net = @game.cmdNetGetForAttack(target.id)
           sleep(rand(4..9))
 
-          update = @game.cmdFightUpdate(k, {
-                                          money: 0,
-                                          bitcoin: 0,
-                                          nodes: "",
-                                          loots: "",
-                                          success: Hackers::Game::SUCCESS_FAIL,
-                                          programs: "",
-                                        })
+          update = @game.cmdFightUpdate(
+            target.id,
+            {
+              money: 0,
+              bitcoin: 0,
+              nodes: '',
+              loots: '',
+              success: Hackers::Game::SUCCESS_FAIL,
+              programs: ''
+            }
+          )
+
           sleep(rand(35..95))
 
           version = [
-            @game.config["version"],
+            @game.config['version'],
             @game.app_settings.get('node types'),
             @game.app_settings.get('program types'),
-          ].join(",")
+          ].join(',')
+
           success = Hackers::Game::SUCCESS_CORE | Hackers::Game::SUCCESS_RESOURCES | Hackers::Game::SUCCESS_CONTROL
-          fight = @game.cmdFight(k, {
-                                   money: net["profile"].money,
-                                   bitcoin: net["profile"].bitcoins,
-                                   nodes: "",
-                                   loots: "",
-                                   success: success,
-                                   programs: "",
-                                   summary: "",
-                                   version: version,
-                                   replay: "",
-                                 })
+          fight = @game.cmdFight(
+            target.id,
+            {
+              money: net['profile'].money,
+              bitcoin: net['profile'].bitcoins,
+              nodes: ''
+              loots: ''
+              success: success,
+              programs: ''
+              summary: ''
+              version: version,
+              replay: ''
+            }
+          )
+
           sleep(rand(5..12))
 
-          leave = @game.cmdNetLeave(k)
-          @game.cmdNetGetForMaint
+          leave = @game.cmdNetLeave(target.id)
+          @game.player.load
         rescue => e
-          @logger.error("#{e}")
+          @logger.error(e)
           sleep(rand(165..295))
           next
         end
@@ -70,17 +79,16 @@ class Autohack < Sandbox::Script
       end
 
       begin
-        new = @game.cmdGetNewTargets
-        targets = new["targets"]
+        targets.new
       rescue Hackers::RequestError => e
-        if e.type == "Net::ReadTimeout"
-          @logger.error("Get new targets timeout")
+        if e.type == 'Net::ReadTimeout'
+          @logger.error('Get new targets timeout')
           retry
         end
+
         @logger.error("Get new targets (#{e})")
         return
       end
     end
   end
 end
-

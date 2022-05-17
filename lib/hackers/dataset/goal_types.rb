@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 module Hackers
+  ##
+  # Goal types
   class GoalTypes < Dataset
     include Enumerable
 
@@ -40,7 +42,7 @@ module Hackers
       @goals.clear
       data[0].each do |record|
         @goals << Goal.new(
-          record[0],
+          record[0].to_i,
           record[1],
           record[2].to_i,
           record[3].to_i,

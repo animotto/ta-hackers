@@ -21,7 +21,7 @@ module Hackers
                 :missions_list, :skin_types, :player,
                 :chat, :hints_list, :experience_list,
                 :builders_list, :goal_types, :shield_types,
-                :rank_list, :countries_list
+                :rank_list, :countries_list, :world
 
     attr_accessor :config, :sid, :syncSeq, :client
 
@@ -65,6 +65,7 @@ module Hackers
       @shield_types = ShieldTypes.new(@api)
       @rank_list = RankList.new(@api)
       @player = Network::Player.new(@api)
+      @world = World::World.new(@api, self)
       @chat = Chat.new(@api)
     end
 

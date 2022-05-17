@@ -110,23 +110,25 @@ module Hackers
 
       def parse(data_nodes, data_topology)
         topology = {}
-        coords, rels, list = data_topology.dig(0, 1).split('|', 3)
-        coords = coords.split('_')
+        unless data_topology.empty?
+          coords, rels, list = data_topology.dig(0, 1).split('|', 3)
+          coords = coords.split('_')
 
-        list = list.split('_').map(&:to_i)
-        list.each_with_index do |id, i|
-          topology[id] = {}
-          topology[id][:rels] = []
-          x, y, z = coords[i].split('*', 3).map(&:to_i)
-          topology[id][:x] = x
-          topology[id][:y] = y
-          topology[id][:z] = z
-        end
+          list = list.split('_').map(&:to_i)
+          list.each_with_index do |id, i|
+            topology[id] = {}
+            topology[id][:rels] = []
+            x, y, z = coords[i].split('*', 3).map(&:to_i)
+            topology[id][:x] = x
+            topology[id][:y] = y
+            topology[id][:z] = z
+          end
 
-        rels = rels.split('_')
-        rels.each do |rel|
-          a, b = rel.split('*', 2).map(&:to_i)
-          topology[list[a]][:rels] << list[b]
+          rels = rels.split('_')
+          rels.each do |rel|
+            a, b = rel.split('*', 2).map(&:to_i)
+            topology[list[a]][:rels] << list[b]
+          end
         end
 
         @nodes.clear
@@ -162,11 +164,11 @@ module Hackers
     ##
     # Profile
     class Profile
-      attr_reader :id, :name, :credits, :experience,
+      attr_reader :id, :name, :experience,
                   :rank, :x, :y, :country, :skin,
                   :builders
 
-      attr_accessor :money, :bitcoins
+      attr_accessor :money, :bitcoins, :credits
 
       def parse(data)
         @id = data[0].to_i

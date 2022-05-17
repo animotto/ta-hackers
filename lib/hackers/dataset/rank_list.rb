@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 module Hackers
+  ##
+  # Rank list
   class RankList < Dataset
     include Enumerable
 

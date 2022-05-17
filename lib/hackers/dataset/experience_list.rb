@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 module Hackers
+  ##
+  # Experience list
   class ExperienceList < Dataset
     include Enumerable
 
