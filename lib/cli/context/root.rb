@@ -989,41 +989,43 @@ SHELL.add_command(
   end
 
   msg = 'Player stats'
-  stats = GAME.cmdPlayerGetStats
+  GAME.player.stats.load
   LOGGER.log(msg)
 
-  shell.puts("\e[1;35m\u2022 Player statistics\e[0m")
-  shell.puts("  Rank: #{stats['rank']}")
-  shell.puts("  Experience: #{stats['experience']}")
-  shell.puts("  Level: #{GAME.experience_list.level(stats['experience'])}")
-  shell.puts('  Hacks:')
-  shell.puts("   Successful: #{stats['hacks']['success']}")
-  shell.puts("   Failed: #{stats['hacks']['fail']}")
+  stats = GAME.player.stats
 
-  if stats['hacks']['success'].zero? && stats['hacks']['fail'].zero?
-    win_rate = 0
-  else
-    win_rate = (stats['hacks']['success'].to_f / (stats['hacks']['success'] + stats['hacks']['fail']) * 100).to_i
+  shell.puts("\e[1;35m\u2022 Player statistics\e[0m")
+  shell.puts("  Rank: #{stats.rank}")
+  shell.puts("  Experience: #{stats.experience}")
+  shell.puts("  Level: #{GAME.experience_list.level(stats.experience)}")
+  shell.puts('  Hacks:')
+  shell.puts("   Successful: #{stats.hacks_success}")
+  shell.puts("   Failed: #{stats.hacks_fail}")
+
+  win_rate = 0
+  hacks_total = stats.hacks_success + stats.hacks_fail
+  unless hacks_total.zero?
+    win_rate = (stats.hacks_success.to_f / hacks_total * 100).to_i
   end
   shell.puts("   Win rate: #{win_rate}%")
 
-  shell.puts('  Defenses:')
-  shell.puts("   Successful: #{stats['defense']['success']}")
-  shell.puts("   Failed: #{stats['defense']['fail']}")
+  shell.puts('  Defense:')
+  shell.puts("   Successful: #{stats.defense_success}")
+  shell.puts("   Failed: #{stats.defense_fail}")
 
-  if stats['defense']['success'].zero? && stats['defense']['fail'].zero?
-    win_rate = 0
-  else
-    win_rate = (stats['defense']['success'].to_f / (stats['defense']['success'] + stats['defense']['fail']) * 100).to_i
+  win_rate = 0
+  defense_total = stats.defense_success + stats.defense_fail
+  unless defense_total.zero?
+    win_rate = (stats.defense_success.to_f / defense_total * 100).to_i
   end
   shell.puts("   Win rate: #{win_rate}%")
 
   shell.puts('  Looted:')
-  shell.puts("   Money: #{stats['loot']['money']}")
-  shell.puts("   Bitcoins: #{stats['loot']['bitcoins']}")
+  shell.puts("   Money: #{stats.loot_money}")
+  shell.puts("   Bitcoins: #{stats.loot_bitcoins}")
   shell.puts('  Collected:')
-  shell.puts("   Money: #{stats['collect']['money']}")
-  shell.puts("   Bitcoins: #{stats['collect']['bitcoins']}")
+  shell.puts("   Money: #{stats.collect_money}")
+  shell.puts("   Bitcoins: #{stats.collect_bitcoins}")
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end

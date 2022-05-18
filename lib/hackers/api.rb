@@ -1204,15 +1204,14 @@ module Hackers
     ##
     # Gets player statistics
     def player_stats(id = @id)
-      params = {
-        'player_get_stats' => '',
-        'id' => id,
-        'app_version' => @version
-      }
-
-      response = @client.request_session(params, @sid)
-      serializer = Serializer.new(response)
-      serializer.parsePlayerGetStats
+      @client.request_session(
+        {
+          'player_get_stats' => '',
+          'id' => id,
+          'app_version' => @version
+        },
+        @sid
+      )
     end
 
     ##

@@ -14,7 +14,8 @@ module Hackers
     # Player
     class Player < Dataset
       attr_reader :datetime, :profile, :shield, :readme,
-                  :skins, :net, :programs, :queue, :logs
+                  :skins, :net, :programs, :queue, :logs,
+                  :stats
 
       attr_accessor :tutorial
 
@@ -29,6 +30,7 @@ module Hackers
         @shield = Shield.new
         @logs = Logs.new(self)
         @readme = ReadmePlayer.new(@api)
+        @stats = Stats.new(@api)
       end
 
       def load
@@ -568,6 +570,39 @@ module Hackers
         data.each do |record|
           @skins << Skin.new(record[0].to_i)
         end
+      end
+    end
+
+    ##
+    # Stats
+    class Stats < Dataset
+      attr_reader :rank, :experience, :hacks_success,
+                  :hacks_fail, :defense_success,
+                  :defense_fail, :loot_money,
+                  :loot_bitcoins, :collect_money,
+                  :collect_bitcoins
+
+      def load
+        @raw_data = @api.player_stats
+
+        parse
+      end
+
+      private
+
+      def parse
+        data = Serializer.parseData(@raw_data)
+
+        @rank = data.dig(0, 0, 0).to_i
+        @experience = data.dig(0, 0, 1).to_i
+        @hacks_success = data.dig(0, 0, 2).to_i
+        @hacks_fail = data.dig(0, 0, 3).to_i
+        @defense_success = data.dig(0, 0, 4).to_i
+        @defense_fail = data.dig(0, 0, 5).to_i
+        @loot_money = data.dig(0, 0, 7).to_i
+        @loot_bitcoins = data.dig(0, 0, 9).to_i
+        @collect_money = data.dig(0, 0, 6).to_i
+        @collect_bitcoins = data.dig(0, 0, 8).to_i
       end
     end
   end
