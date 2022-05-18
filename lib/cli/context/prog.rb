@@ -7,8 +7,8 @@ CONTEXT_PROG.add_command(
   :list,
   description: 'Show programs list'
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -57,8 +57,8 @@ CONTEXT_PROG.add_command(
   :queue,
   description: 'Show programs queue'
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -111,8 +111,8 @@ CONTEXT_PROG.add_command(
   description: 'Create program',
   params: ['<type>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -133,8 +133,8 @@ CONTEXT_PROG.add_command(
   description: 'Upgrade program',
   params: ['<id>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -166,8 +166,8 @@ CONTEXT_PROG.add_command(
   description: 'Finish program',
   params: ['<id>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -199,8 +199,8 @@ CONTEXT_PROG.add_command(
   description: 'Edit programs',
   params: ['<type>', '<amount>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -264,8 +264,8 @@ CONTEXT_PROG.add_command(
   description: 'Set programs queue',
   params: ['<type>', '<amount>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -327,8 +327,8 @@ CONTEXT_PROG.add_command(
   description: 'Revive AI program',
   params: ['<id>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 

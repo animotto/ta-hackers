@@ -9,6 +9,11 @@ class Hidenet < Sandbox::Script
       return
     end
 
+    unless @game.connected?
+      @logger.log('Not connected')
+      return
+    end
+
     @game.player.load
     net = @game.player.net
     topology = net.topology

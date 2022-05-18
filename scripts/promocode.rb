@@ -5,6 +5,11 @@ class Promocode < Sandbox::Script
       return
     end
 
+    unless @game.connected?
+      @logger.log('Not connected')
+      return
+    end
+
     begin
       code = @game.cmdRedeemPromoCode(@game.config['id'], @args[0])
     rescue Hackers::RequestError => e

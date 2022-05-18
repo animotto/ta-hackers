@@ -1,7 +1,7 @@
 class Network < Sandbox::Script
   def main
-    if @game.sid.empty?
-      @logger.log('No session ID')
+    unless @game.connected?
+      @logger.log('Not connected')
       return
     end
 

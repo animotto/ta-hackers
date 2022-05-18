@@ -5,9 +5,10 @@ module Hackers
     ##
     # Player
     class Player < Dataset
-      attr_reader :datetime, :tutorial, :profile,
-                  :shield, :readme, :skins, :net,
-                  :programs, :queue, :logs
+      attr_reader :datetime, :profile, :shield, :readme,
+                  :skins, :net, :programs, :queue, :logs
+
+      attr_accessor :tutorial
 
       def initialize(*)
         super
@@ -287,11 +288,11 @@ module Hackers
     ##
     # Profile
     class Profile
-      attr_reader :id, :name, :experience,
-                  :rank, :x, :y, :country, :skin,
+      attr_reader :id, :name, :x, :y, :country, :skin,
                   :builders
 
-      attr_accessor :money, :bitcoins, :credits
+      attr_accessor :money, :bitcoins, :credits,
+                    :rank, :experience
 
       def parse(data)
         @id = data[0].to_i

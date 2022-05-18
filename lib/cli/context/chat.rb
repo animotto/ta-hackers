@@ -41,7 +41,7 @@ CONTEXT_CHAT_OPEN = CONTEXT_CHAT.add_command(
   description: 'Open room',
   params: ['<room>']
 ) do |tokens, shell|
-  if GAME.sid.empty? || !GAME.app_settings.loaded?
+  unless GAME.connected? || GAME.app_settings.loaded?
     shell.puts('Not connected')
     next
   end
@@ -169,7 +169,7 @@ CONTEXT_CHAT_USERS = CONTEXT_CHAT.add_command(
   description: 'Show users list in the room',
   params: ['<room>']
 ) do |tokens, shell|
-  if GAME.sid.empty? || !GAME.app_settings.loaded?
+  unless GAME.connected? || GAME.app_settings.loaded?
     shell.puts('Not connected')
     next
   end

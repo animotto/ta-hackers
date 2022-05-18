@@ -8,8 +8,8 @@ CONTEXT_BUY.add_command(
   description: 'Buy skin',
   params: ['<type>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -28,8 +28,8 @@ CONTEXT_BUY.add_command(
   description: 'Buy shield',
   params: ['<type>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -47,8 +47,8 @@ CONTEXT_BUY.add_command(
   :builder,
   description: 'Buy builder'
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -65,8 +65,8 @@ CONTEXT_BUY.add_command(
   description: 'Buy money',
   params: ['<perc>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -85,8 +85,8 @@ CONTEXT_BUY.add_command(
   description: 'Buy bitcoins',
   params: ['<perc>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 

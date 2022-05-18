@@ -7,8 +7,8 @@ CONTEXT_NET.add_command(
   :profile,
   description: 'Show profile'
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -60,8 +60,8 @@ CONTEXT_NET.add_command(
   description: 'Show logs',
   params: ['[id]']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -187,8 +187,8 @@ CONTEXT_NET.add_command(
   :readme,
   description: 'Show readme'
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -212,8 +212,8 @@ CONTEXT_NET.add_command(
   description: 'Write message to readme',
   params: ['<message>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -243,13 +243,8 @@ CONTEXT_NET.add_command(
   description: 'Remove message from readme',
   params: ['<id>']
 ) do |tokens, shell|
-  if tokens[1].nil?
-    shell.puts('Specify message ID')
-    next
-  end
-
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -285,8 +280,8 @@ CONTEXT_NET.add_command(
   :clear,
   description: 'Clear readme'
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -310,8 +305,8 @@ CONTEXT_NET.add_command(
   :nodes,
   description: 'Show nodes'
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -378,8 +373,8 @@ CONTEXT_NET.add_command(
   description: 'Create node',
   params: ['<type>', '<parent>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -417,8 +412,8 @@ CONTEXT_NET.add_command(
   description: 'Upgrade node',
   params: ['<id>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -450,8 +445,8 @@ CONTEXT_NET.add_command(
   description: 'Finish node',
   params: ['<id>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    SHELL.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -483,8 +478,8 @@ CONTEXT_NET.add_command(
   description: 'Cancel node upgrade',
   params: ['<id>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -516,8 +511,8 @@ CONTEXT_NET.add_command(
   description: 'Delete node',
   params: ['<id>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -549,8 +544,8 @@ CONTEXT_NET.add_command(
   description: 'Set node builders',
   params: ['<id>', '<amount>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -583,8 +578,8 @@ CONTEXT_NET.add_command(
   description: 'Collect node resources',
   params: ['<id>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -621,8 +616,8 @@ CONTEXT_NET.add_command(
   :net,
   description: 'Show network topology'
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -677,8 +672,8 @@ CONTEXT_NET.add_command(
   description: 'Make a connection between nodes',
   params: ['<from_id>', '<to_id>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -713,8 +708,8 @@ CONTEXT_NET.add_command(
   description: 'Destroy the connection between nodes',
   params: ['<from_id>', '<to_id>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 

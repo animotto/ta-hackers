@@ -54,7 +54,7 @@ module Hackers
     end
 
     ##
-    # Returns true if sid is present
+    # Returns true if there is session id
     def sid?
       !@sid.nil?
     end
@@ -183,16 +183,14 @@ module Hackers
     ##
     # Authenticates by id and password
     def auth(id = @id, password = @password)
-      params = {
-        'auth_id_password' => '',
-        'id_player' => id,
-        'password' => password,
-        'app_version' => @version
-      }
-
-      response = @client.request_cmd(params)
-      serializer = Serializer.new(response)
-      serializer.parseAuthIdPassword
+      @client.request_cmd(
+        {
+          'auth_id_password' => '',
+          'id_player' => id,
+          'password' => password,
+          'app_version' => @version
+        }
+      )
     end
 
     ##
@@ -802,15 +800,14 @@ module Hackers
     ##
     # Gets missions log
     def missions_log(id = @id)
-      params = {
-        'player_missions_get_log' => '',
-        'id' => id,
-        'app_version' => @version
-      }
-
-      response = @client.request_session(params, @sid)
-      serializer = Serializer.new(response)
-      serializer.parseMissionsLog(0)
+      @client.request_session(
+        {
+          'player_missions_get_log' => '',
+          'id' => id,
+          'app_version' => @version
+        },
+        @sid
+      )
     end
 
     ##

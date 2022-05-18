@@ -1,6 +1,6 @@
 class Checkcon < Sandbox::Script
   INTERVAL = 60
-  
+
   def main
     loop do
       @game.cmdCheckCon

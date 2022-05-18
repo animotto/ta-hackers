@@ -16,8 +16,6 @@ module Hackers
 
     def load; end
 
-    private
-
     def parse; end
   end
 end
@@ -40,3 +38,4 @@ require_relative 'dataset/rank_list'
 require_relative 'dataset/network'
 require_relative 'dataset/world'
 require_relative 'dataset/chat'
+require_relative 'dataset/missions'

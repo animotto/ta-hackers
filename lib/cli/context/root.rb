@@ -162,11 +162,8 @@ SHELL.add_command(
   LOGGER.log(msg)
 
   msg = 'Authenticate'
-  # auth = GAME.cmdAuthIdPassword
-  auth = GAME.auth
+  GAME.auth
   LOGGER.log(msg)
-  GAME.sid = auth['sid']
-  GAME.api.sid = auth['sid']
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
@@ -176,12 +173,12 @@ SHELL.add_command(
   :sid,
   description: 'Show session ID'
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
-  shell.puts("SID: #{GAME.sid}")
+  shell.puts("Session ID: #{GAME.api.sid}")
 end
 
 # translations
@@ -673,8 +670,8 @@ SHELL.add_command(
   description: 'Set new name',
   params: ['<name>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -691,8 +688,8 @@ SHELL.add_command(
   description:'Get player info',
   params: ['<id>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -724,8 +721,8 @@ SHELL.add_command(
   description: "Get detailed info about player's network",
   params: ['<id>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -785,8 +782,8 @@ SHELL.add_command(
   y = tokens[2].to_i
   country = tokens[3].to_i
 
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -803,8 +800,8 @@ SHELL.add_command(
   description: 'Set player skin',
   params: ['<skin>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -821,8 +818,8 @@ SHELL.add_command(
   description: 'Set tutorial',
   params: ['<id>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -839,8 +836,8 @@ SHELL.add_command(
   description: 'Email subscribe',
   params: ['<email>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -857,8 +854,8 @@ SHELL.add_command(
   description: 'Show top ranking',
   params: ['<id>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -925,8 +922,8 @@ SHELL.add_command(
   :cpgen,
   description: 'Cp generate code'
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -946,8 +943,8 @@ SHELL.add_command(
   description: 'Cp use code',
   params: ['<code>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -967,8 +964,8 @@ SHELL.add_command(
   :stats,
   description: 'Show player statistics'
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 

@@ -9,10 +9,6 @@ module Hackers
     SUCCESS_RESOURCES = 2
     SUCCESS_CONTROL = 4
 
-    MISSION_AWAITS = 0
-    MISSION_FINISHED = 1
-    MISSION_REJECTED = 2
-
     CURRENCY_MONEY = 0
     CURRENCY_BITCOINS = 1
 
@@ -21,13 +17,13 @@ module Hackers
                 :missions_list, :skin_types, :player,
                 :chat, :hints_list, :experience_list,
                 :builders_list, :goal_types, :shield_types,
-                :rank_list, :countries_list, :world
+                :rank_list, :countries_list, :world,
+                :missions
 
-    attr_accessor :config, :sid, :syncSeq, :client
+    attr_accessor :config, :syncSeq, :client
 
     def initialize(config)
       @config = config
-      @sid = String.new
       @syncSeq = 0
       @client = Client.new(
         @config["host"], 
@@ -67,12 +63,28 @@ module Hackers
       @player = Network::Player.new(@api)
       @world = World::World.new(@api, self)
       @chat = Chat.new(@api)
+      @missions = Missions.new(@api)
+    end
+
+    ##
+    # Returns true if there is an API session id
+    def connected?
+      @api.sid?
     end
 
     ##
     # Authenticates by id and password
     def auth
-      @api.auth
+      raw_data = @api.auth
+      data = Serializer.parseData(raw_data)
+
+      @player.tutorial = data.dig(0, 0, 2).to_i
+      @api.sid = data.dig(0, 0, 3)
+      @player.profile.rank = data.dig(0, 0, 4).to_i
+      @player.profile.experience = data.dig(0, 0, 5).to_i
+
+      @missions.data = data[2]
+      @missions.parse
     end
 
     ##

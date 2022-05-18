@@ -9,8 +9,8 @@ class Autohack < Sandbox::Script
       return
     end
 
-    if @game.sid.empty?
-      @logger.log('No session ID')
+    unless @game.connected?
+      @logger.log('Not connected')
       return
     end
 

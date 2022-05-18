@@ -7,14 +7,16 @@ CONTEXT_MISSION.add_command(
   :list,
   description: 'Show missions log'
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
   msg = 'Missions get log'
-  missions = GAME.cmdPlayerMissionsGetLog
+  GAME.missions.load
   LOGGER.log(msg)
+
+  missions = GAME.missions
 
   shell.puts("\e[1;35m\u2022 Missions log\e[0m")
   shell.puts(
@@ -28,14 +30,14 @@ CONTEXT_MISSION.add_command(
     )
   )
 
-  missions.each do |k, v|
+  missions.each do |mission|
     status = String.new
-    case v['finished']
-    when Hackers::Game::MISSION_AWAITS
+    case mission.status
+    when Hackers::Missions::AWAITS
       status = "\e[37m\u2690\e[0m" 
-    when Hackers::Game::MISSION_FINISHED
+    when Hackers::Missions::FINISHED
       status = "\e[32m\u2691\e[0m"
-    when Hackers::Game::MISSION_REJECTED
+    when Hackers::Missions::REJECTED
       status = "\e[31m\u2691\e[0m"
     end
 
@@ -43,10 +45,10 @@ CONTEXT_MISSION.add_command(
       format(
         '  %-1s %-7d %-7d %-8d %-20s',
         status,
-        k,
-        v['money'],
-        v['bitcoins'],
-        v['datetime']
+        mission.id,
+        mission.money,
+        mission.bitcoins,
+        mission.datetime
       )
     )
   end
@@ -60,8 +62,8 @@ CONTEXT_MISSION.add_command(
   description: 'Start mission',
   params: ['<id>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -73,7 +75,7 @@ CONTEXT_MISSION.add_command(
   end
 
   msg = 'Mission message delivered'
-  GAME.cmdPlayerMissionMessageDelivered(id)
+  GAME.missions.start(id)
   LOGGER.log(msg)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
@@ -85,19 +87,27 @@ CONTEXT_MISSION.add_command(
   description: 'Reject mission',
   params: ['<id>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
   id = tokens[1].to_i
+
   unless GAME.missions_list.exist?(id)
     shell.puts('No such mission')
     next
   end
 
+  unless GAME.missions.exist?(id)
+    shell.puts('Mission is not started')
+    next
+  end
+
+  mission = GAME.missions.get(id)
+
   msg = 'Mission reject'
-  GAME.cmdPlayerMissionReject(id)
+  mission.reject
   LOGGER.log(msg)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")

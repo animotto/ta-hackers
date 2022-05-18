@@ -6,8 +6,8 @@ class Logs < Sandbox::Script
     end
     id = @args[0].to_i
 
-    if @game.sid.empty?
-      @logger.log("No session ID")
+    unless @game.connected?
+      @logger.log('Not connected')
       return
     end
 

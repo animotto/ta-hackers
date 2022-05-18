@@ -3,8 +3,8 @@ class Colres < Sandbox::Script
   INTERVAL_ADD = 120
 
   def main
-    if @game.sid.empty?
-      @logger.log('No session ID')
+    unless @game.connected?
+      @logger.log('Not connected')
       return
     end
 

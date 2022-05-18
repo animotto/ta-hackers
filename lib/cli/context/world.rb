@@ -7,8 +7,8 @@ CONTEXT_WORLD.add_command(
   :targets,
   description: 'Show targets'
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -62,8 +62,8 @@ CONTEXT_WORLD.add_command(
   :new,
   description: 'Get new targets'
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -110,8 +110,8 @@ CONTEXT_WORLD.add_command(
   :bonuses,
   description: 'Show bonuses'
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -161,8 +161,8 @@ CONTEXT_WORLD_COLLECT = CONTEXT_WORLD.add_command(
   description: 'Collect bonus',
   params: ['<id>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -202,8 +202,8 @@ CONTEXT_WORLD.add_command(
   :goals,
   description: 'Show goals'
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -260,8 +260,8 @@ CONTEXT_WORLD_UPDATE = CONTEXT_WORLD.add_command(
   description: 'Update goal',
   params: ['<id>', '<finished>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -303,8 +303,8 @@ CONTEXT_WORLD_REJECT = CONTEXT_WORLD.add_command(
   description: 'Reject goal',
   params: ['<id>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 

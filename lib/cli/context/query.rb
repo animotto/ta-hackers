@@ -86,8 +86,8 @@ CONTEXT_QUERY.add_command(
   description: 'Session query',
   params: ['<args>']
 ) do |tokens, shell|
-  if GAME.sid.empty?
-    shell.puts('No session ID')
+  unless GAME.connected?
+    shell.puts('Not connected')
     next
   end
 
@@ -100,10 +100,10 @@ CONTEXT_QUERY.add_command(
     params[param[0]] = param.length > 1 ? param[1] : ''
   end
 
-  query = GAME.client.generate_uri_session(params.clone, GAME.sid)
+  query = GAME.client.generate_uri_session(params.clone, GAME.api.sid)
 
   msg = "Query: #{query}"
-  response = GAME.client.request_session(params, GAME.sid)
+  response = GAME.client.request_session(params, GAME.api.sid)
   LOGGER.log(msg)
   shell.puts("\e[22;35m#{response}\e[0m")
 
