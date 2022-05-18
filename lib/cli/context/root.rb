@@ -859,25 +859,32 @@ end
 # top
 SHELL.add_command(
   :top,
-  description: 'Show top ranking',
-  params: ['<id>']
+  description: 'Show top ranking'
 ) do |tokens, shell|
   unless GAME.connected?
     shell.puts(NOT_CONNECTED)
     next
   end
 
+  unless GAME.player.loaded?
+    msg = 'Network maintenance'
+    GAME.player.load
+    LOGGER.log(msg)
+  end
+
   msg = 'Ranking get all'
-  top = GAME.cmdRankingGetAll(tokens[1].to_i)
+  GAME.ranking_list.load
   LOGGER.log(msg)
 
+  ranking_list = GAME.ranking_list
+
   types = {
-    'nearby' => 'Players nearby',
-    'country' => 'Top country players',
-    'world' => 'Top world players'
+    ranking_list.nearby => 'Players nearby',
+    ranking_list.country => 'Top country players',
+    ranking_list.world => 'Top world players'
   }
 
-  types.each do |type, title|
+  types.each do |list, title|
     shell.puts("\e[1;35m\u2022 #{title}\e[0m")
     shell.puts(
       format(
@@ -889,15 +896,16 @@ SHELL.add_command(
         'Rank'
       )
     )
-    top[type].each do |player|
+
+    list.each do |player|
       shell.puts(
         format(
           '  %-12s %-25s %-12s %-7s %-12s',
-          player['id'],
-          player['name'],
-          player['experience'],
-          player['country'],
-          player['rank']
+          player.id,
+          player.name,
+          player.experience,
+          player.country,
+          player.rank
         )
       )
     end
@@ -907,17 +915,20 @@ SHELL.add_command(
   shell.puts("\e[1;35m\u2022 Top countries\e[0m")
   shell.puts(
     format(
-      "  \e[35m%-7s %-12s\e[0m",
+      "  \e[35m%-3s %-25s %-12s\e[0m",
+      'ID',
       'Country',
       'Rank'
     )
   )
-  top['countries'].each do |player|
+
+  ranking_list.countries.each do |country|
     shell.puts(
       format(
-        '  %-7s %-12s',
-        player['country'],
-        player['rank']
+        '  %-3d %-25s %-12s',
+        country.id,
+        GAME.countries_list.name(country.id),
+        country.rank
       )
     )
   end

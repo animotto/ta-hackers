@@ -780,16 +780,15 @@ module Hackers
     ##
     # Gets ranking
     def ranking(country, id = @id)
-      params = {
-        'ranking_get_all' => '',
-        'id_player' => id,
-        'id_country' => country,
-        'app_version' => @version
-      }
-
-      response = @client.request_session(params, @sid)
-      serializer = Serializer.new(response)
-      serializer.parseRankingGetAll
+      @client.request_session(
+        {
+          'ranking_get_all' => '',
+          'id_player' => id,
+          'id_country' => country,
+          'app_version' => @version
+        },
+        @sid
+      )
     end
 
     ##
