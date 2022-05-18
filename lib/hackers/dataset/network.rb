@@ -40,6 +40,22 @@ module Hackers
         @api.set_name_once(name)
       end
 
+      def set_hq(x, y, country)
+        @api.set_hq(x, y, country)
+      end
+
+      def set_skin(skin)
+        @api.set_skin(skin)
+      end
+
+      def set_tutorial(tutorial)
+        @api.set_tutorial(tutorial)
+      end
+
+      def subscribe_email(email)
+        @api.subscribe_email(email)
+      end
+
       private
 
       def parse

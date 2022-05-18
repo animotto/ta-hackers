@@ -35,7 +35,7 @@ CONTEXT_NET.add_command(
   shell.puts(format('  %-15s %s', 'Builders', "\e[32m" + "\u25b0" * builders + "\e[37m" + "\u25b1" * (profile.builders - builders) + "\e[0m"))
   shell.puts(format('  %-15s %d', 'X', profile.x))
   shell.puts(format('  %-15s %d', 'Y', profile.y))
-  shell.puts(format('  %-15s %d', 'Country', profile.country))
+  shell.puts(format('  %-15s %s (%d)', 'Country', GAME.countries_list.name(profile.country), profile.country))
   shell.puts(format('  %-15s %d', 'Skin', profile.skin))
   shell.puts(format('  %-15s %d', 'Level', GAME.experience_list.level(profile.experience)))
   shell.puts(format('  %-15s %d', 'Tutorial', player.tutorial))

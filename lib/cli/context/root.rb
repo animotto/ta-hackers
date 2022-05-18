@@ -792,7 +792,7 @@ SHELL.add_command(
   end
 
   msg = 'Set player HQ'
-  GAME.cmdSetPlayerHqCountry(GAME.config['id'], x, y, country)
+  GAME.player.set_hq(x, y, country)
   LOGGER.log(msg)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
@@ -809,8 +809,10 @@ SHELL.add_command(
     next
   end
 
+  skin = tokens[1].to_i
+
   msg = 'Player set skin'
-  GAME.cmdPlayerSetSkin(tokens[1].to_i)
+  GAME.player.set_skin(skin)
   LOGGER.log(msg)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
@@ -827,8 +829,10 @@ SHELL.add_command(
     next
   end
 
+  tutorial = tokens[1].to_i
+
   msg = 'Player set tutorial'
-  GAME.cmdPlayerSetTutorial(tokens[1].to_i)
+  GAME.player.set_tutorial(tutorial)
   LOGGER.log(msg)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
@@ -846,7 +850,7 @@ SHELL.add_command(
   end
 
   msg = 'Email subscribe'
-  GAME.cmdEmailSubscribe(tokens[1])
+  GAME.player.subscribe_email(tokens[1])
   LOGGER.log(msg)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")

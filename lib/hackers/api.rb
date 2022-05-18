@@ -701,13 +701,12 @@ module Hackers
     ##
     # Gets HQ move price
     def hq_price
-      params = {
-        'hq_move_get_price' => '',
-        'app_version' => @version
-      }
-
-      response = @client.request_cmd(params)
-      response.to_i
+      @client.request_cmd(
+        {
+          'hq_move_get_price' => '',
+          'app_version' => @version
+        }
+      )
     end
 
     ##
