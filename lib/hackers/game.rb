@@ -124,5 +124,16 @@ module Hackers
       @player.profile.credits = data.dig(0, 0, 0)
       @player.profile.bitcoins = data.dig(0, 0, 1)
     end
+
+    def create_player
+      raw_data = @api.create_player
+      data = Serializer.parseData(raw_data)
+
+      Account.new(
+        data.dig(0, 0, 0).to_i,
+        data.dig(0, 0, 1),
+        data.dig(0, 0, 2)
+      )
+    end
   end
 end

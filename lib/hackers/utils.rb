@@ -9,7 +9,6 @@ module Hackers
       dhms << format('%02d', timer / 60 / 60 / 24)
       dhms << format('%02d', timer / 60 / 60 % 24)
       dhms << format('%02d', timer / 60 % 60)
-      dhms << format('%02d', timer / 60 % 60)
       dhms << format('%02d', timer % 60)
       dhms.join(':')
     end

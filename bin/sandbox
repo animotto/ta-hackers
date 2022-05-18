@@ -78,9 +78,9 @@ if options.key?(:new)
   config.load
   config.file = config_file
   game = Hackers::Game.new(config)
-  account = game.cmdPlayerCreate
-  config['id'] = account['id']
-  config['password'] = account['password']
+  account = game.create_player
+  config['id'] = account.id
+  config['password'] = account.password
   config.save
   puts("New account #{options[:new]} has been created (#{account['id']})")
   exit

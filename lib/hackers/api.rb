@@ -130,26 +130,27 @@ module Hackers
     ##
     # Creates a new account
     def create_player
-      params = {
-        'player_create' => 1,
-        'app_version' => @version
-      }
-
-      response = @client.request_cmd(params)
-      serializer = Serializer.new(response)
-      serializer.parsePlayerCreate
+      @client.request_cmd(
+        {
+          'player_create' => 1,
+          'app_version' => @version
+        }
+      )
     end
 
     ##
     # Sets new player name
+    #
+    # NOTE: This request has probably been disabled
     def set_name(name, id = @id)
-      @client.request_cmd(
+      @client.request_session(
         {
           'player_set_name' => '',
           'id' => id,
           'name' => name,
           'app_version' => @version
-        }
+        },
+        @sid
       )
     end
 

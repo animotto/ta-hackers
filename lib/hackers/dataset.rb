@@ -20,6 +20,7 @@ module Hackers
   end
 end
 
+require_relative 'dataset/misc'
 require_relative 'dataset/countries_list'
 require_relative 'dataset/app_settings'
 require_relative 'dataset/language_translations'

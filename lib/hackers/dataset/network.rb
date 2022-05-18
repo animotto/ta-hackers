@@ -36,6 +36,10 @@ module Hackers
         parse
       end
 
+      def rename(name)
+        @api.set_name_once(name)
+      end
+
       private
 
       def parse

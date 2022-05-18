@@ -340,9 +340,9 @@ CONTEXT_NET.add_command(
     else
       if node_type.kind_of?(Hackers::NodeTypes::Production)
         case node_type.production_currency(node.level)
-        when Hackers::Game::CURRENCY_MONEY
+        when Hackers::Network::CURRENCY_MONEY
           timer += "\e[33m$ "
-        when Hackers::Game::CURRENCY_BITCOINS
+        when Hackers::Network::CURRENCY_BITCOINS
           timer += "\e[31m\u20bf "
         end
         produced = (node_type.production_speed(node.level).to_f / 60 / 60 * node.timer).to_i

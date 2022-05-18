@@ -653,13 +653,13 @@ SHELL.add_command(
   description: 'Create new account'
 ) do |tokens, shell|
   msg = 'Player create'
-  player = GAME.cmdPlayerCreate
+  account = GAME.create_player
   LOGGER.log(msg)
 
   shell.puts("\e[1;35m\u2022 New account\e[0m")
-  shell.puts("  ID: #{player['id']}")
-  shell.puts("  Password: #{player['password']}")
-  shell.puts("  Session ID: #{player['sid']}")
+  shell.puts("  ID: #{account.id}")
+  shell.puts("  Password: #{account.password}")
+  shell.puts("  Session ID: #{account.sid}")
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
@@ -676,7 +676,7 @@ SHELL.add_command(
   end
 
   msg = 'Player set name'
-  GAME.cmdPlayerSetName(GAME.config['id'], tokens[1])
+  GAME.player.rename(tokens[1])
   LOGGER.log(msg)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
