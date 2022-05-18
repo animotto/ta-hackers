@@ -376,7 +376,7 @@ end
 CONTEXT_NET.add_command(
   :create,
   description: 'Create node',
-  params: ['<type>']
+  params: ['<type>', '<parent>']
 ) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
@@ -384,8 +384,29 @@ CONTEXT_NET.add_command(
   end
 
   type = tokens[1].to_i
+  parent = tokens[2].to_i
 
-  shell.puts('Not implemented')
+  unless GAME.player.loaded?
+    msg = 'Network maintenance'
+    GAME.player.load
+    LOGGER.log(msg)
+  end
+
+  net = GAME.player.net
+
+  unless GAME.node_types.exist?(type)
+    shell.puts('No such node type')
+    next
+  end
+
+  unless net.exist?(parent)
+    shell.puts('No such parent node')
+    next
+  end
+
+  msg = 'Create node'
+  net.node(parent).create(type)
+  LOGGER.log(msg)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
@@ -502,7 +523,22 @@ CONTEXT_NET.add_command(
 
   id = tokens[1].to_i
 
-  shell.puts('Not implemented')
+  unless GAME.player.loaded?
+    msg = 'Network maintenance'
+    GAME.player.load
+    LOGGER.log(msg)
+  end
+
+  net = GAME.player.net
+
+  unless net.exist?(id)
+    shell.puts('No such node')
+    next
+  end
+
+  msg = 'Delete node'
+  net.node(id).delete
+  LOGGER.log(msg)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
@@ -583,7 +619,7 @@ end
 # net
 CONTEXT_NET.add_command(
   :net,
-  description: 'Show network structure'
+  description: 'Show network topology'
 ) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
@@ -597,7 +633,7 @@ CONTEXT_NET.add_command(
   player = GAME.player
   net = player.net
 
-  shell.puts("\e[1;35m\u2022 Network structure\e[0m")
+  shell.puts("\e[1;35m\u2022 Network topology\e[0m")
   shell.puts(
     format(
     "  \e[35m%-12s %-12s %-5s %-6s %-4s %-4s %-4s %s\e[0m",
@@ -632,4 +668,76 @@ CONTEXT_NET.add_command(
   end
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
+end
+
+##
+# connect
+CONTEXT_NET.add_command(
+  :connect,
+  description: 'Make a connection between nodes',
+  params: ['<from_id>', '<to_id>']
+) do |tokens, shell|
+  if GAME.sid.empty?
+    shell.puts('No session ID')
+    next
+  end
+
+  from_id = tokens[1].to_i
+  to_id = tokens[2].to_i
+
+  unless GAME.player.loaded?
+    msg = 'Network maintenance'
+    GAME.player.load
+    LOGGER.log(msg)
+  end
+
+  player = GAME.player
+  net = player.net
+
+  unless net.exist?(from_id) && net.exist?(to_id)
+    shell.puts('No such nodes')
+    next
+  end
+
+  net.node(from_id).connect(net.node(to_id))
+
+  msg = 'Network update'
+  net.update
+  LOGGER.log(msg)
+end
+
+##
+# diconnect
+CONTEXT_NET.add_command(
+  :disconnect,
+  description: 'Destroy the connection between nodes',
+  params: ['<from_id>', '<to_id>']
+) do |tokens, shell|
+  if GAME.sid.empty?
+    shell.puts('No session ID')
+    next
+  end
+
+  from_id = tokens[1].to_i
+  to_id = tokens[2].to_i
+
+  unless GAME.player.loaded?
+    msg = 'Network maintenance'
+    GAME.player.load
+    LOGGER.log(msg)
+  end
+
+  player = GAME.player
+  net = player.net
+
+  unless net.exist?(from_id) && net.exist?(to_id)
+    shell.puts('No such nodes')
+    next
+  end
+
+  net.node(from_id).disconnect(net.node(to_id))
+
+  msg = 'Network update'
+  net.update
+  LOGGER.log(msg)
 end

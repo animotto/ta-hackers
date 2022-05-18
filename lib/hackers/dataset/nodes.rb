@@ -34,10 +34,43 @@ module Hackers
         @api.node_set_builders(@id, amount)
       end
 
+      def create(type)
+        net = @player.net
+        node = NodeTypes.node(type)
+        node = node.new(@api, @player)
+        net.add(node)
+        connect(node)
+
+        raw_data = @api.create_node_update_net(type, net.topology.generate)
+        data = Serializer.parseData(raw_data)
+
+        node.id = data.dig(0, 0, 0).to_i
+        net.update
+      end
+
+      def delete
+        net = @player.net
+        net.each do |node|
+          node.relations.delete_if { |n| n.id == @id }
+        end
+        net.delete(self)
+        @api.delete_node_update_net(@id, net.topology.generate)
+      end
+
       def move(x, y, z)
         @x = x
         @y = y
         @z = z
+      end
+
+      def connect(node)
+        return if @relations.include?(node)
+
+        @relations << node
+      end
+
+      def disconnect(node)
+        @relations.delete_if { |r| r.id == node.id }
       end
 
       def parse(data)

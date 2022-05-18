@@ -105,6 +105,14 @@ module Hackers
         @nodes.detect { |n| n.id == id }
       end
 
+      def add(node)
+        @nodes << node
+      end
+
+      def delete(node)
+        @nodes.delete(node)
+      end
+
       def update
         @api.update_net(@topology.generate)
       end
@@ -113,8 +121,9 @@ module Hackers
         @nodes.clear
         data_nodes.each do |record|
           node = NodeTypes.node(record[2].to_i)
-          @nodes << node.new(@api, @player)
-          @nodes.last.parse(record)
+          node = node.new(@api, @player)
+          add(node)
+          node.parse(record)
         end
 
         @topology.parse(data_topology.dig(0, 1))
@@ -139,6 +148,8 @@ module Hackers
         end
 
         nodes.each_with_index do |node, i|
+          next if node.nil?
+
           @net.node(node).relations.each do |relation|
             j = nodes.index(relation.id)
             rels << [i, j].join('*')

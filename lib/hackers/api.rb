@@ -245,7 +245,7 @@ module Hackers
           'node_delete_net_update' => 1,
           'id_player' => id,
           'id' => node,
-          'net' => Serializer.generateNetwork(net),
+          'net' => net,
           'app_version' => @version
         },
         @sid
