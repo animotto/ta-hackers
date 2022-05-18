@@ -13,6 +13,8 @@ module Hackers
     LANGUAGE = 'en'
     PLATFORM = 'google'
 
+    attr_reader :client
+
     attr_accessor :host, :port, :path, :salt,
                   :ssl, :id, :password, :language,
                   :platform, :version, :sid

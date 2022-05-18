@@ -10,19 +10,12 @@ module Hackers
                 :chat, :hints_list, :experience_list,
                 :builders_list, :goal_types, :shield_types,
                 :rank_list, :countries_list, :world,
-                :missions, :client, :news_list
+                :missions, :news_list
 
     attr_accessor :config
 
     def initialize(config)
       @config = config
-      @client = Client.new(
-        @config['host'],
-        @config['port'],
-        @config.key?('ssl'),
-        @config['url'],
-        @config['salt']
-      )
 
       api_config = {}
       api_config[:host] = @config['host'] if @config.key?('host')

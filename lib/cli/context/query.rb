@@ -25,10 +25,11 @@ CONTEXT_QUERY.add_command(
     params[param[0]] = param.length > 1 ? param[1] : ''
   end
 
-  query = GAME.client.generate_uri_raw(params.clone)
+  client = GAME.api.client
+  query = client.generate_uri_raw(params.clone)
 
   msg = "Query: #{query}"
-  response = GAME.client.request_raw(params)
+  response = client.request_raw(params)
   LOGGER.log(msg)
   shell.puts("\e[22;35m#{response}\e[0m")
 
@@ -60,10 +61,11 @@ CONTEXT_QUERY.add_command(
     params[param[0]] = param.length > 1 ? param[1] : ''
   end
 
-  query = GAME.client.generate_uri_cmd(params.clone)
+  client = GAME.api.client
+  query = client.generate_uri_cmd(params.clone)
 
   msg = "Query: #{query}"
-  response = GAME.client.request_cmd(params)
+  response = client.request_cmd(params)
   LOGGER.log(msg)
   shell.puts("\e[22;35m#{response}\e[0m")
 
@@ -100,10 +102,11 @@ CONTEXT_QUERY.add_command(
     params[param[0]] = param.length > 1 ? param[1] : ''
   end
 
-  query = GAME.client.generate_uri_session(params.clone, GAME.api.sid)
+  client = GAME.api.client
+  query = client.generate_uri_session(params.clone, GAME.api.sid)
 
   msg = "Query: #{query}"
-  response = GAME.client.request_session(params, GAME.api.sid)
+  response = client.request_session(params, GAME.api.sid)
   LOGGER.log(msg)
   shell.puts("\e[22;35m#{response}\e[0m")
 
