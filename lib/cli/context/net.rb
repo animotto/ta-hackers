@@ -8,7 +8,7 @@ CONTEXT_NET.add_command(
   description: 'Show profile'
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -61,7 +61,7 @@ CONTEXT_NET.add_command(
   params: ['[id]']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -188,7 +188,7 @@ CONTEXT_NET.add_command(
   description: 'Show readme'
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -213,7 +213,7 @@ CONTEXT_NET.add_command(
   params: ['<message>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -244,7 +244,7 @@ CONTEXT_NET.add_command(
   params: ['<id>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -281,7 +281,7 @@ CONTEXT_NET.add_command(
   description: 'Clear readme'
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -306,7 +306,7 @@ CONTEXT_NET.add_command(
   description: 'Show nodes'
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -374,7 +374,7 @@ CONTEXT_NET.add_command(
   params: ['<type>', '<parent>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -413,7 +413,7 @@ CONTEXT_NET.add_command(
   params: ['<id>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -446,7 +446,7 @@ CONTEXT_NET.add_command(
   params: ['<id>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -479,7 +479,7 @@ CONTEXT_NET.add_command(
   params: ['<id>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -512,7 +512,7 @@ CONTEXT_NET.add_command(
   params: ['<id>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -545,7 +545,7 @@ CONTEXT_NET.add_command(
   params: ['<id>', '<amount>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -579,7 +579,7 @@ CONTEXT_NET.add_command(
   params: ['<id>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -617,7 +617,7 @@ CONTEXT_NET.add_command(
   description: 'Show network topology'
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -673,7 +673,7 @@ CONTEXT_NET.add_command(
   params: ['<from_id>', '<to_id>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -709,7 +709,7 @@ CONTEXT_NET.add_command(
   params: ['<from_id>', '<to_id>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 

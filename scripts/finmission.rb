@@ -12,7 +12,7 @@ class Finmission < Sandbox::Script
     end
 
     unless @game.connected?
-      @logger.log('Not connected')
+      @logger.log(NOT_CONNECTED)
       return
     end
 

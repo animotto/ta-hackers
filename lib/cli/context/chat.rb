@@ -42,7 +42,7 @@ CONTEXT_CHAT_OPEN = CONTEXT_CHAT.add_command(
   params: ['<room>']
 ) do |tokens, shell|
   unless GAME.connected? || GAME.app_settings.loaded?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -170,7 +170,7 @@ CONTEXT_CHAT_USERS = CONTEXT_CHAT.add_command(
   params: ['<room>']
 ) do |tokens, shell|
   unless GAME.connected? || GAME.app_settings.loaded?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 

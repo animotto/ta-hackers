@@ -2,7 +2,7 @@ class Antiafk < Sandbox::Script
   CHECKCON_INTERVAL = 60
   AUTH_INTERVAL_MIN = 840
   AUTH_INTERVAL_ADD = 180
-  
+
   def main
     checkConLast = authLast = authInterval = 0
     loop do

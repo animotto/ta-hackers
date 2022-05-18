@@ -8,7 +8,7 @@ CONTEXT_MISSION.add_command(
   description: 'Show missions log'
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -68,7 +68,7 @@ CONTEXT_MISSION.add_command(
   params: ['<id>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -93,7 +93,7 @@ CONTEXT_MISSION.add_command(
   params: ['<id>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 

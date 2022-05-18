@@ -8,7 +8,7 @@ CONTEXT_WORLD.add_command(
   description: 'Show targets'
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -63,7 +63,7 @@ CONTEXT_WORLD.add_command(
   description: 'Get new targets'
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -111,7 +111,7 @@ CONTEXT_WORLD.add_command(
   description: 'Show bonuses'
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -162,7 +162,7 @@ CONTEXT_WORLD_COLLECT = CONTEXT_WORLD.add_command(
   params: ['<id>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -203,7 +203,7 @@ CONTEXT_WORLD.add_command(
   description: 'Show goals'
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -261,7 +261,7 @@ CONTEXT_WORLD_UPDATE = CONTEXT_WORLD.add_command(
   params: ['<id>', '<finished>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -304,7 +304,7 @@ CONTEXT_WORLD_REJECT = CONTEXT_WORLD.add_command(
   params: ['<id>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 

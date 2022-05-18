@@ -89,7 +89,7 @@ CONTEXT_QUERY.add_command(
   params: ['<args>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 

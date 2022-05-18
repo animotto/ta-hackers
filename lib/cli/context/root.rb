@@ -174,7 +174,7 @@ SHELL.add_command(
   description: 'Show session ID'
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -671,7 +671,7 @@ SHELL.add_command(
   params: ['<name>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -689,7 +689,7 @@ SHELL.add_command(
   params: ['<id>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -724,7 +724,7 @@ SHELL.add_command(
   params: ['<id>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -787,7 +787,7 @@ SHELL.add_command(
   country = tokens[3].to_i
 
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -805,7 +805,7 @@ SHELL.add_command(
   params: ['<skin>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -823,7 +823,7 @@ SHELL.add_command(
   params: ['<id>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -841,7 +841,7 @@ SHELL.add_command(
   params: ['<email>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -859,7 +859,7 @@ SHELL.add_command(
   params: ['<id>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -927,7 +927,7 @@ SHELL.add_command(
   description: 'Cp generate code'
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -948,7 +948,7 @@ SHELL.add_command(
   params: ['<code>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -969,7 +969,7 @@ SHELL.add_command(
   description: 'Show player statistics'
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 

@@ -9,7 +9,7 @@ CONTEXT_MARKET.add_command(
   params: ['<type>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -29,7 +29,7 @@ CONTEXT_MARKET.add_command(
   params: ['<type>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -48,7 +48,7 @@ CONTEXT_MARKET.add_command(
   description: 'Buy builder'
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -66,7 +66,7 @@ CONTEXT_MARKET.add_command(
   params: ['<perc>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -86,7 +86,7 @@ CONTEXT_MARKET.add_command(
   params: ['<perc>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 

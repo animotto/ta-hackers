@@ -8,7 +8,7 @@ CONTEXT_PROG.add_command(
   description: 'Show programs list'
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -58,7 +58,7 @@ CONTEXT_PROG.add_command(
   description: 'Show programs queue'
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -112,7 +112,7 @@ CONTEXT_PROG.add_command(
   params: ['<type>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -134,7 +134,7 @@ CONTEXT_PROG.add_command(
   params: ['<id>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -167,7 +167,7 @@ CONTEXT_PROG.add_command(
   params: ['<id>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -200,7 +200,7 @@ CONTEXT_PROG.add_command(
   params: ['<type>', '<amount>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -265,7 +265,7 @@ CONTEXT_PROG.add_command(
   params: ['<type>', '<amount>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 
@@ -328,7 +328,7 @@ CONTEXT_PROG.add_command(
   params: ['<id>']
 ) do |tokens, shell|
   unless GAME.connected?
-    shell.puts('Not connected')
+    shell.puts(NOT_CONNECTED)
     next
   end
 

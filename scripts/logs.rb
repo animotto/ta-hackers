@@ -7,7 +7,7 @@ class Logs < Sandbox::Script
     id = @args[0].to_i
 
     unless @game.connected?
-      @logger.log('Not connected')
+      @logger.log(NOT_CONNECTED)
       return
     end
 
