@@ -2,6 +2,14 @@
 
 module Hackers
   module Network
+    SUCCESS_FAIL = 0
+    SUCCESS_CORE = 1
+    SUCCESS_RESOURCES = 2
+    SUCCESS_CONTROL = 4
+
+    CURRENCY_MONEY = 0
+    CURRENCY_BITCOINS = 1
+
     ##
     # Player
     class Player < Dataset

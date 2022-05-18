@@ -29,6 +29,10 @@ module Hackers
       @missions.each(&block)
     end
 
+    def empty?
+      @missions.empty?
+    end
+
     def exist?(mission)
       @missions.any? { |m| m.id == mission }
     end
@@ -42,6 +46,8 @@ module Hackers
     end
 
     def parse
+      return if @data.nil?
+
       @missions.clear
       @data.each do |record|
         mission = Mission.new(@api)

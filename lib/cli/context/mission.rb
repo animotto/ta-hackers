@@ -19,6 +19,11 @@ CONTEXT_MISSION.add_command(
   missions = GAME.missions
 
   shell.puts("\e[1;35m\u2022 Missions log\e[0m")
+  if missions.empty?
+    shell.puts('  Empty')
+    next
+  end
+
   shell.puts(
     format(
       "  \e[35m%-1s %-7s %-7s %-8s %-20s\e[0m",

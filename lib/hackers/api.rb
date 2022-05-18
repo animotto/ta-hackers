@@ -769,17 +769,16 @@ module Hackers
     ##
     # Buys currency
     def buy_currency(currency, perc, id = @id)
-      params = {
-        'player_buy_currency_percentage' => 1,
-        'id' => id,
-        'currency' => currency,
-        'max_storage_percentage' => perc,
-        'app_version' => @version
-      }
-
-      response = @client.request_session(params, @sid)
-      serializer = Serializer.new(response)
-      serializer.parsePlayerBuyCurrencyPerc
+      @client.request_session(
+        {
+          'player_buy_currency_percentage' => 1,
+          'id' => id,
+          'currency' => currency,
+          'max_storage_percentage' => perc,
+          'app_version' => @version
+        },
+        @sid
+      )
     end
 
     ##
@@ -1001,7 +1000,7 @@ module Hackers
     end
 
     ##
-    # Buys builder:
+    # Buys builder
     def buy_builder(id = @id)
       @client.request_session(
         {

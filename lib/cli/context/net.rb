@@ -336,7 +336,7 @@ CONTEXT_NET.add_command(
     timer = String.new
     if node.timer.negative?
       timer += "\e[32m" + "\u25b0" * node.builders + "\e[37m" + "\u25b1" * (profile.builders - node.builders) + "\e[0m "
-      timer += GAME.timerToDHMS(node.timer * -1)
+      timer += Hackers::Utils.timer_dhms(node.timer * -1)
     else
       if node_type.kind_of?(Hackers::NodeTypes::Production)
         case node_type.production_currency(node.level)

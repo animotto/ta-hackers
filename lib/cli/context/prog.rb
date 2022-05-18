@@ -34,7 +34,7 @@ CONTEXT_PROG.add_command(
 
   programs.each do |program|
     timer = String.new
-    timer = GAME.timerToDHMS(program.timer * -1) if program.timer.negative?
+    timer = Hackers::Utils.timer_dhms(program.timer * -1) if program.timer.negative?
 
     shell.puts(
       format(
@@ -100,7 +100,7 @@ CONTEXT_PROG.add_command(
 
   shell.puts
   shell.puts("  \e[35mSequence: #{queue.sequence}\e[0m")
-  shell.puts("  \e[35mTotal: #{GAME.timerToDHMS(total)}\e[0m") unless total.zero?
+  shell.puts("  \e[35mTotal: #{Hackers::Utils.timer_dhms(total)}\e[0m") unless total.zero?
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
@@ -240,7 +240,7 @@ CONTEXT_PROG.add_command(
 
   programs.each do |program|
     timer = String.new
-    timer = GAME.timerToDHMS(program.timer * -1) if program.timer.negative?
+    timer = Hackers::Utils.timer_dhms(program.timer * -1) if program.timer.negative?
 
     shell.puts(
       format(
@@ -316,7 +316,7 @@ CONTEXT_PROG.add_command(
 
   shell.puts
   shell.puts("  \e[35mSequence: #{queue.sequence}\e[0m")
-  shell.puts("  \e[35mTotal: #{GAME.timerToDHMS(total)}\e[0m") unless total.zero?
+  shell.puts("  \e[35mTotal: #{Hackers::Utils.timer_dhms(total)}\e[0m") unless total.zero?
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end

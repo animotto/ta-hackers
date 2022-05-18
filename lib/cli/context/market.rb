@@ -3,7 +3,7 @@
 ## Commands
 
 # skin
-CONTEXT_BUY.add_command(
+CONTEXT_MARKET.add_command(
   :skin,
   description: 'Buy skin',
   params: ['<type>']
@@ -16,14 +16,14 @@ CONTEXT_BUY.add_command(
   skin = tokens[1].to_i
 
   msg = 'Buy skin'
-  GAME.cmdPlayerBuySkin(skin)
+  GAME.buy_skin(skin)
   LOGGER.log(msg)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
-# skin
-CONTEXT_BUY.add_command(
+# shield
+CONTEXT_MARKET.add_command(
   :shield,
   description: 'Buy shield',
   params: ['<type>']
@@ -36,14 +36,14 @@ CONTEXT_BUY.add_command(
   shield = tokens[1].to_i
 
   msg = 'Buy shield'
-  GAME.cmdShieldBuy(shield)
+  GAME.buy_shield(shield)
   LOGGER.log(msg)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
 # builder
-CONTEXT_BUY.add_command(
+CONTEXT_MARKET.add_command(
   :builder,
   description: 'Buy builder'
 ) do |tokens, shell|
@@ -53,14 +53,14 @@ CONTEXT_BUY.add_command(
   end
 
   msg = 'Buy builder'
-  GAME.cmdPlayerBuyBuilder
+  GAME.buy_builder
   LOGGER.log(msg)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
 # money
-CONTEXT_BUY.add_command(
+CONTEXT_MARKET.add_command(
   :money,
   description: 'Buy money',
   params: ['<perc>']
@@ -73,14 +73,14 @@ CONTEXT_BUY.add_command(
   perc = tokens[1].to_i
 
   msg = 'Buy currency'
-  GAME.cmdPlayerBuyCurrencyPerc(Hackers::Game::CURRENCY_MONEY, perc)
+  GAME.buy_money(perc)
   LOGGER.log(msg)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
 # bitcoins
-CONTEXT_BUY.add_command(
+CONTEXT_MARKET.add_command(
   :bitcoins,
   description: 'Buy bitcoins',
   params: ['<perc>']
@@ -93,7 +93,7 @@ CONTEXT_BUY.add_command(
   perc = tokens[1].to_i
 
   msg = 'Buy currency'
-  GAME.cmdPlayerBuyCurrencyPerc(Hackers::Game::CURRENCY_BITCOINS, perc)
+  GAME.buy_bitcoins(perc)
   LOGGER.log(msg)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")

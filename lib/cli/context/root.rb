@@ -16,8 +16,8 @@ CONTEXT_WORLD = SHELL.add_context(:world, description: 'World')
 CONTEXT_SCRIPT = SHELL.add_context(:script, description: 'Scripts')
 # chat
 CONTEXT_CHAT = SHELL.add_context(:chat, description: 'Internal chat')
-# buy
-CONTEXT_BUY = SHELL.add_context(:buy, description: 'The buys')
+# market
+CONTEXT_MARKET = SHELL.add_context(:market, description: 'Black market')
 
 ## Commands
 
