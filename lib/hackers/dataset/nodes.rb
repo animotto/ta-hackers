@@ -5,31 +5,47 @@ module Hackers
     ##
     # Node
     class Node
-      attr_reader :id, :type, :level, :timer, :builders,
-                  :x, :y, :z, :relations
+      attr_accessor :id, :type, :level, :timer, :builders,
+                    :x, :y, :z, :relations
 
-      def initialize(data, topology)
-        @data = data
-        @topology = topology
+      def initialize(api, player)
+        @api = api
+        @player = player
 
-        parse
+        @x = 0
+        @y = 0
+        @z = 0
+        @relations = []
       end
 
-      private
+      def upgrade
+        @api.upgrade_node(@id)
+      end
 
-      def parse
-        @id = @data[0].to_i
-        @type = @data[2].to_i
-        @level = @data[3].to_i
-        @timer = @data[4].to_i
-        @builders = @data.dig(5).to_i
+      def finish
+        @api.finish_node(@id)
+      end
 
-        unless @topology.empty?
-          @relations = @topology[@id][:rels]
-          @x = @topology[@id][:x]
-          @y = @topology[@id][:y]
-          @z = @topology[@id][:z]
-        end
+      def cancel
+        @api.cancel_node(@id)
+      end
+
+      def set_builders(amount)
+        @api.node_set_builders(@id, amount)
+      end
+
+      def move(x, y, z)
+        @x = x
+        @y = y
+        @z = z
+      end
+
+      def parse(data)
+        @id = data[0].to_i
+        @type = data[2].to_i
+        @level = data[3].to_i
+        @timer = data[4].to_i
+        @builders = data.dig(5).to_i
       end
     end
 
@@ -54,6 +70,15 @@ module Hackers
     end
 
     ##
+    # Production
+    class Production < Business
+      def collect
+        raw_data = @api.collect_node(@id)
+        data = Serializer.parseData(raw_data)
+      end
+    end
+
+    ##
     # Core
     class Core < Business
     end
@@ -65,7 +90,11 @@ module Hackers
 
     ##
     # Farm
-    class Farm < Business
+    class Farm < Production
+      def collect
+        data = super
+        @player.profile.money = data.dig(0, 0, 1).to_i
+      end
     end
 
     ##
@@ -75,7 +104,11 @@ module Hackers
 
     ##
     # Bitcoin Mine
-    class BitcoinMine < Business
+    class BitcoinMine < Production
+      def collect
+        data = super
+        @player.profile.bitcoins = data.dig(0, 0, 1).to_i
+      end
     end
 
     ##

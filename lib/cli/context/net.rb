@@ -385,13 +385,7 @@ CONTEXT_NET.add_command(
 
   type = tokens[1].to_i
 
-  msg = 'Network maintenance'
-  net = GAME.cmdNetGetForMaint
-  LOGGER.log(msg)
-
-  msg = 'Create node'
-  GAME.cmdCreateNodeUpdateNet(type, net['net'])
-  LOGGER.log(msg)
+  shell.puts('Not implemented')
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
@@ -409,8 +403,21 @@ CONTEXT_NET.add_command(
 
   id = tokens[1].to_i
 
+  unless GAME.player.loaded?
+    msg = 'Network maintenance'
+    GAME.player.load
+    LOGGER.log(msg)
+  end
+
+  net = GAME.player.net
+
+  unless net.exist?(id)
+    shell.puts('No such node')
+    next
+  end
+
   msg = 'Upgrade node'
-  GAME.cmdUpgradeNode(id)
+  net.node(id).upgrade
   LOGGER.log(msg)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
@@ -429,8 +436,21 @@ CONTEXT_NET.add_command(
 
   id = tokens[1].to_i
 
+  unless GAME.player.loaded?
+    msg = 'Network maintenance'
+    GAME.player.load
+    LOGGER.log(msg)
+  end
+
+  net = GAME.player.net
+
+  unless net.exist?(id)
+    shell.puts('No such node')
+    next
+  end
+
   msg = 'Finish node'
-  GAME.cmdFinishNode(id)
+  net.node(id).finish
   LOGGER.log(msg)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
@@ -449,8 +469,21 @@ CONTEXT_NET.add_command(
 
   id = tokens[1].to_i
 
+  unless GAME.player.loaded?
+    msg = 'Network maintenance'
+    GAME.player.load
+    LOGGER.log(msg)
+  end
+
+  net = GAME.player.net
+
+  unless net.exist?(id)
+    shell.puts('No such node')
+    next
+  end
+
   msg = 'Cancel node'
-  GAME.cmdNodeCancel(id)
+  net.node(id).cancel
   LOGGER.log(msg)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
@@ -469,13 +502,7 @@ CONTEXT_NET.add_command(
 
   id = tokens[1].to_i
 
-  msg = 'Network maintenance'
-  net = GAME.cmdNetGetForMaint
-  LOGGER.log(msg)
-
-  msg = 'Delete node'
-  GAME.cmdDeleteNodeUpdateNet(id, net['net'])
-  LOGGER.log(msg)
+  shell.puts('Not implemented')
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
@@ -494,8 +521,21 @@ CONTEXT_NET.add_command(
   id = tokens[1].to_i
   builders = tokens[2].to_i
 
+  unless GAME.player.loaded?
+    msg = 'Network maintenance'
+    GAME.player.load
+    LOGGER.log(msg)
+  end
+
+  net = GAME.player.net
+
+  unless net.exist?(id)
+    shell.puts('No such node')
+    next
+  end
+
   msg = 'Node set builders'
-  GAME.cmdNodeSetBuilders(id, builders)
+  net.node(id).set_builders(builders)
   LOGGER.log(msg)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
@@ -505,29 +545,37 @@ end
 CONTEXT_NET.add_command(
   :collect,
   description: 'Collect node resources',
-  params: ['[id]']
+  params: ['<id>']
 ) do |tokens, shell|
   if GAME.sid.empty?
     shell.puts('No session ID')
     next
   end
 
-  nodes = []
-  if tokens[1].nil?
-    msg = 'Network maintenance'
-    net = GAME.cmdNetGetForMaint
-    LOGGER.log(msg)
+  id = tokens[1].to_i
 
-    nodes = net['nodes'].select { |k, v| (v['type'] == 11 || v['type'] == 13) && v['timer'] >= 0 }.map { |k, v| k }
-  else
-    nodes << tokens[1].to_i
+  unless GAME.player.loaded?
+    msg = 'Network maintenance'
+    GAME.player.load
+    LOGGER.log(msg)
+  end
+
+  net = GAME.player.net
+
+  unless net.exist?(id)
+    shell.puts('No such node')
+    next
+  end
+
+  node = net.node(id)
+  unless node.kind_of?(Hackers::Nodes::Production)
+    shell.puts('Node is not production')
+    next
   end
 
   msg = 'Collect node'
-  nodes.each do |node|
-    GAME.cmdCollectNode(node)
-    LOGGER.log("#{msg} (#{node})")
-  end
+  node.collect
+  LOGGER.log(msg)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
@@ -566,6 +614,7 @@ CONTEXT_NET.add_command(
 
   net.each do |node|
     node_type = GAME.node_types.get(node.type)
+    relations = node.relations.map { |r| r.id }
 
     shell.puts(
       format(
@@ -577,7 +626,7 @@ CONTEXT_NET.add_command(
         node.x,
         node.y,
         node.z,
-        node.relations
+        relations
       )
     )
   end

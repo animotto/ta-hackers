@@ -1,32 +1,27 @@
 class Hidenet < Sandbox::Script
+  COORD_MIN = 1
+  COORD_MAX = 999
+
   def main
     hide = @args[0]
     if hide.nil? || hide !~ /^(on|off)$/
-      @logger.log("Specify on|off argument")
+      @logger.log('Specify on|off argument')
       return
     end
 
-    begin
-      net = @game.cmdNetGetForMaint
-    rescue Hackers::RequestError => e
-      @logger.error("#{e}")
-      return
+    @game.player.load
+    net = @game.player.net
+    topology = net.topology
+
+    coord = hide == 'on' ? COORD_MAX : COORD_MIN
+    net.each do |node|
+      node.move(coord, coord, coord)
     end
 
-    coord = hide == "on" ? 999 : 1
-    net["net"].each_index do |i|
-      net["net"][i]["x"] = coord
-      net["net"][i]["y"] = coord
-      net["net"][i]["z"] = coord
-    end
+    net.update
 
-    begin
-      @game.cmdUpdateNet(net["net"])
-    rescue Hackers::RequestError => e
-      @logger.error("#{e}")
-      return
-    end
-    
-    @logger.log("Nodes coordinates updated to #{coord}")
+    @logger.log("Node coordinates have been updated to #{coord}")
+  rescue Hackers::RequestError => e
+    @logger.error(e)
   end
 end

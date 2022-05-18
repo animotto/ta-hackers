@@ -108,7 +108,7 @@ module Hackers
             record[5].to_i,
             record[6].to_i,
             Network::Profile.new,
-            Network::Network.new
+            Network::Network.new(@api)
           )
 
           unless data_players.empty?

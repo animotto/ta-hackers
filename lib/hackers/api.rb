@@ -215,7 +215,7 @@ module Hackers
         {
           'net_update' => 1,
           'id_player' => id,
-          'net' => Serializer.generateNetwork(net),
+          'net' => net,
           'app_version' => @version
         },
         @sid
@@ -225,16 +225,16 @@ module Hackers
     ##
     # Creates a node and updates the network structure
     def create_node_update_net(type, net, id = @id)
-      params = {
-        'create_node_and_update_net' => 1,
-        'id_player' => id,
-        'id_node' => type,
-        'net' => Serializer.generateNetwork(net),
-        'app_version' => @version
-      }
-
-      response = @client.request_session(params, @sid)
-      response.to_i
+      @client.request_session(
+        {
+          'create_node_and_update_net' => 1,
+          'id_player' => id,
+          'id_node' => type,
+          'net' => net,
+          'app_version' => @version
+        },
+        @sid
+      )
     end
 
     ##
@@ -296,15 +296,14 @@ module Hackers
     ##
     # Collects node resources
     def collect_node(node)
-      params = {
-        'collect' => 1,
-        'id_node' => node,
-        'app_version' => @version
-      }
-
-      response = @client.request_session(params, @sid)
-      serializer = Serializer.new(response)
-      serializer.parseCollectNode
+      @client.request_session(
+        {
+          'collect' => 1,
+          'id_node' => node,
+          'app_version' => @version
+        },
+        @sid
+      )
     end
 
     ##

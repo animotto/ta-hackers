@@ -12,7 +12,7 @@ module Hackers
       def initialize(*)
         super
 
-        @net = Network.new
+        @net = Network.new(@api, self)
         @profile = Profile.new
         @programs = Programs.new(@api)
         @queue = Queue.new(@api, self)
@@ -83,47 +83,131 @@ module Hackers
     class Network
       include Enumerable
 
-      def initialize
+      attr_reader :topology
+
+      def initialize(api, player)
+        @api = api
+        @player = player
+
         @nodes = []
+        @topology = Topology.new(self)
       end
 
       def each(&block)
         @nodes.each(&block)
       end
 
+      def exist?(id)
+        @nodes.any? { |n| n.id == id }
+      end
+
       def node(id)
         @nodes.detect { |n| n.id == id }
       end
 
+      def update
+        @api.update_net(@topology.generate)
+      end
+
       def parse(data_nodes, data_topology)
-        topology = {}
-        unless data_topology.empty?
-          coords, rels, list = data_topology.dig(0, 1).split('|', 3)
-          coords = coords.split('_')
-
-          list = list.split('_').map(&:to_i)
-          list.each_with_index do |id, i|
-            topology[id] = {}
-            topology[id][:rels] = []
-            x, y, z = coords[i].split('*', 3).map(&:to_i)
-            topology[id][:x] = x
-            topology[id][:y] = y
-            topology[id][:z] = z
-          end
-
-          rels = rels.split('_')
-          rels.each do |rel|
-            a, b = rel.split('*', 2).map(&:to_i)
-            topology[list[a]][:rels] << list[b]
-          end
-        end
-
         @nodes.clear
         data_nodes.each do |record|
           node = NodeTypes.node(record[2].to_i)
-          @nodes << node.new(record, topology)
+          @nodes << node.new(@api, @player)
+          @nodes.last.parse(record)
+        end
+
+        @topology.parse(data_topology.dig(0, 1))
+      end
+    end
+
+    ##
+    # Topology
+    class Topology
+      def initialize(net)
+        @net = net
+      end
+
+      def generate
+        coords = []
+        rels = []
+        nodes = []
+
+        @net.each_with_index do |node, i|
+          coords << [node.x, node.y, node.z].join('*')
+          nodes << node.id
+        end
+
+        nodes.each_with_index do |node, i|
+          @net.node(node).relations.each do |relation|
+            j = nodes.index(relation.id)
+            rels << [i, j].join('*')
+          end
+        end
+
+        coords = coords.join('_') + '_'
+        rels = rels.join('_') + '_'
+        nodes = nodes.join('_') + '_'
+
+        [coords, rels, nodes].join('|')
+      end
+
+      def parse(data)
+        if data.nil?
+          default
+          return
+        end
+
+        coords, rels, nodes = data.split('|', 3)
+        raise TopologyError if coords.nil? || rels.nil? || nodes.nil?
+
+        coords = coords.split('_')
+        rels = rels.split('_')
+        nodes = nodes.split('_').map(&:to_i)
+
+        nodes.each do |node|
+          raise TopologyError unless @net.exist?(node)
+        end
+
+        rels_list = Array.new(nodes.length) { [] }
+        rels.each do |rel|
+          a, b = rel.split('*', 2).map(&:to_i)
+          raise TopologyError unless a.between?(0, rels_list.length - 1) || b.between?(0, rels_list.length - 1)
+
+          rels_list[a] << b
+        end
+
+        nodes.each_with_index do |id, i|
+          x, y, z = coords[i].split('*', 3).map(&:to_i)
+          relations = rels_list[i].map { |r| nodes[r] }
+
+          node = @net.node(id)
+          node.x = x
+          node.y = y
+          node.z = z
+          relations.each do |r|
+            node.relations << @net.node(r)
+          end
+        end
+      rescue TopologyError
+        default
+      end
+
+      private
+
+      def default
+        @net.each do |node|
+          node.x = 1
+          node.y = 1
+          node.z = 1
+          node.relations.clear
         end
       end
+    end
+
+    ##
+    # Topology error
+    class TopologyError < StandardError
     end
 
     ##
