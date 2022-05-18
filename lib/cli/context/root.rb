@@ -693,8 +693,10 @@ SHELL.add_command(
     next
   end
 
+  id = tokens[1].to_i
+
   msg = 'Player get info'
-  profile = GAME.cmdPlayerGetInfo(tokens[1].to_i)
+  profile = GAME.player_info(id)
   LOGGER.log(msg)
 
   shell.puts("\e[1;35m\u2022 Player info\e[0m")
@@ -708,16 +710,16 @@ SHELL.add_command(
   shell.puts(format('  %-15s %s', 'Builders', "\e[37m" + "\u25b0" * profile.builders + "\e[0m"))
   shell.puts(format('  %-15s %d', 'X', profile.x))
   shell.puts(format('  %-15s %d', 'Y', profile.y))
-  shell.puts(format('  %-15s %d', 'Country', profile.country))
+  shell.puts(format('  %-15s %s (%d)', 'Country', GAME.countries_list.name(profile.country), profile.country))
   shell.puts(format('  %-15s %d', 'Skin', profile.skin))
   shell.puts(format('  %-15s %d', 'Level', GAME.experience_list.level(profile.experience)))
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
 
-# detail
+# details
 SHELL.add_command(
-  :detail,
+  :details,
   description: "Get detailed info about player's network",
   params: ['<id>']
 ) do |tokens, shell|
@@ -726,24 +728,26 @@ SHELL.add_command(
     next
   end
 
+  id = tokens[1].to_i
+
   msg = 'Get net details world'
-  detail = GAME.cmdGetNetDetailsWorld(tokens[1].to_i)
+  details = GAME.player_details(id)
   LOGGER.log(msg)
 
   shell.puts("\e[1;35m\u2022 Detailed player network\e[0m")
-  shell.puts(format('  %-15s %d', 'ID', detail['profile'].id))
-  shell.puts(format('  %-15s %s', 'Name', detail['profile'].name))
-  shell.puts(format("  %-15s \e[33m$ %d\e[0m", 'Money', detail['profile'].money))
-  shell.puts(format("  %-15s \e[31m\u20bf %d\e[0m", 'Bitcoins', detail['profile'].bitcoins))
-  shell.puts(format('  %-15s %d', 'Credits', detail['profile'].credits))
-  shell.puts(format('  %-15s %d', 'Experience', detail['profile'].experience))
-  shell.puts(format('  %-15s %d', 'Rank', detail['profile'].rank))
-  shell.puts(format('  %-15s %s', 'Builders', "\e[37m" + "\u25b0" * detail['profile'].builders + "\e[0m"))
-  shell.puts(format('  %-15s %d', 'X', detail['profile'].x))
-  shell.puts(format('  %-15s %d', 'Y', detail['profile'].y))
-  shell.puts(format('  %-15s %d', 'Country', detail['profile'].country))
-  shell.puts(format('  %-15s %d', 'Skin', detail['profile'].skin))
-  shell.puts(format('  %-15s %d', 'Level', GAME.experience_list.level(detail['profile'].experience)))
+  shell.puts(format('  %-15s %d', 'ID', details.profile.id))
+  shell.puts(format('  %-15s %s', 'Name', details.profile.name))
+  shell.puts(format("  %-15s \e[33m$ %d\e[0m", 'Money', details.profile.money))
+  shell.puts(format("  %-15s \e[31m\u20bf %d\e[0m", 'Bitcoins', details.profile.bitcoins))
+  shell.puts(format('  %-15s %d', 'Credits', details.profile.credits))
+  shell.puts(format('  %-15s %d', 'Experience', details.profile.experience))
+  shell.puts(format('  %-15s %d', 'Rank', details.profile.rank))
+  shell.puts(format('  %-15s %s', 'Builders', "\e[37m" + "\u25b0" * details.profile.builders + "\e[0m"))
+  shell.puts(format('  %-15s %d', 'X', details.profile.x))
+  shell.puts(format('  %-15s %d', 'Y', details.profile.y))
+  shell.puts(format('  %-15s %s (%d)', 'Country', GAME.countries_list.name(details.profile.country), details.profile.country))
+  shell.puts(format('  %-15s %d', 'Skin', details.profile.skin))
+  shell.puts(format('  %-15s %d', 'Level', GAME.experience_list.level(details.profile.experience)))
 
   shell.puts
   shell.puts(
@@ -756,15 +760,15 @@ SHELL.add_command(
       'Name'
     )
   )
-  detail['nodes'].each do |k, v|
+  details.network.each do |node|
     shell.puts(
       format(
         '  %-12d %-4d %-5d %-12d %-12s',
-        k,
-        v['type'],
-        v['level'],
-        v['timer'],
-        GAME.node_types.get(v['type']).name
+        node.id,
+        node.type,
+        node.level,
+        node.timer,
+        GAME.node_types.get(node.type).name
       )
     )
   end

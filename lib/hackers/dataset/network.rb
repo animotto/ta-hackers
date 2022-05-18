@@ -130,7 +130,9 @@ module Hackers
         @api.update_net(@topology.generate)
       end
 
-      def parse(data_nodes, data_topology)
+      def parse(data_nodes, data_topology = [])
+        return if data_nodes.nil?
+
         @nodes.clear
         data_nodes.each do |record|
           node = NodeTypes.node(record[2].to_i)

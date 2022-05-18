@@ -125,6 +125,8 @@ module Hackers
       @player.profile.bitcoins = data.dig(0, 0, 1)
     end
 
+    ##
+    # Creates a new account
     def create_player
       raw_data = @api.create_player
       data = Serializer.parseData(raw_data)
@@ -134,6 +136,31 @@ module Hackers
         data.dig(0, 0, 1),
         data.dig(0, 0, 2)
       )
+    end
+
+    ##
+    # Gets player info
+    def player_info(id)
+      raw_data = @api.player_info(id)
+      data = Serializer.parseData(raw_data)
+
+      profile = Network::Profile.new
+      profile.parse(data.dig(0, 0))
+      profile
+    end
+
+    ##
+    # Gets detailed player info
+    def player_details(id)
+      raw_data = @api.player_details(id)
+      data = Serializer.parseData(raw_data)
+
+      profile = Network::Profile.new
+      profile.parse(data.dig(0, 0))
+      network = Network::Network.new(@api, @player)
+      network.parse(data.dig(1))
+
+      PlayerDetails.new(profile, network)
     end
   end
 end

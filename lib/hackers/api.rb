@@ -641,33 +641,27 @@ module Hackers
     ##
     # Gets player info
     def player_info(id)
-      params = {
-        'player_get_info' => '',
-        'id' => id,
-        'app_version' => @version
-      }
-
-      response = @client.request_session(params, @sid)
-      serializer = Serializer.new(response)
-      serializer.parseProfile(0, 0)
+      @client.request_session(
+        {
+          'player_get_info' => '',
+          'id' => id,
+          'app_version' => @version
+        },
+        @sid
+      )
     end
 
     ##
     # Gets detailed player info
     def player_details(id)
-      params = {
-        'get_net_details_world' => 1,
-        'id_player' => id,
-        'app_version' => @version
-      }
-
-      response = @client.request_session(params, @sid)
-      serializer = Serializer.new(response)
-
-      {
-        'profile' => serializer.parseProfile(0, 0),
-        'nodes' => serializer.parseNodes(1)
-      }
+      @client.request_session(
+        {
+          'get_net_details_world' => 1,
+          'id_player' => id,
+          'app_version' => @version
+        },
+        @sid
+      )
     end
 
     ##
