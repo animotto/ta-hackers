@@ -12,8 +12,8 @@ This project is for research purposes only. All source code is provided as is. I
 It uses my [sandbox-ruby](https://github.com/animotto/sandbox-ruby) gem
 
 The sandbox consists of the following contexts:
-- `buy` Purchases of various ingame items
 - `chat` Internal chat
+- `market` Purchases of various ingame items
 - `mission` Managing your missions
 - `net` Maintenance your network
 - `prog` Managing your programs

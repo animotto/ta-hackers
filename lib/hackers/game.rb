@@ -10,7 +10,7 @@ module Hackers
                 :chat, :hints_list, :experience_list,
                 :builders_list, :goal_types, :shield_types,
                 :rank_list, :countries_list, :world,
-                :missions, :client
+                :missions, :client, :news_list
 
     attr_accessor :config
 
@@ -55,6 +55,7 @@ module Hackers
       @world = World::World.new(@api, self)
       @chat = Chat.new(@api)
       @missions = Missions.new(@api)
+      @news_list = NewsList.new(@api)
     end
 
     ##

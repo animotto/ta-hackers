@@ -855,14 +855,12 @@ module Hackers
     ##
     # Gets news list
     def news
-      params = {
-        'news_get_list' => 1,
-        'app_version' => @version
-      }
-
-      response = @client.request_cmd(params)
-      serializer = Serializer.new(response)
-      serializer.parseNewsList
+      @client.request_cmd(
+        {
+          'news_get_list' => 1,
+          'app_version' => @version
+        }
+      )
     end
 
     ##

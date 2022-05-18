@@ -442,21 +442,21 @@ SHELL.add_command(
   description: 'News'
 ) do |tokens, shell|
   msg = 'News'
-  news = GAME.cmdNewsGetList
+  GAME.news_list.load
   LOGGER.log(msg)
 
-  news.each do |k, v|
+  GAME.news_list.each do |news|
     shell.puts(
       format(
         "\e[34m%s \e[33m%s\e[0m",
-        v['date'],
-        v['title']
+        news.datetime,
+        news.title
       )
     )
     shell.puts(
       format(
         "\e[35m%s\e[0m",
-        v['body']
+        news.body
       )
     )
     shell.puts
