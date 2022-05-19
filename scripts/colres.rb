@@ -19,16 +19,19 @@ class Colres < Sandbox::Script
         percent = node.timer / total_time * 100
         next if percent < PERCENT
 
-        node.collect
+        money = @game.player.profile.money
+        bitcoins = @game.player.profile.bitcoins
 
-        collected = ((node_type.production_speed(node.level).to_f / 60 / 60) * node.timer).to_i
-        collected = [collected, node_type.production_limit(node.level)].min
+        node.collect
         case node_type.production_currency(node.level)
         when Hackers::Network::CURRENCY_MONEY
           currency = '$'
+          collected = @game.player.profile.money - money
         when Hackers::Network::CURRENCY_BITCOINS
           currency = "\u20bf"
+          collected = @game.player.profile.bitcoins - bitcoins
         end
+
         @logger.log("Node #{node_type.name} (#{node.id}) collected #{collected}#{currency}")
       end
     rescue Hackers::RequestError => e
