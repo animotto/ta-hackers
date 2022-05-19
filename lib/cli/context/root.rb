@@ -261,11 +261,18 @@ SHELL.add_command(
     )
 
     node.levels.each do |level|
+      case node.upgrade_currency(level)
+      when Hackers::Network::CURRENCY_MONEY
+        upgrade_currency = '$'
+      when Hackers::Network::CURRENCY_BITCOINS
+        upgrade_currency = "\u20bf"
+      end
+
       shell.puts(
         format(
-          ' %-5d %-10d %-5d %-7d %-5d %-5d %-8d',
+          ' %-5d %-10s %-5d %-7d %-5d %-5d %-8d',
           level,
-          node.upgrade_cost(level),
+          "#{node.upgrade_cost(level)}#{upgrade_currency}",
           node.experience_gained(level),
           node.completion_time(level),
           node.node_connections(level),

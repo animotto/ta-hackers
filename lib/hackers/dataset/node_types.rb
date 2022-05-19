@@ -241,6 +241,16 @@ module Hackers
         record = find_record_level(level)
         record[13].to_i
       end
+
+      def capacity_money(level)
+        record = find_record_level(level)
+        record[14].to_i
+      end
+
+      def capacity_bitcoins(level)
+        record = find_record_level(level)
+        record[15].to_i
+      end
     end
 
     ##
@@ -265,6 +275,11 @@ module Hackers
     class Database < Business
       TYPE = NodeTypes::DATABASE
 
+      def capacity(level)
+        record = find_record_level(level)
+        record[14].to_i
+      end
+
       def exfiltration_amount(level)
         record = find_record_level(level)
         record[15].to_i
@@ -286,6 +301,11 @@ module Hackers
     # Bitcoin Mixer
     class BitcoinMixer < Business
       TYPE = NodeTypes::BITCOIN_MIXER
+
+      def capacity(level)
+        record = find_record_level(level)
+        record[14].to_i
+      end
 
       def exfiltration_amount(level)
         record = find_record_level(level)

@@ -22,6 +22,7 @@ class Colres < Sandbox::Script
         node.collect
 
         collected = ((node_type.production_speed(node.level).to_f / 60 / 60) * node.timer).to_i
+        collected = [collected, node_type.production_limit(node.level)].min
         case node_type.production_currency(node.level)
         when Hackers::Network::CURRENCY_MONEY
           currency = '$'

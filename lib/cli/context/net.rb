@@ -21,14 +21,30 @@ CONTEXT_NET.add_command(
   profile = player.profile
   skins = player.skins
   shield = player.shield
+  node_types = GAME.node_types
+
+  capacity_money = 0
+  capacity_bitcoins = 0
+  net.each do |node|
+    node_type = node_types.get(node.type)
+    if node_type.instance_of?(Hackers::NodeTypes::Core)
+      capacity_money += node_type.capacity_money(node.level)
+      capacity_bitcoins += node_type.capacity_bitcoins(node.level)
+    elsif node_type.kind_of?(Hackers::NodeTypes::Database)
+      capacity_money += node_type.capacity(node.level)
+    elsif node_type.kind_of?(Hackers::NodeTypes::BitcoinMixer)
+      capacity_bitcoins += node_type.capacity(node.level)
+    end
+  end
 
   builders = 0
   net.each { |node| builders += node.builders if node.timer.negative? }
+
   shell.puts("\e[1;35m\u2022 Profile\e[0m")
   shell.puts(format('  %-15s %d', 'ID', profile.id))
   shell.puts(format('  %-15s %s', 'Name', profile.name))
-  shell.puts(format("  %-15s \e[33m$ %d\e[0m", 'Money', profile.money))
-  shell.puts(format("  %-15s \e[31m\u20bf %d\e[0m", 'Bitcoins', profile.bitcoins))
+  shell.puts(format("  %-15s \e[33m$ %d / %d\e[0m", 'Money', profile.money, capacity_money))
+  shell.puts(format("  %-15s \e[31m\u20bf %d / %d\e[0m", 'Bitcoins', profile.bitcoins, capacity_bitcoins))
   shell.puts(format('  %-15s %d', 'Credits', profile.credits))
   shell.puts(format('  %-15s %d', 'Experience', profile.experience))
   shell.puts(format('  %-15s %d', 'Rank', profile.rank))
@@ -131,9 +147,9 @@ CONTEXT_NET.add_command(
     shell.puts(
       format(
         "  %s%s%s %+-3d %-10s %-19s %-10s %-5d %s",
-        record.success & Hackers::Game::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-        record.success & Hackers::Game::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-        record.success & Hackers::Game::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+        record.success & Hackers::Network::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+        record.success & Hackers::Network::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+        record.success & Hackers::Network::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
         record.rank,
         record.id,
         record.datetime,
@@ -166,9 +182,9 @@ CONTEXT_NET.add_command(
     shell.puts(
       format(
         "  %s%s%s %+-3d %-10s %-19s %-10s %-5d %s",
-        record.success & Hackers::Game::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-        record.success & Hackers::Game::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-        record.success & Hackers::Game::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+        record.success & Hackers::Network::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+        record.success & Hackers::Network::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+        record.success & Hackers::Network::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
         record.rank,
         record.id,
         record.datetime,
@@ -321,11 +337,12 @@ CONTEXT_NET.add_command(
   shell.puts("\e[1;35m\u2022 Nodes\e[0m")
   shell.puts(
     format(
-      "  \e[35m%-12s %-12s %-4s %-5s %-16s\e[0m",
+      "  \e[35m%-10s %-12s %-4s %-5s %-10s %-16s\e[0m",
       'ID',
       'Name',
       'Type',
       'Level',
+      'Upgrade',
       'Timer'
     )
   )
@@ -352,13 +369,28 @@ CONTEXT_NET.add_command(
       end
     end
 
+    upgrade_currency = ''
+    upgrade_cost = '-'
+    upgrade_level = node.level + 1
+    if upgrade_level <= node_type.levels.length
+      case node_type.upgrade_currency(upgrade_level)
+      when Hackers::Network::CURRENCY_MONEY
+        upgrade_currency = '$'
+      when Hackers::Network::CURRENCY_BITCOINS
+        upgrade_currency = "\u20bf"
+      end
+
+      upgrade_cost = node_type.upgrade_cost(upgrade_level)
+    end
+
     shell.puts(
       format(
-        '  %-12d %-12s %-4d %-5d %-17s',
+        '  %-10d %-12s %-4d %-5d %-10s %-17s',
         node.id,
         node_type.name,
         node.type,
         node.level,
+        "#{upgrade_cost}#{upgrade_currency}",
         timer
       )
     )
