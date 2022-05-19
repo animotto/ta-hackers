@@ -156,5 +156,26 @@ module Hackers
 
       PlayerDetails.new(profile, network)
     end
+
+    ##
+    # Generates CP (change platform) code
+    def cp_generate_code
+      raw_data = @api.cp_generate_code
+      data = Serializer.parseData(raw_data)
+
+      data.dig(0, 0, 0)
+    end
+
+    ##
+    # Uses CP (change platform) code
+    def cp_use_code(code, platform)
+      raw_data = @api.cp_use_code(code, platform)
+      data = Serializer.parseData(raw_data)
+
+      Account.new(
+        data.dig(0, 0, 0).to_i,
+        data.dig(0, 0, 1)
+      )
+    end
   end
 end

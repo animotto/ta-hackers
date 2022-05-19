@@ -1021,33 +1021,31 @@ module Hackers
 
     ##
     # Uses CP (change platform) code
-    def cp_use_code(code, id = @id, platform = @platform)
-      params = {
-        'cp_use_code' => '',
-        'id_player' => id,
-        'code' => code,
-        'platform' => platform,
-        'app_version' => @version
-      }
-
-      response = @client.request_session(params, @sid)
-      serializer = Serializer.new(response)
-      serializer.parseCpUseCode
+    def cp_use_code(code, platform = @platform, id = @id)
+      @client.request_session(
+        {
+          'cp_use_code' => '',
+          'id_player' => id,
+          'code' => code,
+          'platform' => platform,
+          'app_version' => @version
+        },
+        @sid
+      )
     end
 
     ##
     # Generates CP (change platform) code
-    def cp_generate_code(id = @id, platform = @platform)
-      params = {
-        'cp_generate_code' => '',
-        'id_player' => id,
-        'platform' => platform,
-        'app_version' => @version
-      }
-
-      response = @client.request_session(params, @sid)
-      serializer = Serializer.new(response)
-      serializer.parseCpGenerateCode
+    def cp_generate_code(platform = @platform, id = @id)
+      @client.request_session(
+        {
+          'cp_generate_code' => '',
+          'id_player' => id,
+          'platform' => platform,
+          'app_version' => @version
+        },
+        @sid
+      )
     end
 
     ##

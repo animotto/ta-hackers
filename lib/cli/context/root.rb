@@ -946,7 +946,7 @@ end
 # cpgen
 SHELL.add_command(
   :cpgen,
-  description: 'Cp generate code'
+  description: 'Generate code for platform change'
 ) do |tokens, shell|
   unless GAME.connected?
     shell.puts(NOT_CONNECTED)
@@ -954,7 +954,7 @@ SHELL.add_command(
   end
 
   msg = 'Cp generate code'
-  code = GAME.cmdCpGenerateCode(GAME.config['id'], GAME.config['platform'])
+  code = GAME.cp_generate_code
   LOGGER.log(msg)
 
   shell.puts("\e[1;35m\u2022 Generated code\e[0m")
@@ -966,8 +966,8 @@ end
 # cpuse
 SHELL.add_command(
   :cpuse,
-  description: 'Cp use code',
-  params: ['<code>']
+  description: 'Use code for platform change',
+  params: ['<code>', '<platform>']
 ) do |tokens, shell|
   unless GAME.connected?
     shell.puts(NOT_CONNECTED)
@@ -975,12 +975,12 @@ SHELL.add_command(
   end
 
   msg = 'Cp use code'
-  data = GAME.cmdCpUseCode(GAME.config['id'], tokens[1], GAME.config['platform'])
+  account = GAME.cp_use_code(tokens[1], tokens[2])
   LOGGER.log(msg)
 
   shell.puts("\e[1;35m\u2022 Account credentials\e[0m")
-  shell.puts("  ID: #{data["id"]}")
-  shell.puts("  Password: #{data["password"]}")
+  shell.puts("  ID: #{account.id}")
+  shell.puts("  Password: #{account.password}")
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
