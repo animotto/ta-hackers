@@ -1,13 +1,15 @@
+# frozen_string_literal: true
+
 class Finmission < Sandbox::Script
   def main
     if @args[0].nil?
-      @logger.log("Specify mission ID")
+      @logger.log('Specify mission ID')
       return
     end
 
     id = @args[0].to_i
     unless @game.missions_list.exist?(id)
-      @logger.log("No such mission")
+      @logger.log('No such mission')
       return
     end
 
@@ -17,36 +19,28 @@ class Finmission < Sandbox::Script
     end
 
     begin
-      log = @game.cmdPlayerMissionsGetLog
-      unless log.key?(id)
-        @logger.log("Mission #{id} not started")
+      @game.missions.load
+
+      unless @game.missions.exist?(id)
+        @logger.log("Mission #{id} is not started")
         return
       end
 
-      money = @game.missions_list.money(id) - log[id]["money"]
-      bitcoins = @game.missions_list.bitcoins(id) - log[id]["bitcoins"]
+      mission = @game.missions.get(id)
+      mission_type = @game.missions_list.get(id)
 
-      mission = @game.cmdGetMissionFight(id)
-      currencies = Hash.new
-      nodes = mission["nodes"].select {|k, v| [7, 11, 12, 13, 14].include?(v["type"])}
-      nodes.each do |k, v|
-        currencies[k] = 0
-      end
-      data = {
-        :money => money,
-        :bitcoins => bitcoins,
-        :finished => Hackers::Game::MISSION_FINISHED,
-        :currencies => currencies,
-        :programs => mission["programs"],
-      }
-      @game.cmdPlayerMissionUpdate(id, data)
-      @logger.log("Mission #{id} finished")
-      @logger.log("Money: #{@game.missions_list.reward_money(id)} + #{money}")
-      @logger.log("Bitcoins: #{@game.missions_list.reward_bitcoins(id)} + #{bitcoins}")
+      mission.attack
+      mission.money = mission_type.additional_money
+      mission.bitcoins = mission_type.additional_bitcoins
+      mission.finish
+      mission.update
+
+      @logger.log("Mission #{mission_type.name} (#{id}) has been finished")
+      @logger.log("Money: #{mission_type.reward_money} + #{mission_type.additional_money}")
+      @logger.log("Bitcoins: #{mission_type.reward_bitcoins} + #{mission_type.additional_bitcoins}")
     rescue Hackers::RequestError => e
       @logger.error(e)
       return
     end
   end
 end
-

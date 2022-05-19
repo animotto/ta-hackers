@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Network < Sandbox::Script
   def main
     unless @game.connected?
@@ -22,7 +24,7 @@ class Network < Sandbox::Script
     @shell.puts("\u2022 Network structure for #{target.profile.name}")
     @shell.puts(
       format(
-        '  %-12s %-12s %-5s %-6s %-4s %-4s %-4s %s',
+        '  %-10s %-12s %-5s %-6s %-4s %-4s %-4s %s',
         'ID',
         'Name',
         'Type',
@@ -35,9 +37,10 @@ class Network < Sandbox::Script
     )
 
     target.net.each do |node|
+      relations = node.relations.map { |r| r.id }
       @shell.puts(
         format(
-          '  %-12d %-12s %-5d %-6d %-+4d %-+4d %-+4d %s',
+          '  %-10d %-12s %-5d %-6d %-+4d %-+4d %-+4d %s',
           node.id,
           @game.node_types.get(node.type).name,
           node.type,
@@ -45,7 +48,7 @@ class Network < Sandbox::Script
           node.x,
           node.y,
           node.z,
-          node.relations
+          relations
         )
       )
     end

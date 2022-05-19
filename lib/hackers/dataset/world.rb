@@ -113,7 +113,7 @@ module Hackers
 
           unless data_players.empty?
             @targets.last.profile.parse(data_players.dig(i, 0))
-            @targets.last.net.parse(data_players.dig(i + 1), [])
+            @targets.last.net.parse(data_players.dig(i + 1))
             i += 2
           end
         end
@@ -218,6 +218,13 @@ module Hackers
 
       def remove(goal)
         @goals.delete_if { |g| g.id == goal }
+      end
+
+      def load
+        raw_data = @api.goals
+        data = Serializer.parseData(raw_data)
+
+        parse(data[0])
       end
 
       def parse(data)

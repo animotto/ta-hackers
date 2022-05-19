@@ -1,17 +1,25 @@
+# frozen_string_literal: true
+
 class Readme < Sandbox::Script
   def main
     if @args[0].nil?
-      @logger.log("Specify player ID")
+      @logger.log('Specify player ID')
       return
     end
 
+    id = @args[0].to_i
+
     begin
-      readme = @game.cmdPlayerGetReadme(@args[0])
+      friend = @game.friend(id)
+      friend.load_readme
     rescue Hackers::RequestError => e
       @logger.error(e)
     end
+
+    readme = friend.readme
+
     if readme.empty?
-      @logger.log("Readme is empty")
+      @logger.log('Readme is empty')
       return
     end
 
@@ -20,4 +28,3 @@ class Readme < Sandbox::Script
     end
   end
 end
-

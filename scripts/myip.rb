@@ -1,7 +1,9 @@
-require "resolv"
+# frozen_string_literal: true
+
+require 'resolv'
 
 class Myip < Sandbox::Script
-  HOST = "ident.me"
+  HOST = 'ident.me'
   PORT = 443
 
   def main
@@ -9,18 +11,18 @@ class Myip < Sandbox::Script
     http.use_ssl = PORT == 443
     ip = String.new
     begin
-      response = http.get("/")
-      raise response.message unless response.instance_of?(Net::HTTPOK)
+      response = http.get('/')
+      raise StandardError, response.message unless response.instance_of?(Net::HTTPOK)
       ip = response.body
-    rescue => e
+    rescue StandardError => e
       @logger.error(e)
       return
     end
 
     line = ip
     begin
-      line << " / " + Resolv.getname(ip)
-    rescue
+      line << ' / ' + Resolv.getname(ip)
+    rescue StandardError
     end
 
     @logger.log(line)

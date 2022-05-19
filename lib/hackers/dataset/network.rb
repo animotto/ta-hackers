@@ -28,7 +28,6 @@ module Hackers
         @queue = Queue.new(@api, self)
         @skins = Skins.new
         @shield = Shield.new
-        @logs = Logs.new(self)
         @readme = ReadmePlayer.new(@api)
         @stats = Stats.new(@api)
       end
@@ -66,12 +65,13 @@ module Hackers
         @datetime = data.dig(10, 0, 0)
         @tutorial = data.dig(5, 0, 0).to_i
 
-        @net.parse(data.dig(0), data.dig(1))
+        @net.parse(data.dig(0), data.dig(1, 0, 1))
         @profile.parse(data.dig(2, 0))
         @programs.parse(data.dig(3))
         @queue.parse(data.dig(4))
         @skins.parse(data.dig(6))
         @shield.parse(data.dig(8, 0))
+        @logs = Logs.new(@profile.id)
         @logs.parse(data.dig(9))
         @readme.parse(data.dig(11, 0))
       end
@@ -85,7 +85,7 @@ module Hackers
       def initialize(*)
         super
 
-        @net = Network.new
+        @net = Network.new(@api, self)
         @profile = Profile.new
         @readme = Readme.new(@api)
       end
@@ -103,9 +103,37 @@ module Hackers
       def parse
         data = Serializer.parseData(@raw_data)
 
-        @net.parse(data.dig(0), data.dig(1))
+        @net.parse(data.dig(0), data.dig(1, 0, 1))
         @profile.parse(data.dig(2, 0))
         @readme.parse(data.dig(5, 0))
+      end
+    end
+
+    ##
+    # Friend
+    class Friend < Dataset
+      attr_reader :logs, :readme
+
+      def initialize(api, id)
+        super(api)
+
+        @id = id
+      end
+
+      def load_logs
+        raw_data = @api.friend_logs(@id)
+        data = Serializer.parseData(raw_data)
+
+        @logs = Logs.new(@id)
+        @logs.parse(data[0])
+      end
+
+      def load_readme
+        raw_data = @api.player_readme(@id)
+        data = Serializer.parseData(raw_data)
+
+        @readme = Readme.new(@api)
+        @readme.parse(data.dig(0, 0))
       end
     end
 
@@ -148,7 +176,7 @@ module Hackers
         @api.update_net(@topology.generate)
       end
 
-      def parse(data_nodes, data_topology = [])
+      def parse(data_nodes, data_topology = nil)
         return if data_nodes.nil?
 
         @nodes.clear
@@ -159,7 +187,7 @@ module Hackers
           node.parse(record)
         end
 
-        @topology.parse(data_topology.dig(0, 1))
+        @topology.parse(data_topology)
       end
     end
 
@@ -360,8 +388,6 @@ module Hackers
     ##
     # Logs
     class Logs
-      include Enumerable
-
       Record = Struct.new(
         :id,
         :datetime,
@@ -385,22 +411,23 @@ module Hackers
 
       attr_reader :logs
 
-      def initialize(player)
-        @player = player
+      def initialize(id)
+        @id = id
+
         @logs = []
       end
 
       def hacks
-        @logs.select { |r| r.attacker_id == @player.profile.id }
+        @logs.select { |r| r.attacker_id == @id }
       end
 
       def security
-        @logs.select { |r| r.target_id == @player.profile.id }
+        @logs.select { |r| r.target_id == @id }
       end
 
       def parse(data)
         @logs.clear
-        data.each do |record|
+        data.reverse_each do |record|
           programs = []
           programs_data = record[7].split(':')
           0.step(programs_data.length - 1, 2) do |i|
@@ -442,6 +469,10 @@ module Hackers
 
       def each(&block)
         @messages.each(&block)
+      end
+
+      def empty?
+        @messages.empty?
       end
 
       def message?(index)

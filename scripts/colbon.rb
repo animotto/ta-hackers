@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Colbon < Sandbox::Script
   INTERVAL_MIN = 300
   INTERVAL_ADD = 120

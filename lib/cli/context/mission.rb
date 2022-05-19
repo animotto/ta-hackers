@@ -26,16 +26,19 @@ CONTEXT_MISSION.add_command(
 
   shell.puts(
     format(
-      "  \e[35m%-1s %-7s %-7s %-8s %-20s\e[0m",
+      "  \e[35m%-1s %-7s %-7s %-8s %-20s %s\e[0m",
       '',
       'ID',
       'Money',
       'Bitcoins',
-      'Datetime'
+      'Datetime',
+      'Name',
     )
   )
 
   missions.each do |mission|
+    mission_type = GAME.missions_list.get(mission.id)
+
     status = String.new
     case mission.status
     when Hackers::Missions::AWAITS
@@ -48,12 +51,13 @@ CONTEXT_MISSION.add_command(
 
     shell.puts(
       format(
-        '  %-1s %-7d %-7d %-8d %-20s',
+        '  %-1s %-7d %-7d %-8d %-20s %s',
         status,
         mission.id,
         mission.money,
         mission.bitcoins,
-        mission.datetime
+        mission.datetime,
+        mission_type.name
       )
     )
   end

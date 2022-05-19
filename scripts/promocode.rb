@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Promocode < Sandbox::Script
   def main
     if @args[0].nil?
@@ -11,11 +13,10 @@ class Promocode < Sandbox::Script
     end
 
     begin
-      code = @game.cmdRedeemPromoCode(@game.config['id'], @args[0])
+      response = @game.api.redeem_promocode(@args[0])
+      @logger.log(response)
     rescue Hackers::RequestError => e
       @logger.log(e)
-    else
-      @logger.log(code['message'])
     end
   end
 end

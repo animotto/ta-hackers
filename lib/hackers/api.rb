@@ -579,17 +579,26 @@ module Hackers
 
     ##
     # Updates mission in tutorial mode
-    def update_mission_tutorial(mission, tutorial, data, id = @id)
+    def update_mission_tutorial(
+      mission,
+      tutorial,
+      money,
+      bitcoins,
+      status,
+      currencies,
+      programs,
+      id = @id
+    )
       @client.request_session(
         {
           'tutorial_player_mission_update' => 1,
           'id_player' => id,
           'id_mission' => mission,
-          'money_looted' => data[:money],
-          'bcoins_looted' => data[:bitcoins],
-          'finished' => data[:finished],
-          'nodes_currencies' => Serializer.generateMissionCurrencies(data[:currencies]),
-          'programs_data' => Serializer.generateMissionPrograms(data[:programs]),
+          'money_looted' => money,
+          'bcoins_looted' => bitcoins,
+          'finished' => status,
+          'nodes_currencies' => currencies,
+          'programs_data' => programs,
           'tutorial' => tutorial,
           'app_version' => @version
         },
@@ -628,16 +637,15 @@ module Hackers
     ##
     # Gets mission fight
     def attack_mission(mission, id = @id)
-      params = {
-        'get_mission_fight' => 1,
-        'id_mission' => mission,
-        'id_attacker' => id,
-        'app_version' => @version
-      }
-
-      response = @client.request_session(params, @sid)
-      serializer = Serializer.new(response)
-      serializer.parseGetMissionFight
+      @client.request_session(
+        {
+          'get_mission_fight' => 1,
+          'id_mission' => mission,
+          'id_attacker' => id,
+          'app_version' => @version
+        },
+        @sid
+      )
     end
 
     ##
@@ -836,15 +844,14 @@ module Hackers
     ##
     # Gets player goals
     def goals(id = @id)
-      params = {
-        'goal_by_player' => '',
-        'id_player' => id,
-        'app_version' => @version
-      }
-
-      response = @client.request_session(params, @sid)
-      serializer = Serializer.new(response)
-      serializer.parseGoals(0)
+      @client.request_session(
+        {
+          'goal_by_player' => '',
+          'id_player' => id,
+          'app_version' => @version
+        },
+        @sid
+      )
     end
 
     ##
@@ -1051,16 +1058,15 @@ module Hackers
     ##
     # Redeems promo code
     def redeem_promocode(code, id = @id)
-      params = {
-        'redeem_promo_code' => 1,
-        'id_player' => id,
-        'code' => code,
-        'app_version' => @version
-      }
-
-      response = @client.request_session(params, @sid)
-      serializer = Serializer.new(response)
-      serializer.parseRedeemPromoCode
+      @client.request_session(
+        {
+          'redeem_promo_code' => 1,
+          'id_player' => id,
+          'code' => code,
+          'app_version' => @version
+        },
+        @sid
+      )
     end
 
     ##
@@ -1109,16 +1115,15 @@ module Hackers
 
     ##
     # Gets friends logs
-    def fight_friend(id = @id)
-      params = {
-        'fight_by_fb_friend' => '',
-        'id_player' => id,
-        'app_version' => @version
-      }
-
-      response = @client.request_session(params, @sid)
-      serializer = Serializer.new(response)
-      serializer.parseLogs(0)
+    def friend_logs(id)
+      @client.request_session(
+        {
+          'fight_by_fb_friend' => '',
+          'id_player' => id,
+          'app_version' => @version
+        },
+        @sid
+      )
     end
 
     ##
@@ -1397,15 +1402,13 @@ module Hackers
     ##
     # Gets player readme
     def player_readme(id = @id)
-      params = {
-        'player_get_readme' => '',
-        'id' => id,
-        'app_version' => @version
-      }
-
-      response = @client.request_session(params, @sid)
-      serializer = Serializer.new(response)
-      serializer.parseReadme(0, 0, 0)
+      @client.request_session(
+        {
+          'player_get_readme' => '',
+          'id' => id,
+          'app_version' => @version
+        }, @sid
+      )
     end
 
     ##
@@ -1423,17 +1426,25 @@ module Hackers
 
     ##
     # Updates mission
-    def update_mission(mission, data, id = @id)
+    def update_mission(
+      mission,
+      money,
+      bitcoins,
+      status,
+      currencies,
+      programs,
+      id = @id
+    )
       @client.request_session(
         {
           'player_mission_update' => 1,
           'id_player' => id,
           'id_mission' => mission,
-          'money_looted' => data[:money],
-          'bcoins_looted' => data[:bitcoins],
-          'finished' => data[:finished],
-          'nodes_currencies' => Serializer.generateMissionCurrencies(data[:currencies]),
-          'programs_data' => Serializer.generateMissionPrograms(data[:programs]),
+          'money_looted' => money,
+          'bcoins_looted' => bitcoins,
+          'finished' => status,
+          'nodes_currencies' => currencies,
+          'programs_data' => programs,
           'app_version' => @version
         },
         @sid

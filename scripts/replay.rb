@@ -1,7 +1,9 @@
+# frozen_string_literal: true
+
 class Replay < Sandbox::Script
   def main
     if @args[0].nil?
-      @logger.log("Specify replay ID")
+      @logger.log('Specify replay ID')
       return
     end
 
@@ -31,4 +33,3 @@ class Replay < Sandbox::Script
     end
   end
 end
-

@@ -1,28 +1,29 @@
+# frozen_string_literal: true
+
 class Antiafk < Sandbox::Script
   CHECKCON_INTERVAL = 60
   AUTH_INTERVAL_MIN = 840
   AUTH_INTERVAL_ADD = 180
 
   def main
-    checkConLast = authLast = authInterval = 0
+    checkcon_last = auth_last = auth_interval = 0
     loop do
-      if (Time.now - authLast).to_i >= authInterval
-        auth = @game.cmdAuthIdPassword
-        @game.sid = auth["sid"]
-        @game.cmdNetGetForMaint
-        authLast = Time.now
-        authInterval = AUTH_INTERVAL_MIN + rand(AUTH_INTERVAL_ADD)
+      if (Time.now - auth_last).to_i >= auth_interval
+        @game.auth
+        @game.player.load
+        auth_last = Time.now
+        auth_interval = AUTH_INTERVAL_MIN + rand(AUTH_INTERVAL_ADD)
       end
 
-      if (Time.now - checkConLast).to_i >= CHECKCON_INTERVAL
-        @game.cmdCheckCon
-        checkConLast = Time.now
+      if (Time.now - checkcon_last).to_i >= CHECKCON_INTERVAL
+        @game.check_connectivity
+        checkcon_last = Time.now
       end
     rescue Hackers::RequestError => e
-      @logger.error("#{e}")
+      @logger.error(e)
       sleep(10)
     ensure
-      sleep(0.1)
+      sleep(1)
     end
   end
 end

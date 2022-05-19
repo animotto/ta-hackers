@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Autohack < Sandbox::Script
   BLACKLIST = [
     127

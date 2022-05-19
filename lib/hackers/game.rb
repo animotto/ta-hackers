@@ -47,7 +47,7 @@ module Hackers
       @player = Network::Player.new(@api)
       @world = World::World.new(@api, self)
       @chat = Chat.new(@api)
-      @missions = Missions.new(@api)
+      @missions = Missions.new(@api, @player)
       @news_list = NewsList.new(@api)
       @ranking_list = RankingList.new(@api, @player)
     end
@@ -79,6 +79,12 @@ module Hackers
       target = Network::Target.new(@api)
       target.attack_test(id)
       target
+    end
+
+    ##
+    # Returns friend dataset
+    def friend(id)
+      Network::Friend.new(@api, id)
     end
 
     ##
@@ -176,6 +182,12 @@ module Hackers
         data.dig(0, 0, 0).to_i,
         data.dig(0, 0, 1)
       )
+    end
+
+    ##
+    # Checks network connectivity
+    def check_connectivity
+      @api.check_connectivity
     end
   end
 end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Hidenet < Sandbox::Script
   COORD_MIN = 1
   COORD_MAX = 999

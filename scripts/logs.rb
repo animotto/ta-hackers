@@ -1,9 +1,12 @@
+# frozen_string_literal: true
+
 class Logs < Sandbox::Script
   def main
     if @args[0].nil?
-      @logger.log("Specify player ID")
+      @logger.log('Specify player ID')
       return
     end
+
     id = @args[0].to_i
 
     unless @game.connected?
@@ -11,78 +14,84 @@ class Logs < Sandbox::Script
       return
     end
 
+    friend = @game.friend(id)
+
     begin
-      logs = @game.cmdFightByFBFriend(id)
+      friend.load_logs
     rescue Hackers::RequestError => e
       @logger.error(e)
       return
     end
 
-    @shell.puts("Logs for #{id}")
-    @shell.puts
+    logs = friend.logs
 
-    @shell.puts("\u2022 Security")
-    @shell.puts(
-      "  %-7s %-10s %-19s %-10s %-5s %s" % [
-        "",
-        "ID",
-        "Date",
-        "Attacker",
-        "Level",
-        "Name",
-      ]
-    )
-    security = logs.select do |k, v|
-      v["target"]["id"] == id
-    end
-    security = security.to_a.reverse.to_h
-    security.each do |k, v|
+    @shell.puts("\e[1;35m\u2022 Security\e[0m")
+    if logs.security.empty?
+      @shell.puts('  Empty')
+    else
       @shell.puts(
-        "  %s%s%s %+-3d %-10s %-19s %-10s %-5d %s" % [
-          v["success"] & Hackers::Game::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-          v["success"] & Hackers::Game::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-          v["success"] & Hackers::Game::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-          v["rank"],
-          k,
-          v["date"],
-          v["attacker"]["id"],
-          v["attacker"]["level"],
-          v["attacker"]["name"],
-        ]
+        format(
+          "  \e[35m%-7s %-10s %-19s %-10s %-5s %s\e[0m",
+          '',
+          'ID',
+          'Datetime',
+          'Attacker',
+          'Level',
+          'Name'
+        )
       )
-    end          
+    end
+
+    logs.security.each do |record|
+      @shell.puts(
+        format(
+          "  %s%s%s %+-3d %-10s %-19s %-10s %-5d %s",
+          record.success & Hackers::Network::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+          record.success & Hackers::Network::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+          record.success & Hackers::Network::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+          record.rank,
+          record.id,
+          record.datetime,
+          record.attacker_id,
+          record.attacker_level,
+          record.attacker_name,
+        )
+      )
+    end
 
     @shell.puts
-    @shell.puts("\u2022 Hacks")
-    @shell.puts(
-      "  %-7s %-10s %-19s %-10s %-5s %s" % [
-        "",
-        "ID",
-        "Date",
-        "Target",
-        "Level",
-        "Name",
-      ]
-    )
-    hacks = logs.select do |k, v|
-      v["attacker"]["id"] == id
-    end
-    hacks = hacks.to_a.reverse.to_h
-    hacks.each do |k, v|
+    @shell.puts("\e[1;35m\u2022 Hacks\e[0m")
+    if logs.hacks.empty?
+      @shell.puts('  Empty')
+    else
       @shell.puts(
-        "  %s%s%s %+-3d %-10s %-19s %-10s %-5d %s" % [
-          v["success"] & Hackers::Game::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-          v["success"] & Hackers::Game::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-          v["success"] & Hackers::Game::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-          v["rank"],
-          k,
-          v["date"],
-          v["target"]["id"],
-          v["target"]["level"],
-          v["target"]["name"],
-        ]
+        format(
+          "  \e[35m%-7s %-10s %-19s %-10s %-5s %s\e[0m",
+          '',
+          'ID',
+          'Datetime',
+          'Target',
+          'Level',
+          'Name'
+        )
+      )
+    end
+
+    logs.hacks.each do |record|
+      @shell.puts(
+        format(
+          "  %s%s%s %+-3d %-10s %-19s %-10s %-5d %s",
+          record.success & Hackers::Network::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+          record.success & Hackers::Network::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+          record.success & Hackers::Network::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+          record.rank,
+          record.id,
+          record.datetime,
+          record.target_id,
+          record.target_level,
+          record.target_name,
+        )
       )
     end
   end
 end
-

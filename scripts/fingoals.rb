@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Fingoals < Sandbox::Script
   INTERVAL_MIN = 300
   INTERVAL_ADD = 120
@@ -9,11 +11,13 @@ class Fingoals < Sandbox::Script
     end
 
     loop do
-      goals = @game.cmdGoalByPlayer
-      goals.each do |id, goal|
-        goal_type = GAME.goal_types.get(goal['type'])
-        @game.cmdGoalUpdate(id, goal_type.amount)
-        @logger.log("Goal #{id} finished with #{goal_type.credits} credits")
+      @game.world.goals.load
+
+      goals = @game.world.goals.to_a
+      goals.each do |goal|
+        goal_type = GAME.goal_types.get(goal.type)
+        goal.update(goal_type.amount)
+        @logger.log("Goal #{goal.name} (#{goal.id}) finished with #{goal_type.credits} credits")
       end
     rescue Hackers::RequestError => e
       @logger.error(e)
@@ -22,4 +26,3 @@ class Fingoals < Sandbox::Script
     end
   end
 end
-

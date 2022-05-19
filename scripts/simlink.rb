@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Simlink < Sandbox::Script
   def main
     if @args[0].nil?
