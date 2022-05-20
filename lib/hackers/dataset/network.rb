@@ -23,12 +23,11 @@ module Hackers
         super
 
         @net = Network.new(@api, self)
-        @profile = Profile.new
+        @profile = Serializer::Profile::Data.new
         @programs = Programs.new(@api)
         @queue = Queue.new(@api, self)
         @skins = Skins.new
         @shield = Shield.new
-        @readme = ReadmePlayer.new(@api)
         @stats = Stats.new(@api)
       end
 
@@ -66,14 +65,21 @@ module Hackers
         @tutorial = data.dig(5, 0, 0).to_i
 
         @net.parse(data.dig(0), data.dig(1, 0, 1))
-        @profile.parse(data.dig(2, 0))
+
+        serializer_profile = Serializer::Profile.new(@raw_data)
+        @profile = serializer_profile.parse(2, 0)
+
         @programs.parse(data.dig(3))
         @queue.parse(data.dig(4))
         @skins.parse(data.dig(6))
         @shield.parse(data.dig(8, 0))
+
         @logs = Logs.new(@profile.id)
         @logs.parse(data.dig(9))
-        @readme.parse(data.dig(11, 0))
+
+        serializer_readme = Serializer::Readme.new(@raw_data)
+        readme_data = serializer_readme.parse(11, 0, 0)
+        @readme = ReadmePlayer.new(@api, readme_data)
       end
     end
 
@@ -86,8 +92,6 @@ module Hackers
         super
 
         @net = Network.new(@api, self)
-        @profile = Profile.new
-        @readme = Readme.new(@api)
       end
 
       def attack(id)
@@ -104,8 +108,13 @@ module Hackers
         data = Serializer.parseData(@raw_data)
 
         @net.parse(data.dig(0), data.dig(1, 0, 1))
-        @profile.parse(data.dig(2, 0))
-        @readme.parse(data.dig(5, 0))
+
+        serializer_profile = Serializer::Profile.new(@raw_data)
+        @profile = serializer_profile.parse(2, 0)
+
+        serializer_readme = Serializer::Readme.new(@raw_data)
+        readme_data = serializer_readme.parse(5, 0, 0)
+        @readme = Readme.new(@api, readme_data)
       end
     end
 
@@ -130,10 +139,10 @@ module Hackers
 
       def load_readme
         raw_data = @api.player_readme(@id)
-        data = Serializer.parseData(raw_data)
 
-        @readme = Readme.new(@api)
-        @readme.parse(data.dig(0, 0))
+        readme = Serializer::Readme.new(raw_data)
+        readme = readme.parse(0, 0, 0)
+        @readme = Readme.new(@api, readme)
       end
     end
 
@@ -346,31 +355,6 @@ module Hackers
     end
 
     ##
-    # Profile
-    class Profile
-      attr_reader :id, :name, :x, :y, :country, :skin,
-                  :builders
-
-      attr_accessor :money, :bitcoins, :credits,
-                    :rank, :experience
-
-      def parse(data)
-        @id = data[0].to_i
-        @name = data[1]
-        @money = data[2].to_i
-        @bitcoins = data[3].to_i
-        @credits = data[4].to_i
-        @experience = data[5].to_i
-        @rank = data[9].to_i
-        @builders = data[10].to_i
-        @x = data[11].to_i
-        @y = data[12].to_i
-        @country = data[13].to_i
-        @skin = data[14].to_i
-      end
-    end
-
-    ##
     # Shield
     class Shield
       attr_reader :type, :time
@@ -461,10 +445,10 @@ module Hackers
     class Readme
       include Enumerable
 
-      def initialize(api)
+      def initialize(api, messages)
         @api = api
 
-        @messages = []
+        @messages = messages.map { |m| m.message }
       end
 
       def each(&block)
@@ -500,23 +484,17 @@ module Hackers
       def clear
         @messages.clear
       end
-
-      def generate
-        @messages.join(Serializer::DELIM_README)
-      end
-
-      def parse(data)
-        return if data.nil?
-
-        @messages = data[0].split(Serializer::DELIM_README)
-      end
     end
 
     ##
     # Readme player
     class ReadmePlayer < Readme
       def update
-        @api.set_readme(generate)
+        messages = @messages.map { |m| Serializer::Readme::Message.new(m) }
+        readme = Serializer::Readme.new
+        data = readme.generate(messages)
+
+        @api.set_readme(data)
       end
     end
 

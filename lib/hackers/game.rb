@@ -142,11 +142,9 @@ module Hackers
     # Gets player info
     def player_info(id)
       raw_data = @api.player_info(id)
-      data = Serializer.parseData(raw_data)
 
-      profile = Network::Profile.new
-      profile.parse(data.dig(0, 0))
-      profile
+      serializer_profile = Serializer::Profile.new(raw_data)
+      serializer_profile.parse(0, 0)
     end
 
     ##
@@ -155,8 +153,8 @@ module Hackers
       raw_data = @api.player_details(id)
       data = Serializer.parseData(raw_data)
 
-      profile = Network::Profile.new
-      profile.parse(data.dig(0, 0))
+      serializer_profile = Serializer::Profile.new(raw_data)
+      profile = serializer_profile.parse(0, 0)
       network = Network::Network.new(@api, @player)
       network.parse(data.dig(1))
 

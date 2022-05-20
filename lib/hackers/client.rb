@@ -66,11 +66,10 @@ module Hackers
 
       body = response.body.force_encoding('UTF-8')
       unless response.instance_of?(Net::HTTPOK)
-        fields = Serializer.parseData(body)
-        raise RequestError.new(
-          Serializer.normalizeData(fields.dig(0, 0, 0)),
-          Serializer.normalizeData(fields.dig(0, 0, 1))
-        )
+        serializer = Serializer::Exception.new(body)
+        exception = serializer.parse(0, 0)
+
+        raise RequestError.new(exception.type, exception.data)
       end
 
       body

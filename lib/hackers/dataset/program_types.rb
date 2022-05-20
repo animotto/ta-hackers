@@ -93,7 +93,7 @@ module Hackers
       private
 
       def parse
-        data = Serializer.parseData(@raw_data)
+        data = Serializer::Base.new(@raw_data)
 
         @programs.clear
         @programs << @ion_canon = IonCannon.new(data)
@@ -133,7 +133,7 @@ module Hackers
       end
 
       def levels
-        records = @data[1].select { |r| r[1].to_i == type }
+        records = @data.section(1).select { |r| r[1].to_i == type }
         records.map { |r| r[2].to_i }
       end
 
@@ -185,11 +185,11 @@ module Hackers
       private
 
       def find_record_general
-        @data[0].detect { |r| r[0].to_i == type }
+        @data.section(0).detect { |r| r[0].to_i == type }
       end
 
       def find_record_level(level)
-        @data[1].detect { |r| r[1].to_i == type && r[2].to_i == level }
+        @data.section(1).detect { |r| r[1].to_i == type && r[2].to_i == level }
       end
     end
 

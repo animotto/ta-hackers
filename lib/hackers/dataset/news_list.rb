@@ -6,8 +6,6 @@ module Hackers
   class NewsList < Dataset
     include Enumerable
 
-    News = Struct.new(:datetime, :title, :body)
-
     def initialize(*)
       super
 
@@ -26,16 +24,8 @@ module Hackers
     private
 
     def parse
-      data = Serializer.parseData(@raw_data)
-
-      @news.clear
-      data[0].each do |record|
-        @news << News.new(
-          record[1],
-          record[2],
-          record[3]
-        )
-      end
+      serializer = Serializer::News.new(@raw_data)
+      @news = serializer.parse(0)
     end
   end
 end

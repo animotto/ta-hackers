@@ -99,6 +99,13 @@ module Hackers
         @targets.clear
         i = 0
         data_targets.each do |record|
+          if data_players.empty?
+            profile = Serializer::Profile::Data.new
+          else
+            serializer_profile = Serializer::Profile.new(@world.raw_data)
+            profile = serializer_profile.parse(10 + i, 0)
+          end
+
           @targets << Target.new(
             record[0].to_i,
             record[1],
@@ -107,12 +114,11 @@ module Hackers
             record[4].to_i,
             record[5].to_i,
             record[6].to_i,
-            Network::Profile.new,
+            profile,
             Network::Network.new(@api, @game.player)
           )
 
           unless data_players.empty?
-            @targets.last.profile.parse(data_players.dig(i, 0))
             @targets.last.net.parse(data_players.dig(i + 1))
             i += 2
           end

@@ -349,7 +349,7 @@ CONTEXT_QUERY_FORMAT = CONTEXT_QUERY.add_command(
     next
   end
 
-  serializer = Hackers::Serializer.new(Base64.decode64(QUERY_DUMPS[id][:data]))
+  serializer = Hackers::Serializer::Base.new(Base64.decode64(QUERY_DUMPS[id][:data]))
 
   serializer.fields.each_with_index do |section, i|
     next if !tokens[2].nil? && tokens[2].to_i != i

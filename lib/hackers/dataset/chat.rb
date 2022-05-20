@@ -7,15 +7,6 @@ module Hackers
     include Enumerable
 
     Room = Struct.new(:id, :last_message)
-    Message = Struct.new(
-      :datetime,
-      :name,
-      :message,
-      :id,
-      :experience,
-      :rank,
-      :country
-    )
 
     def initialize(api)
       @api = api
@@ -46,41 +37,34 @@ module Hackers
 
       room = @rooms.detect { |r| r.id == room }
       raw_data = @api.read_chat(room.id, room.last_message)
-      data = Serializer.parseData(raw_data)
-      parse(data.dig(0), room)
+      serializer = Serializer::Chat.new(raw_data)
+      data = serializer.parse(0)
+      parse(data, room)
     end
 
     def write(room, message)
       return unless opened?(room)
 
+      serializer_message = Serializer::ChatMessage.new
       room = @rooms.detect { |r| r.id == room }
       raw_data = @api.write_chat(
         room.id,
-        Serializer.normalizeData(message, false),
+        serializer_message.generate(message),
         room.last_message
       )
 
-      data = Serializer.parseData(raw_data)
-      parse(data.dig(0), room)
+      serializer_chat = Serializer::Chat.new(raw_data)
+      data = serializer_chat.parse(0)
+      parse(data, room)
     end
 
     private
 
     def parse(data, room)
       messages = []
-      return messages if data.nil?
-
-      data.reverse.each do |record|
-        room.last_message = record[0]
-        messages << Message.new(
-          record[0],
-          record[1],
-          record[2],
-          record[3].to_i,
-          record[4].to_i,
-          record[5].to_i,
-          record[6].to_i
-        )
+      data.each do |message|
+        room.last_message = message.datetime
+        messages << message
       end
 
       messages

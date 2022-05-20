@@ -6,14 +6,6 @@ module Hackers
   class ShieldTypes < Dataset
     include Enumerable
 
-    Shield = Struct.new(
-      :id,
-      :hours,
-      :price,
-      :title,
-      :description
-    )
-
     def initialize(*)
       super
 
@@ -36,18 +28,8 @@ module Hackers
     private
 
     def parse
-      data = Serializer.parseData(@raw_data)
-
-      @shields.clear
-      data[0].each do |record|
-        @shields << Shield.new(
-          record[0].to_i,
-          record[1].to_i,
-          record[3].to_i,
-          record[4],
-          record[5],
-        )
-      end
+      serializer = Serializer::ShieldType.new(@raw_data)
+      @shields = serializer.parse(0)
     end
   end
 end

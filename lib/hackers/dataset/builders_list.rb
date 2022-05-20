@@ -6,8 +6,6 @@ module Hackers
   class BuildersList < Dataset
     include Enumerable
 
-    Builder = Struct.new(:amount, :price)
-
     def initialize(*)
       super
 
@@ -30,15 +28,8 @@ module Hackers
     private
 
     def parse
-      data = Serializer.parseData(@raw_data)
-
-      @builders.clear
-      data[0].each do |record|
-        @builders << Builder.new(
-          record[0].to_i,
-          record[1].to_i
-        )
-      end
+      serializer = Serializer::Builder.new(@raw_data)
+      @builders = serializer.parse(0)
     end
   end
 end
