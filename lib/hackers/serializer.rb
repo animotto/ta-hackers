@@ -99,11 +99,11 @@ module Hackers
       end
 
       def record?(a, b)
-        section?(a) && section(a).length < b
+        section?(a) && b < section(a).length
       end
 
       def field?(a, b, c)
-        record?(a, b) && record(a, b).length < c
+        record?(a, b) && c < record(a, b).length
       end
 
       def parse(a = nil, b = nil, c = nil); end
