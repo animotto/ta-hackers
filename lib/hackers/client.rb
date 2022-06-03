@@ -59,6 +59,7 @@ module Hackers
       uri = generate_uri_raw(params)
       response = nil
       mutex.synchronize do
+        client.start unless client.started?
         response = data.empty? ? client.get(uri, HEADERS) : client.post(uri, URI.encode_www_form(data), HEADERS)
       rescue StandardError => e
         raise RequestError.new(e.class.to_s, e.message)
