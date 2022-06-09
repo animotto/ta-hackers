@@ -608,14 +608,12 @@ end
 CONTEXT_NET.add_command(
   :collect,
   description: 'Collect node resources',
-  params: ['<id>']
+  params: ['[id]']
 ) do |tokens, shell|
   unless GAME.connected?
     shell.puts(NOT_CONNECTED)
     next
   end
-
-  id = tokens[1].to_i
 
   unless GAME.player.loaded?
     msg = 'Network maintenance'
@@ -625,6 +623,18 @@ CONTEXT_NET.add_command(
 
   net = GAME.player.net
 
+  if tokens[1].nil?
+    net.each do |node|
+      next unless node.kind_of?(Hackers::Nodes::Production)
+
+      msg = 'Collect node'
+      node.collect
+      LOGGER.log(msg)
+    end
+    next
+  end
+
+  id = tokens[1].to_i
   unless net.exist?(id)
     shell.puts('No such node')
     next
