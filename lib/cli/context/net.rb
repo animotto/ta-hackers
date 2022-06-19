@@ -625,12 +625,13 @@ CONTEXT_NET.add_command(
 
   if tokens[1].nil?
     net.each do |node|
-      next unless node.kind_of?(Hackers::Nodes::Production)
+      next unless node.kind_of?(Hackers::Nodes::Production) && node.timer.positive?
 
       msg = 'Collect node'
       node.collect
       LOGGER.log(msg)
     end
+
     next
   end
 
