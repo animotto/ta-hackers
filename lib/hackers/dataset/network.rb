@@ -490,7 +490,7 @@ module Hackers
     # Readme player
     class ReadmePlayer < Readme
       def update
-        messages = @messages.map { |m| Serializer::Readme::Message.new(m) }
+        messages = @messages.map { |m| Serializer::Readme::Data.new(m) }
         readme = Serializer::Readme.new
         data = readme.generate(messages)
 

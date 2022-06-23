@@ -181,6 +181,8 @@ module Hackers
 
       def parse(a, b, c)
         messages = []
+        return messages unless record?(a, b)
+
         field(a, b, c).split(DELIM).each do |message|
           messages << Data.new(message)
         end
