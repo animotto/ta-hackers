@@ -637,20 +637,8 @@ SHELL.add_command(
   profile = GAME.player_info(id)
   LOGGER.log(msg)
 
-  shell.puts("\e[1;35m\u2022 Player info\e[0m")
-  shell.puts(format('  %-15s %d', 'ID', profile.id))
-  shell.puts(format('  %-15s %s', 'Name', profile.name))
-  shell.puts(format("  %-15s \e[33m$ %d\e[0m", 'Money', profile.money))
-  shell.puts(format("  %-15s \e[31m\u20bf %d\e[0m", 'Bitcoins', profile.bitcoins))
-  shell.puts(format('  %-15s %d', 'Credits', profile.credits))
-  shell.puts(format('  %-15s %d', 'Experience', profile.experience))
-  shell.puts(format('  %-15s %d', 'Rank', profile.rank))
-  shell.puts(format('  %-15s %s', 'Builders', "\e[37m" + "\u25b0" * profile.builders + "\e[0m"))
-  shell.puts(format('  %-15s %d', 'X', profile.x))
-  shell.puts(format('  %-15s %d', 'Y', profile.y))
-  shell.puts(format('  %-15s %s (%d)', 'Country', GAME.countries_list.name(profile.country), profile.country))
-  shell.puts(format('  %-15s %d', 'Skin', profile.skin))
-  shell.puts(format('  %-15s %d', 'Level', GAME.experience_list.level(profile.experience)))
+  profile = Printer::Profile.new(profile, GAME)
+  shell.puts(profile)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
@@ -672,44 +660,24 @@ SHELL.add_command(
   details = GAME.player_details(id)
   LOGGER.log(msg)
 
-  shell.puts("\e[1;35m\u2022 Detailed player network\e[0m")
-  shell.puts(format('  %-15s %d', 'ID', details.profile.id))
-  shell.puts(format('  %-15s %s', 'Name', details.profile.name))
-  shell.puts(format("  %-15s \e[33m$ %d\e[0m", 'Money', details.profile.money))
-  shell.puts(format("  %-15s \e[31m\u20bf %d\e[0m", 'Bitcoins', details.profile.bitcoins))
-  shell.puts(format('  %-15s %d', 'Credits', details.profile.credits))
-  shell.puts(format('  %-15s %d', 'Experience', details.profile.experience))
-  shell.puts(format('  %-15s %d', 'Rank', details.profile.rank))
-  shell.puts(format('  %-15s %s', 'Builders', "\e[37m" + "\u25b0" * details.profile.builders + "\e[0m"))
-  shell.puts(format('  %-15s %d', 'X', details.profile.x))
-  shell.puts(format('  %-15s %d', 'Y', details.profile.y))
-  shell.puts(format('  %-15s %s (%d)', 'Country', GAME.countries_list.name(details.profile.country), details.profile.country))
-  shell.puts(format('  %-15s %d', 'Skin', details.profile.skin))
-  shell.puts(format('  %-15s %d', 'Level', GAME.experience_list.level(details.profile.experience)))
-
+  profile = Printer::Profile.new(details.profile, GAME)
+  shell.puts(profile)
   shell.puts
-  shell.puts(
-    format(
-      "  \e[35m%-12s %-4s %-5s %-12s %-12s\e[0m",
-      'ID',
-      'Type',
-      'Level',
-      'Timer',
-      'Name'
-    )
+
+  table = Printer::Table.new(
+    'Nodes',
+    ['ID', 'Type', 'Level', 'Timer', 'Name'],
+    details.network.map do |n|
+      [
+        n.id,
+        n.type,
+        n.level,
+        n.timer,
+        GAME.node_types.get(n.type).name
+      ]
+    end
   )
-  details.network.each do |node|
-    shell.puts(
-      format(
-        '  %-12d %-4d %-5d %-12d %-12s',
-        node.id,
-        node.type,
-        node.level,
-        node.timer,
-        GAME.node_types.get(node.type).name
-      )
-    )
-  end
+  shell.puts(table)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end

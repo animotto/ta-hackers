@@ -84,6 +84,10 @@ module Printer
     def initialize(data)
       @data = data
     end
+
+    private
+
+    def parse; end
   end
 
   ##
@@ -123,6 +127,83 @@ module Printer
           @data[:collected_bitcoins]
         ]
       ).to_s
+    end
+  end
+
+  ##
+  # Profile
+  class Profile < BasePrinter
+    attr_accessor :tutorial, :shield, :builders_busy,
+                  :capacity_money, :capacity_bitcoins
+
+    def initialize(data, game)
+      super(data)
+
+      @game = game
+      @builders_busy = 0
+    end
+
+    def to_s
+      parse
+      List.new('Profile', @titles, @items).to_s
+    end
+
+    private
+
+    def parse
+      @titles = [
+        'ID',
+        'Name',
+        'Money',
+        'Bitcoins',
+        'Credits',
+        'Experience',
+        'Rank',
+        'Builders',
+        'X',
+        'Y',
+        'Country',
+        'Skin',
+        'Level'
+      ]
+
+      if @capacity_money
+        money = [@data.money, @capacity_money].join(' / ')
+      else
+        money = @data.money
+      end
+
+      if @capacity_bitcoins
+        bitcoins = [@data.bitcoins, @capacity_bitcoins].join(' / ')
+      else
+        bitcoins = @data.bitcoins
+      end
+
+      @items = [
+        @data.id,
+        @data.name,
+        "\e[33m$ #{money}\e[0m",
+        "\e[31m\u20bf #{bitcoins}\e[0m",
+        @data.credits,
+        @data.experience,
+        @data.rank,
+        "\e[32m" + ("\u25b0" * @builders_busy) + "\e[37m" + ("\u25b1" * (@data.builders - @builders_busy)) + "\e[0m",
+        @data.x,
+        @data.y,
+        "#{@game.countries_list.name(@data.country)} (#{@data.country})",
+        @data.skin,
+        @game.experience_list.level(@data.experience)
+      ]
+
+      if @tutorial
+        @titles << 'Tutorial'
+        @items << @tutorial
+      end
+
+      if @shield
+        @titles << 'Shield'
+        @items << (@shield.installed? ? "#{@game.shield_types.get(@shield.type).title} (#{@shield.time})" : '-')
+      end
     end
   end
 end

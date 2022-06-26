@@ -20,7 +20,6 @@ CONTEXT_NET.add_command(
   net = player.net
   profile = player.profile
   skins = player.skins
-  shield = player.shield
   node_types = GAME.node_types
 
   capacity_money = 0
@@ -40,31 +39,22 @@ CONTEXT_NET.add_command(
   builders = 0
   net.each { |node| builders += node.builders if node.timer.negative? }
 
-  shell.puts("\e[1;35m\u2022 Profile\e[0m")
-  shell.puts(format('  %-15s %d', 'ID', profile.id))
-  shell.puts(format('  %-15s %s', 'Name', profile.name))
-  shell.puts(format("  %-15s \e[33m$ %d / %d\e[0m", 'Money', profile.money, capacity_money))
-  shell.puts(format("  %-15s \e[31m\u20bf %d / %d\e[0m", 'Bitcoins', profile.bitcoins, capacity_bitcoins))
-  shell.puts(format('  %-15s %d', 'Credits', profile.credits))
-  shell.puts(format('  %-15s %d', 'Experience', profile.experience))
-  shell.puts(format('  %-15s %d', 'Rank', profile.rank))
-  shell.puts(format('  %-15s %s', 'Builders', "\e[32m" + "\u25b0" * builders + "\e[37m" + "\u25b1" * (profile.builders - builders) + "\e[0m"))
-  shell.puts(format('  %-15s %d', 'X', profile.x))
-  shell.puts(format('  %-15s %d', 'Y', profile.y))
-  shell.puts(format('  %-15s %s (%d)', 'Country', GAME.countries_list.name(profile.country), profile.country))
-  shell.puts(format('  %-15s %d', 'Skin', profile.skin))
-  shell.puts(format('  %-15s %d', 'Level', GAME.experience_list.level(profile.experience)))
-  shell.puts(format('  %-15s %d', 'Tutorial', player.tutorial))
-
-  if shield.installed?
-    shell.puts(format('  %-15s %s (%d)', 'Shield', GAME.shield_types.get(player.shield.type).title, shield.time))
-  end
+  list_profile = Printer::Profile.new(profile, GAME)
+  list_profile.tutorial = player.tutorial
+  list_profile.capacity_money = capacity_money
+  list_profile.capacity_bitcoins = capacity_bitcoins
+  list_profile.builders_busy = builders
+  list_profile.shield = player.shield
+  shell.puts(list_profile)
 
   unless skins.empty?
-    shell.puts('  Skins:')
-    skins.each do |skin|
-      shell.puts(format('   %-3d %-15s', skin.type, GAME.skin_types.get(skin.type).name))
-    end
+    list_skins = Printer::List.new(
+      'Skins',
+      skins.map { |s| s.type.to_s },
+      skins.map { |s| GAME.skin_types.get(s.type).name }
+    )
+    shell.puts
+    shell.puts(list_skins)
   end
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
