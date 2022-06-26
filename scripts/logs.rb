@@ -25,73 +25,10 @@ class Logs < Sandbox::Script
 
     logs = friend.logs
 
-    @shell.puts("\e[1;35m\u2022 Security\e[0m")
-    if logs.security.empty?
-      @shell.puts('  Empty')
-    else
-      @shell.puts(
-        format(
-          "  \e[35m%-7s %-10s %-19s %-10s %-5s %s\e[0m",
-          '',
-          'ID',
-          'Datetime',
-          'Attacker',
-          'Level',
-          'Name'
-        )
-      )
-    end
-
-    logs.security.each do |record|
-      @shell.puts(
-        format(
-          "  %s%s%s %+-3d %-10s %-19s %-10s %-5d %s",
-          record.success & Hackers::Network::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-          record.success & Hackers::Network::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-          record.success & Hackers::Network::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-          record.rank,
-          record.id,
-          record.datetime,
-          record.attacker_id,
-          record.attacker_level,
-          record.attacker_name,
-        )
-      )
-    end
-
+    table_security = Printer::LogsSecurity.new(logs.security)
+    @shell.puts(table_security)
     @shell.puts
-    @shell.puts("\e[1;35m\u2022 Hacks\e[0m")
-    if logs.hacks.empty?
-      @shell.puts('  Empty')
-    else
-      @shell.puts(
-        format(
-          "  \e[35m%-7s %-10s %-19s %-10s %-5s %s\e[0m",
-          '',
-          'ID',
-          'Datetime',
-          'Target',
-          'Level',
-          'Name'
-        )
-      )
-    end
-
-    logs.hacks.each do |record|
-      @shell.puts(
-        format(
-          "  %s%s%s %+-3d %-10s %-19s %-10s %-5d %s",
-          record.success & Hackers::Network::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-          record.success & Hackers::Network::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-          record.success & Hackers::Network::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-          record.rank,
-          record.id,
-          record.datetime,
-          record.target_id,
-          record.target_level,
-          record.target_name,
-        )
-      )
-    end
+    table_hacks = Printer::LogsHacks.new(logs.hacks)
+    @shell.puts(table_hacks)
   end
 end

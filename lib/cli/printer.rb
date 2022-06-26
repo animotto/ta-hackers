@@ -13,14 +13,19 @@ module Printer
     end
 
     def to_s
-      title_length = @titles.inject(0) { |a, t| t.length > a ? t.length : a }
       list = ["\e[1;35m\u2022 #{@header}\e[0m"]
-      @titles.each_with_index do |title, i|
-        list << Kernel.format(
-          "  \e[35m%-#{title_length}s\e[0m  %s",
-          title,
-          @items[i]
-        )
+
+      if @items.empty?
+        list << '  Empty'
+      else
+        title_length = @titles.inject(0) { |a, t| t.length > a ? t.length : a }
+        @titles.each_with_index do |title, i|
+          list << Kernel.format(
+            "  \e[35m%-#{title_length}s\e[0m  %s",
+            title,
+            @items[i]
+          )
+        end
       end
 
       list.join("\n")
@@ -44,34 +49,38 @@ module Printer
     def to_s
       table = ["\e[1;35m\u2022 #{@header}\e[0m"]
 
-      column_length = @titles.map(&:length)
-      @items.each do |item|
-        item.each_with_index do |col, i|
-          length = col.to_s.length
-          column_length[i] = length if length > column_length[i]
+      if @items.empty?
+        table << '  Empty'
+      else
+        column_length = @titles.map(&:length)
+        @items.each do |item|
+          item.each_with_index do |col, i|
+            c = col.to_s.gsub(/\e\[[\d;]*[[:alpha:]]/, '')
+            column_length[i] = c.length if c.length > column_length[i]
+          end
         end
-      end
 
-      titles = []
-      @titles.each_with_index do |title, i|
-        titles << Kernel.format(
-          "\e[35m%-#{column_length[i]}s\e[0m",
-          title
-        )
-      end
-      table << titles.join(' ').prepend('  ')
-
-      @items.each.with_index do |item, i|
-        row = []
-        item.each_with_index do |col, j|
-          row << Kernel.format(
-            "%-#{column_length[j]}s",
-            col
+        titles = []
+        @titles.each_with_index do |title, i|
+          titles << Kernel.format(
+            "\e[35m%-#{column_length[i]}s\e[0m",
+            title
           )
         end
-        row = row.join(' ').prepend('  ')
-        row = "\e[37;45m#{row}\e[0m" if @selected.include?(i)
-        table << row
+        table << titles.join(' ').prepend('  ')
+
+        @items.each.with_index do |item, i|
+          row = []
+          item.each_with_index do |col, j|
+            row << Kernel.format(
+              "%-#{column_length[j]}s",
+              col
+            )
+          end
+          row = row.join(' ').prepend('  ')
+          row = "\e[37;45m#{row}\e[0m" if @selected.include?(i)
+          table << row
+        end
       end
 
       table.join("\n")
@@ -203,6 +212,75 @@ module Printer
       if @shield
         @titles << 'Shield'
         @items << (@shield.installed? ? "#{@game.shield_types.get(@shield.type).title} (#{@shield.time})" : '-')
+      end
+    end
+  end
+
+  ##
+  # Logs
+  class Logs < BasePrinter
+    def to_s
+      parse
+      Printer::Table.new(
+        self.class::TITLE,
+        ['', '', 'ID', 'Datetime', 'Level', self.class::PLAYER, 'Name'],
+        @items
+      ).to_s
+    end
+
+    private
+
+    def format_success(data)
+      line = []
+      line << ((data & Hackers::Network::SUCCESS_CORE).zero? ? "\u25b3" : "\e[32m\u25b2\e[0m")
+      line << ((data & Hackers::Network::SUCCESS_RESOURCES).zero? ? "\u25b3" : "\e[32m\u25b2\e[0m")
+      line << ((data & Hackers::Network::SUCCESS_CONTROL).zero? ? "\u25b3" : "\e[32m\u25b2\e[0m")
+      line.join
+    end
+  end
+
+  ##
+  # Logs security
+  class LogsSecurity < Logs
+    TITLE = 'Security'
+    PLAYER = 'Attacker'
+
+    private
+
+    def parse
+      @items = @data.map do |r|
+        [
+          format_success(r.success),
+          Kernel.format('%+d', r.rank),
+          r.id,
+          r.datetime,
+          r.attacker_level,
+          r.attacker_id,
+          r.attacker_name
+        ]
+      end
+    end
+  end
+
+  ##
+  # Logs hacks
+  class LogsHacks < Logs
+    TITLE = 'Hacks'
+    PLAYER = 'Target'
+
+    private
+
+    def parse
+      @items = @data.map do |r|
+        [
+          format_success(r.success),
+          Kernel.format('%+d', r.rank),
+          r.id,
+          r.datetime,
+          r.target_level,
+          r.target_id,
+          r.target_name
+        ]
       end
     end
   end

@@ -86,104 +86,94 @@ CONTEXT_NET.add_command(
       next
     end
 
-    shell.puts('Logs record:')
+    # shell.puts('Logs record:')
 
-    shell.puts(" ID: #{record.id}")
-    shell.puts(" Datetime: #{record.datetime}")
+    # shell.puts(" ID: #{record.id}")
+    # shell.puts(" Datetime: #{record.datetime}")
 
-    shell.puts(" Attacker ID: #{record.attacker_id}")
-    shell.puts(" Attacker name: #{record.attacker_name}")
-    shell.puts(" Attacker level: #{record.attacker_level}")
-    shell.puts(" Attacker country: #{GAME.countries_list.name(record.attacker_country)} (#{record.attacker_country})")
+    # shell.puts(" Attacker ID: #{record.attacker_id}")
+    # shell.puts(" Attacker name: #{record.attacker_name}")
+    # shell.puts(" Attacker level: #{record.attacker_level}")
+    # shell.puts(" Attacker country: #{GAME.countries_list.name(record.attacker_country)} (#{record.attacker_country})")
 
-    shell.puts(" Target ID: #{record.target_id}")
-    shell.puts(" Target name: #{record.target_name}")
-    shell.puts(" Target level: #{record.target_level}")
-    shell.puts(" Target country: #{GAME.countries_list.name(record.target_country)} (#{record.target_country})")
+    # shell.puts(" Target ID: #{record.target_id}")
+    # shell.puts(" Target name: #{record.target_name}")
+    # shell.puts(" Target level: #{record.target_level}")
+    # shell.puts(" Target country: #{GAME.countries_list.name(record.target_country)} (#{record.target_country})")
 
-    shell.puts(" Money: #{record.money}")
-    shell.puts(" Bitcoins: #{record.bitcoins}")
-    shell.puts(" Success: #{record.success}")
-    shell.puts(" Rank: #{record.rank}")
-    shell.puts(" Test: #{record.test}")
+    # shell.puts(" Money: #{record.money}")
+    # shell.puts(" Bitcoins: #{record.bitcoins}")
+    # shell.puts(" Success: #{record.success}")
+    # shell.puts(" Rank: #{record.rank}")
+    # shell.puts(" Test: #{record.test}")
 
-    shell.puts(' Programs:')
-    record.programs.each do |program|
-      program_type = GAME.program_types.get(program.type)
-      shell.puts("  #{program_type.name}: #{program.amount}")
-    end
+    # shell.puts(' Programs:')
+    # record.programs.each do |program|
+    #   program_type = GAME.program_types.get(program.type)
+    #   shell.puts("  #{program_type.name}: #{program.amount}")
+    # end
+
+    list_record = Printer::List.new(
+      'Logs record',
+      [
+        'ID',
+        'Datetime',
+        'Attacker ID',
+        'Attacker name',
+        'Attacker level',
+        'Attacker country',
+        'Target ID',
+        'Target name',
+        'Target level',
+        'Target country',
+        'Money',
+        'Bitcoins',
+        'Success',
+        'Rank',
+        'Test'
+      ],
+      [
+        record.id,
+        record.datetime,
+        record.attacker_id,
+        record.attacker_name,
+        record.attacker_level,
+        "#{GAME.countries_list.name(record.attacker_country)} (#{record.attacker_country})",
+        record.target_id,
+        record.target_name,
+        record.target_level,
+        "#{GAME.countries_list.name(record.target_country)} (#{record.target_country})",
+        record.money,
+        record.bitcoins,
+        record.success,
+        Kernel.format('%+d', record.rank),
+        record.test
+      ]
+    )
+    shell.puts(list_record)
+    shell.puts
+
+    table_programs = Printer::Table.new(
+      'Programs',
+      ['Type', 'Name', 'Amount'],
+      record.programs.map do |p|
+        [
+          p.type,
+          GAME.program_types.get(p.type).name,
+          p.amount
+        ]
+      end
+    )
+    shell.puts(table_programs)
 
     next
   end
 
-  shell.puts("\e[1;35m\u2022 Security\e[0m")
-  if logs.security.empty?
-    shell.puts('  Empty')
-  else
-    shell.puts(
-      format(
-        "  \e[35m%-7s %-10s %-19s %-10s %-5s %s\e[0m",
-        '',
-        'ID',
-        'Datetime',
-        'Attacker',
-        'Level',
-        'Name'
-      )
-    )
-  end
-
-  logs.security.each do |record|
-    shell.puts(
-      format(
-        "  %s%s%s %+-3d %-10s %-19s %-10s %-5d %s",
-        record.success & Hackers::Network::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-        record.success & Hackers::Network::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-        record.success & Hackers::Network::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-        record.rank,
-        record.id,
-        record.datetime,
-        record.attacker_id,
-        record.attacker_level,
-        record.attacker_name,
-      )
-    )
-  end
-
+  table_security = Printer::LogsSecurity.new(logs.security)
+  shell.puts(table_security)
   shell.puts
-  shell.puts("\e[1;35m\u2022 Hacks\e[0m")
-  if logs.hacks.empty?
-    shell.puts('  Empty')
-  else
-    shell.puts(
-      format(
-        "  \e[35m%-7s %-10s %-19s %-10s %-5s %s\e[0m",
-        '',
-        'ID',
-        'Datetime',
-        'Target',
-        'Level',
-        'Name'
-      )
-    )
-  end
-
-  logs.hacks.each do |record|
-    shell.puts(
-      format(
-        "  %s%s%s %+-3d %-10s %-19s %-10s %-5d %s",
-        record.success & Hackers::Network::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-        record.success & Hackers::Network::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-        record.success & Hackers::Network::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-        record.rank,
-        record.id,
-        record.datetime,
-        record.target_id,
-        record.target_level,
-        record.target_name,
-      )
-    )
-  end
+  table_hacks = Printer::LogsHacks.new(logs.hacks)
+  shell.puts(table_hacks)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
