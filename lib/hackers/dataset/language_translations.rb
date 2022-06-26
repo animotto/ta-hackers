@@ -4,6 +4,8 @@ module Hackers
   ##
   # Language translations
   class LanguageTranslations < Dataset
+    include Enumerable
+
     def initialize(*)
       super
 

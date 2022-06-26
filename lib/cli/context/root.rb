@@ -48,16 +48,12 @@ CONTEXT_ROOT_SET = SHELL.add_command(
   global: true
 ) do |tokens, shell|
   if tokens.length < 2
-    shell.puts('Configuration:')
-    GAME.config.each do |k, v|
-      shell.puts(
-        format(
-          ' %-16s .. %s',
-          k,
-          v
-        )
-      )
-    end
+    list = Printer::List.new(
+      'Configuartion',
+      GAME.config.keys,
+      GAME.config.values
+    )
+    shell.puts(list)
     next
   end
 
@@ -178,7 +174,7 @@ SHELL.add_command(
     next
   end
 
-  shell.puts("Session ID: #{GAME.api.sid}")
+  shell.puts(GAME.api.sid)
 end
 
 # translations
@@ -191,16 +187,12 @@ SHELL.add_command(
     next
   end
 
-  shell.puts('Language translations:')
-  GAME.language_translations.each do |k|
-    shell.puts(
-      format(
-        ' %-32s .. %s',
-        k,
-        GAME.language_translations.get(k)
-      )
-    )
-  end
+  list = Printer::List.new(
+    'Language translations',
+    GAME.language_translations.map { |k| k.to_s },
+    GAME.language_translations.map { |k| GAME.language_translations.get(k) }
+  )
+  shell.puts(list)
 end
 
 # settings
@@ -213,18 +205,17 @@ SHELL.add_command(
     next
   end
 
-  shell.puts("Datetime: #{GAME.app_settings.datetime}")
+  keys = GAME.app_settings.map { |k| k.to_s }
+  values = GAME.app_settings.map { |k| GAME.app_settings.get(k) }
+  keys << 'datetime'
+  values << GAME.app_settings.datetime
 
-  shell.puts('Application settings:')
-  GAME.app_settings.each do |name|
-    shell.puts(
-      format(
-        ' %-32s .. %s',
-        name,
-        GAME.app_settings.get(name)
-      )
-    )
-  end
+  list = Printer::List.new(
+    'Application settings',
+    keys,
+    values
+  )
+  shell.puts(list)
 end
 
 # nodes
@@ -246,20 +237,8 @@ SHELL.add_command(
     end
 
     node = GAME.node_types.get(id)
-    shell.puts("#{node.name}:")
-    shell.puts(
-      format(
-        ' %-5s %-10s %-5s %-7s %-5s %-5s %-5s',
-        'Level',
-        'Cost',
-        'Exp',
-        'Upgrade',
-        'Conns',
-        'Slots',
-        'Firewall',
-      )
-    )
 
+    levels = []
     node.levels.each do |level|
       case node.upgrade_currency(level)
       when Hackers::Network::CURRENCY_MONEY
@@ -268,33 +247,32 @@ SHELL.add_command(
         upgrade_currency = "\u20bf"
       end
 
-      shell.puts(
-        format(
-          ' %-5d %-10s %-5d %-7d %-5d %-5d %-8d',
-          level,
-          "#{node.upgrade_cost(level)}#{upgrade_currency}",
-          node.experience_gained(level),
-          node.completion_time(level),
-          node.node_connections(level),
-          node.program_slots(level),
-          node.firewall(level)
-        )
-      )
+      levels << [
+        level,
+        "#{node.upgrade_cost(level)}#{upgrade_currency}",
+        node.experience_gained(level),
+        node.completion_time(level),
+        node.node_connections(level),
+        node.program_slots(level),
+        node.firewall(level)
+      ]
     end
 
+    table = Printer::Table.new(
+      node.name,
+      ['Level', 'Cost', 'Exp', 'Upgrade', 'Conns', 'Slots', 'Firewall'],
+      levels
+    )
+    shell.puts(table)
     next
   end
 
-  shell.puts('Node types:')
-  GAME.node_types.each do |node|
-    shell.puts(
-      format(
-        ' %-2s .. %s',
-        node.type,
-        node.name
-      )
-    )
-  end
+  table = Printer::Table.new(
+    'Node types',
+    ['ID', 'Name'],
+    GAME.node_types.map { |n| [n.type, n.name] }
+  )
+  shell.puts(table)
 end
 
 # progs
@@ -317,51 +295,36 @@ SHELL.add_command(
 
     program_type = GAME.program_types.get(id)
 
-    shell.puts("#{program_type.name}:")
-    shell.puts(
-      format(
-        ' %-5s %-8s %-4s %-5s %-7s %-4s %-7s %-8s %-7s',
-        'Level',
-        'Upgrade',
-        'Exp',
-        'Price',
-        'Compile',
-        'Disk',
-        'Install',
-        'Research',
-        'Evolver'
-      )
-    )
-
+    levels = []
     program_type.levels.each do |level|
-      shell.puts(
-        format(
-          ' %-5d %-8d %-4d %-5d %-7d %-4d %-7.1f %-8s %-7d',
-          level,
-          program_type.upgrade_cost(level),
-          program_type.experience_gained(level),
-          program_type.compilation_price(level),
-          program_type.compilation_time(level),
-          program_type.disk_space(level),
-          program_type.install_time(level),
-          program_type.research_time(level),
-          program_type.required_evolver_level(level)
-        )
-      )
+      levels << [
+        level,
+        program_type.upgrade_cost(level),
+        program_type.experience_gained(level),
+        program_type.compilation_price(level),
+        program_type.compilation_time(level),
+        program_type.disk_space(level),
+        program_type.install_time(level),
+        program_type.research_time(level),
+        program_type.required_evolver_level(level)
+      ]
     end
+
+    table = Printer::Table.new(
+      program_type.name,
+      ['Level', 'Upgrade', 'Exp', 'Price', 'Compile', 'Disk', 'Install', 'Research', 'Evolver'],
+      levels
+    )
+    shell.puts(table)
     next
   end
 
-  shell.puts('Program types:')
-  GAME.program_types.each do |program|
-    shell.puts(
-      format(
-        ' %-2s .. %s',
-        program.type,
-        program.name
-      )
-    )
-  end
+  table = Printer::Table.new(
+    'Program types',
+    ['ID', 'Name'],
+    GAME.program_types.map { |p| [p.type, p.name] }
+  )
+  shell.puts(table)
 end
 
 # missions
@@ -386,37 +349,55 @@ SHELL.add_command(
 
     mission = missions_list.get(id)
 
-    shell.puts(format('%-20s %d', 'ID', mission.id))
-    shell.puts(format('%-20s %s', 'Group', mission.group))
-    shell.puts(format('%-20s %s', 'Name', mission.name))
-    shell.puts(format('%-20s %s', 'Giver name', mission.giver_name))
-    shell.puts(format('%-20s %s (%d)', 'Country', GAME.countries_list.name(mission.country), mission.country))
-    shell.puts(format('%-20s %d, %d', 'Coordinates', mission.x, mission.y))
-    shell.puts(format('%-20s %d', 'Reward money', mission.reward_money))
-    shell.puts(format('%-20s %d', 'Reward bitcoins', mission.reward_bitcoins))
-    shell.puts(format('%-20s %d', 'Additional money', mission.additional_money))
-    shell.puts(format('%-20s %d', 'Additional bitcoins', mission.additional_bitcoins))
-    shell.puts(format('%-20s %s', 'Required missions', mission.required_missions))
-    shell.puts(format('%-20s %d', 'Required core level', mission.required_core_level))
-    shell.puts(format('%-20s %s', 'Goals', mission.goals))
-    shell.puts(format('%-20s %s', 'Message info', mission.message_info))
-    shell.puts(format('%-20s %s', 'Message completion', mission.message_completion))
-    shell.puts(format('%-20s %s', 'Message news', mission.message_news))
+    list = Printer::List.new(
+      'Mission',
+      [
+        'ID',
+        'Group',
+        'Name',
+        'Giver name',
+        'Country',
+        'Coordinates',
+        'Reward money',
+        'Reward bitcoins',
+        'Additional money',
+        'Additional bitcoins',
+        'Required missions',
+        'Required core level',
+        'Goals',
+        'Message info',
+        'Message completion',
+        'Message news'
+      ],
+      [
+        mission.id,
+        mission.group,
+        mission.name,
+        mission.giver_name,
+        "#{GAME.countries_list.name(mission.country)} (#{mission.country})",
+        "#{mission.x}, #{mission.y}",
+        mission.reward_money,
+        mission.reward_bitcoins,
+        mission.additional_money,
+        mission.additional_bitcoins,
+        mission.required_missions,
+        mission.required_core_level,
+        mission.goals,
+        mission.message_info,
+        mission.message_completion,
+        mission.message_news
+      ]
+    )
+    shell.puts(list)
     next
   end
 
-  shell.puts('Missions list:')
-  missions_list.each do |mission|
-    shell.puts(
-      format(
-        ' %-4d %-10s %-13s %s',
-        mission.id,
-        mission.group,
-        mission.giver_name,
-        mission.name
-      )
-    )
-  end
+  table = Printer::Table.new(
+    'Missions list',
+    ['ID', 'Group', 'Giver name', 'Name'],
+    missions_list.map { |m| [m.id, m.group, m.giver_name, m.name] }
+  )
+  shell.puts(table)
 end
 
 # skins
@@ -429,18 +410,12 @@ SHELL.add_command(
     next
   end
 
-  shell.puts('Skin types:')
-  GAME.skin_types.each do |skin|
-    shell.puts(
-      format(
-        ' %-4d %-5d %-4d %s',
-        skin.id,
-        skin.price,
-        skin.rank,
-        skin.name
-      )
-    )
-  end
+  list = Printer::Table.new(
+    'Skin types',
+    ['ID', 'Price', 'Rank', 'Name'],
+    GAME.skin_types.map { |s| [s.id, s.price, s.rank, s.name] }
+  )
+  shell.puts(list)
 end
 
 # news
@@ -482,15 +457,12 @@ SHELL.add_command(
     next
   end
 
-  GAME.hints_list.each do |hint|
-    shell.puts(
-      format(
-        ' %-4d %s',
-        hint.id,
-        hint.description
-      )
-    )
-  end
+  list = Printer::List.new(
+    'Hints',
+    GAME.hints_list.map { |h| h.id.to_s },
+    GAME.hints_list.map { |h| h.description }
+  )
+  shell.puts(list)
 end
 
 # experience
@@ -513,16 +485,12 @@ SHELL.add_command(
     next
   end
 
-  shell.puts('Experience list:')
-  experience_list.each do |level|
-    shell.puts(
-      format(
-        ' %-3d %d',
-        level.level,
-        level.experience
-      )
-    )
-  end
+  list = Printer::List.new(
+    'Experience list',
+    experience_list.map { |e| e.level.to_s },
+    experience_list.map { |e| e.experience.to_s }
+  )
+  shell.puts(list)
 end
 
 # builders
@@ -535,16 +503,12 @@ SHELL.add_command(
     next
   end
 
-  shell.puts('Builders list:')
-  GAME.builders_list.each do |builder|
-    shell.puts(
-      format(
-        ' %-3d %d',
-        builder.amount,
-        builder.price
-      )
-    )
-  end
+  table = Printer::Table.new(
+    'Builders',
+    ['Amount', 'Price'],
+    GAME.builders_list.map { |b| [b.amount, b.price] }
+  )
+  shell.puts(table)
 end
 
 # goals
@@ -557,29 +521,12 @@ SHELL.add_command(
     next
   end
 
-  shell.puts('Goal types:')
-  shell.puts(
-    format(
-      ' %-3s %-20s %-6s %-7s %s',
-      'ID',
-      'Name',
-      'Amount',
-      'Credits',
-      'Description'
-    )
+  table = Printer::Table.new(
+    'Goal types',
+    ['ID', 'Name', 'Amount', 'Credits', 'Description'],
+    GAME.goal_types.map { |g| [g.id, g.name, g.amount, g.credits, g.description] }
   )
-  GAME.goal_types.each do |goal|
-    shell.puts(
-      format(
-        ' %-3d %-20s %-6d %-7d %s',
-        goal.id,
-        goal.name,
-        goal.amount,
-        goal.credits,
-        goal.description
-      )
-    )
-  end
+  shell.puts(table)
 end
 
 # shields
@@ -592,18 +539,12 @@ SHELL.add_command(
     next
   end
 
-  shell.puts('Shield types:')
-  GAME.shield_types.each do |shield|
-    shell.puts(
-      format(
-        ' %-3d %-3d %-4d %s',
-        shield.id,
-        shield.hours,
-        shield.price,
-        shield.title
-      )
-    )
-  end
+  table = Printer::Table.new(
+    'Shield types',
+    ['ID', 'Hours', 'Price', 'Title'],
+    GAME.shield_types.map { |s| [s.id, s.hours, s.price, s.title] }
+  )
+  shell.puts(table)
 end
 
 # ranks
@@ -616,20 +557,12 @@ SHELL.add_command(
     next
   end
 
-  shell.puts('Rank list:')
-  GAME.rank_list.each do |rank|
-    shell.puts(
-      format(
-        ' %-3d %-14s %-5d %-5d %-7d %-7d',
-        rank.id,
-        rank.title,
-        rank.rank_gain,
-        rank.rank_maintain,
-        rank.bonus_money,
-        rank.bonus_bitcoins
-      )
-    )
-  end
+  table = Printer::Table.new(
+    'Rank list',
+    ['ID', 'Title', 'Gain', 'Maintain', 'Money', 'Bitcoins'],
+    GAME.rank_list.map { |r| [r.id, r.title, r.rank_gain, r.rank_maintain, r.bonus_money, r.bonus_bitcoins] }
+  )
+  shell.puts(table)
 end
 
 # countries
@@ -642,16 +575,12 @@ SHELL.add_command(
     next
   end
 
-  shell.puts('Countries list:')
-  GAME.countries_list.each do |country|
-    shell.puts(
-      format(
-        ' %-4d %s',
-        country.id,
-        country.name
-      )
-    )
-  end
+  list = Printer::List.new(
+    'Countries list',
+    GAME.countries_list.map { |c| c.id.to_s },
+    GAME.countries_list.map { |c| c.name }
+  )
+  shell.puts(list)
 end
 
 # new
@@ -663,10 +592,12 @@ SHELL.add_command(
   account = GAME.create_player
   LOGGER.log(msg)
 
-  shell.puts("\e[1;35m\u2022 New account\e[0m")
-  shell.puts("  ID: #{account.id}")
-  shell.puts("  Password: #{account.password}")
-  shell.puts("  Session ID: #{account.sid}")
+  list = Printer::List.new(
+    'New account',
+    ['ID', 'Password', 'Session ID'],
+    [account.id, account.password, account.sid]
+  )
+  shell.puts(list)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
@@ -1000,39 +931,31 @@ SHELL.add_command(
   LOGGER.log(msg)
 
   stats = GAME.player.stats
-
-  shell.puts("\e[1;35m\u2022 Player statistics\e[0m")
-  shell.puts("  Rank: #{stats.rank}")
-  shell.puts("  Experience: #{stats.experience}")
-  shell.puts("  Level: #{GAME.experience_list.level(stats.experience)}")
-  shell.puts('  Hacks:')
-  shell.puts("   Successful: #{stats.hacks_success}")
-  shell.puts("   Failed: #{stats.hacks_fail}")
-
-  win_rate = 0
+  hacks_winrate = 0
   hacks_total = stats.hacks_success + stats.hacks_fail
-  unless hacks_total.zero?
-    win_rate = (stats.hacks_success.to_f / hacks_total * 100).to_i
-  end
-  shell.puts("   Win rate: #{win_rate}%")
-
-  shell.puts('  Defense:')
-  shell.puts("   Successful: #{stats.defense_success}")
-  shell.puts("   Failed: #{stats.defense_fail}")
-
-  win_rate = 0
+  win_rate = (stats.hacks_success.to_f / hacks_total * 100).to_i unless hacks_total.zero?
+  defense_winrate = 0
   defense_total = stats.defense_success + stats.defense_fail
-  unless defense_total.zero?
-    win_rate = (stats.defense_success.to_f / defense_total * 100).to_i
-  end
-  shell.puts("   Win rate: #{win_rate}%")
+  defense_winrate = (stats.defense_success.to_f / defense_total * 100).to_i unless defense_total.zero?
 
-  shell.puts('  Looted:')
-  shell.puts("   Money: #{stats.loot_money}")
-  shell.puts("   Bitcoins: #{stats.loot_bitcoins}")
-  shell.puts('  Collected:')
-  shell.puts("   Money: #{stats.collect_money}")
-  shell.puts("   Bitcoins: #{stats.collect_bitcoins}")
+  data = {
+    rank: stats.rank,
+    experience: stats.experience,
+    level: GAME.experience_list.level(stats.experience),
+    hacks_success: stats.hacks_success,
+    hacks_fail: stats.hacks_fail,
+    hacks_winrate: "#{hacks_winrate}%",
+    defense_success: stats.defense_success,
+    defense_fail: stats.defense_fail,
+    defense_winrate: "#{defense_winrate}%",
+    looted_money: stats.loot_money,
+    looted_bitcoins: stats.loot_bitcoins,
+    collected_money: stats.collect_money,
+    collected_bitcoins: stats.collect_bitcoins
+  }
+
+  list = Printer::Stats.new(data)
+  shell.puts(list)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end

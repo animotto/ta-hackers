@@ -214,10 +214,12 @@ CONTEXT_NET.add_command(
 
   readme = GAME.player.readme
 
-  shell.puts("\e[1;35m\u2022 Readme\e[0m")
-  readme.each_with_index do |message, i|
-    shell.puts("  [#{i}] #{message}")
-  end
+  list = Printer::List.new(
+    'Readme',
+    readme.each_with_index.map { |_, i| "#{i}" },
+    readme.each.map { |m| m }
+  )
+  shell.puts(list)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
@@ -245,10 +247,12 @@ CONTEXT_NET.add_command(
   readme.update
   LOGGER.log(msg)
 
-  shell.puts("\e[1;35m\u2022 Readme\e[0m")
-  readme.each_with_index do |message, i|
-    shell.puts("  [#{i}] #{message}")
-  end
+  list = Printer::List.new(
+    'Readme',
+    readme.each_with_index.map { |_, i| "#{i}" },
+    readme.each.map { |m| m }
+  )
+  shell.puts(list)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
@@ -334,19 +338,7 @@ CONTEXT_NET.add_command(
   profile = player.profile
   net = player.net
 
-  shell.puts("\e[1;35m\u2022 Nodes\e[0m")
-  shell.puts(
-    format(
-      "  \e[35m%-10s %-12s %-4s %-5s %-10s %-16s\e[0m",
-      'ID',
-      'Name',
-      'Type',
-      'Level',
-      'Upgrade',
-      'Timer'
-    )
-  )
-
+  nodes = []
   net.each do |node|
     node_type = GAME.node_types.get(node.type)
 
@@ -383,18 +375,22 @@ CONTEXT_NET.add_command(
       upgrade_cost = node_type.upgrade_cost(upgrade_level)
     end
 
-    shell.puts(
-      format(
-        '  %-10d %-12s %-4d %-5d %-10s %-17s',
-        node.id,
-        node_type.name,
-        node.type,
-        node.level,
-        "#{upgrade_cost}#{upgrade_currency}",
-        timer
-      )
-    )
+    nodes << [
+      node.id,
+      node_type.name,
+      node.type,
+      node.level,
+      "#{upgrade_cost}#{upgrade_currency}",
+      timer
+    ]
   end
+
+  table = Printer::Table.new(
+    'Nodes',
+    ['ID', 'Name', 'Type', 'Level', 'Upgrade', 'Timer'],
+    nodes
+  )
+  shell.puts(table)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end

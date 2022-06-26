@@ -51,6 +51,7 @@ module Hackers
     ##
     # List
     class List < Dataset
+      include Enumerable
 
       attr_reader :core, :connection, :farm, :database,
         :bitcoin_mine, :bitcoin_mixer, :sentry,

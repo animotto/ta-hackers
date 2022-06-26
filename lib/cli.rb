@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'cli/sandbox'
+require 'cli/printer'
 require 'cli/misc'
 require 'cli/context/root'
 require 'cli/context/net'

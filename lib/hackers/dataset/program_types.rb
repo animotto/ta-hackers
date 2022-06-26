@@ -59,6 +59,7 @@ module Hackers
     ##
     # List
     class List < Dataset
+      include Enumerable
 
       attr_reader :ion_canon, :shuriken, :worms, :blaster,
                   :shock, :data_leech, :battering_ram,
