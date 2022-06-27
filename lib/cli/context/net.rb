@@ -86,33 +86,6 @@ CONTEXT_NET.add_command(
       next
     end
 
-    # shell.puts('Logs record:')
-
-    # shell.puts(" ID: #{record.id}")
-    # shell.puts(" Datetime: #{record.datetime}")
-
-    # shell.puts(" Attacker ID: #{record.attacker_id}")
-    # shell.puts(" Attacker name: #{record.attacker_name}")
-    # shell.puts(" Attacker level: #{record.attacker_level}")
-    # shell.puts(" Attacker country: #{GAME.countries_list.name(record.attacker_country)} (#{record.attacker_country})")
-
-    # shell.puts(" Target ID: #{record.target_id}")
-    # shell.puts(" Target name: #{record.target_name}")
-    # shell.puts(" Target level: #{record.target_level}")
-    # shell.puts(" Target country: #{GAME.countries_list.name(record.target_country)} (#{record.target_country})")
-
-    # shell.puts(" Money: #{record.money}")
-    # shell.puts(" Bitcoins: #{record.bitcoins}")
-    # shell.puts(" Success: #{record.success}")
-    # shell.puts(" Rank: #{record.rank}")
-    # shell.puts(" Test: #{record.test}")
-
-    # shell.puts(' Programs:')
-    # record.programs.each do |program|
-    #   program_type = GAME.program_types.get(program.type)
-    #   shell.puts("  #{program_type.name}: #{program.amount}")
-    # end
-
     list_record = Printer::List.new(
       'Logs record',
       [
@@ -196,7 +169,7 @@ CONTEXT_NET.add_command(
 
   list = Printer::List.new(
     'Readme',
-    readme.each_with_index.map { |_, i| "#{i}" },
+    readme.each_with_index.map { |_, i| i.to_s },
     readme.each.map { |m| m }
   )
   shell.puts(list)
@@ -229,7 +202,7 @@ CONTEXT_NET.add_command(
 
   list = Printer::List.new(
     'Readme',
-    readme.each_with_index.map { |_, i| "#{i}" },
+    readme.each_with_index.map { |_, i| i.to_s },
     readme.each.map { |m| m }
   )
   shell.puts(list)
@@ -267,10 +240,12 @@ CONTEXT_NET.add_command(
   readme.update
   LOGGER.log(msg)
 
-  shell.puts("\e[1;35m\u2022 Readme\e[0m")
-  readme.each_with_index do |message, i|
-    shell.puts("  [#{i}] #{message}")
-  end
+  list = Printer::List.new(
+    'Readme',
+    readme.each_with_index.map { |_, i| i.to_s },
+    readme.each.map { |m| m }
+  )
+  shell.puts(list)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
@@ -645,41 +620,9 @@ CONTEXT_NET.add_command(
   LOGGER.log(msg)
 
   player = GAME.player
-  net = player.net
 
-  shell.puts("\e[1;35m\u2022 Network topology\e[0m")
-  shell.puts(
-    format(
-    "  \e[35m%-12s %-12s %-5s %-6s %-4s %-4s %-4s %s\e[0m",
-      'ID',
-      'Name',
-      'Type',
-      'Level',
-      'X',
-      'Y',
-      'Z',
-      'Relations'
-    )
-  )
-
-  net.each do |node|
-    node_type = GAME.node_types.get(node.type)
-    relations = node.relations.map { |r| r.id }
-
-    shell.puts(
-      format(
-        '  %-12d %-12s %-5d %-6d %-+4d %-+4d %-+4d %s',
-        node.id,
-        node_type.name,
-        node.type,
-        node.level,
-        node.x,
-        node.y,
-        node.z,
-        relations
-      )
-    )
-  end
+  table = Printer::Network.new(player.net, GAME)
+  shell.puts(table)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end

@@ -284,4 +284,42 @@ module Printer
       end
     end
   end
+
+  ##
+  # Network
+  class Network < BasePrinter
+    def initialize(data, game)
+      super(data)
+
+      @game = game
+    end
+
+    def to_s
+      Table.new(
+        'Network topology',
+        [
+          'ID',
+          'Name',
+          'Type',
+          'Level',
+          'X',
+          'Y',
+          'Z',
+          'Relations'
+        ],
+        @data.map do |n|
+          [
+            n.id,
+            @game.node_types.get(n.type).name,
+            n.type,
+            n.level,
+            Kernel.format('%+d', n.x),
+            Kernel.format('%+d', n.y),
+            Kernel.format('%+d', n.z),
+            n.relations.map { |r| r.id }
+          ]
+        end
+      ).to_s
+    end
+  end
 end
