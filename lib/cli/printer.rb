@@ -322,4 +322,66 @@ module Printer
       ).to_s
     end
   end
+
+  ##
+  # Top players
+  class TopPlayers < BasePrinter
+    def initialize(data, game)
+      super(data)
+
+      @game = game
+    end
+
+    def to_s
+      Table.new(
+        'Top players',
+        [
+          'ID',
+          'Level',
+          'Rank',
+          'Country',
+          'Name'
+        ],
+        @data.map do |p|
+          [
+            p.id,
+            @game.experience_list.level(p.experience),
+            p.rank,
+            Kernel.format("%s (%d)", @game.countries_list.name(p.country), p.country),
+            p.name
+          ]
+        end,
+        [@data.index { |p| p.id == @game.player.profile.id }]
+      ).to_s
+    end
+  end
+
+  ##
+  # Top countries
+  class TopCountries < BasePrinter
+    def initialize(data, game)
+      super(data)
+
+      @game = game
+    end
+
+    def to_s
+      Table.new(
+        'Top countries',
+        [
+          'ID',
+          'Rank',
+          'Country'
+        ],
+        @data.map do |c|
+          [
+            c.id,
+            c.rank,
+            @game.countries_list.name(c.id)
+          ]
+        end,
+        [@data.index { |c| c.id == @game.player.profile.country }]
+      ).to_s
+    end
+  end
 end

@@ -19,6 +19,7 @@ The sandbox consists of the following contexts:
 - `prog` Managing your programs
 - `query` Creating and analyzing queries to the API server
 - `script` Running your own scripts to interact with the sandbox
+- `top` Top players
 - `world` World map
 
 ## How to run it

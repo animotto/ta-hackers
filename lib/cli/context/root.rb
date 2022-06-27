@@ -18,6 +18,8 @@ CONTEXT_SCRIPT = SHELL.add_context(:script, description: 'Scripts')
 CONTEXT_CHAT = SHELL.add_context(:chat, description: 'Internal chat')
 # market
 CONTEXT_MARKET = SHELL.add_context(:market, description: 'Black market')
+# top
+CONTEXT_TOP = SHELL.add_context(:top, description: 'Top players')
 
 ## Commands
 
@@ -758,86 +760,6 @@ SHELL.add_command(
   msg = 'Email subscribe'
   GAME.player.subscribe_email(tokens[1])
   LOGGER.log(msg)
-rescue Hackers::RequestError => e
-  LOGGER.error("#{msg} (#{e})")
-end
-
-# top
-SHELL.add_command(
-  :top,
-  description: 'Show top ranking'
-) do |tokens, shell|
-  unless GAME.connected?
-    shell.puts(NOT_CONNECTED)
-    next
-  end
-
-  unless GAME.player.loaded?
-    msg = 'Network maintenance'
-    GAME.player.load
-    LOGGER.log(msg)
-  end
-
-  msg = 'Ranking get all'
-  GAME.ranking_list.load
-  LOGGER.log(msg)
-
-  ranking_list = GAME.ranking_list
-
-  types = {
-    ranking_list.nearby => 'Players nearby',
-    ranking_list.country => 'Top country players',
-    ranking_list.world => 'Top world players'
-  }
-
-  types.each do |list, title|
-    shell.puts("\e[1;35m\u2022 #{title}\e[0m")
-    shell.puts(
-      format(
-        "  \e[35m%-12s %-25s %-12s %-7s %-12s\e[0m",
-        'ID',
-        'Name',
-        'Experience',
-        'Country',
-        'Rank'
-      )
-    )
-
-    list.each do |player|
-      shell.puts(
-        format(
-          '  %-12s %-25s %-12s %-7s %-12s',
-          player.id,
-          player.name,
-          player.experience,
-          player.country,
-          player.rank
-        )
-      )
-    end
-    shell.puts
-  end
-
-  shell.puts("\e[1;35m\u2022 Top countries\e[0m")
-  shell.puts(
-    format(
-      "  \e[35m%-3s %-25s %-12s\e[0m",
-      'ID',
-      'Country',
-      'Rank'
-    )
-  )
-
-  ranking_list.countries.each do |country|
-    shell.puts(
-      format(
-        '  %-3d %-25s %-12s',
-        country.id,
-        GAME.countries_list.name(country.id),
-        country.rank
-      )
-    )
-  end
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
