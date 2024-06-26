@@ -2,6 +2,7 @@
 
 require 'hackers/utils'
 require 'hackers/client'
+require 'hackers/exceptions'
 require 'hackers/api'
 require 'hackers/serializer'
 require 'hackers/game'

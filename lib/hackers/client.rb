@@ -70,6 +70,10 @@ module Hackers
         serializer = Serializer::Exception.new(body)
         exception = serializer.parse(0, 0)
 
+        if exception.type == EXCEPTION_TYPE && EXCEPTIONS.key?(exception.data)
+          raise EXCEPTIONS[exception.data].new(exception.type, exception.data)
+        end
+
         raise RequestError.new(exception.type, exception.data)
       end
 

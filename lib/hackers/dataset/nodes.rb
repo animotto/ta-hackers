@@ -12,6 +12,8 @@ module Hackers
         @api = api
         @player = player
 
+        @level = 1
+        @builders = 0
         @x = 0
         @y = 0
         @z = 0
@@ -45,7 +47,15 @@ module Hackers
         data = Serializer.parseData(raw_data)
 
         node.id = data.dig(0, 0, 0).to_i
+        node.type = type
+        node.builders = 1
+
+        # The API server always returns a success response, even the creation of a new node fails
+        # We fix this behavior and raise this exception
+        raise CreateNodeError if node.id.zero?
+
         net.update
+        node
       end
 
       def delete

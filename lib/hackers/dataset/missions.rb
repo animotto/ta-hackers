@@ -45,6 +45,8 @@ module Hackers
       @missions.detect { |m| m.id == mission }
     end
 
+    ##
+    # TODO: Local objects syncrhonization - we need to add the mission to the list
     def start(mission)
       @api.start_mission(mission)
     end
