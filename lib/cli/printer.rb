@@ -188,6 +188,9 @@ module Printer
         bitcoins = @data.bitcoins
       end
 
+      builders_busy = Array.new(@builders_busy, "\e[32m\u25b0")
+      builders_free = Array.new(@data.builders - @builders_busy, "\e[37m\u25b1")
+
       @items = [
         @data.id,
         @data.name,
@@ -196,7 +199,7 @@ module Printer
         @data.credits,
         @data.experience,
         @data.rank,
-        "\e[32m" + ("\u25b0" * @builders_busy) + "\e[37m" + ("\u25b1" * (@data.builders - @builders_busy)) + "\e[0m",
+        (builders_busy + builders_free).join(' ') + "\e[0m",
         @data.x,
         @data.y,
         "#{@game.countries_list.name(@data.country)} (#{@data.country})",

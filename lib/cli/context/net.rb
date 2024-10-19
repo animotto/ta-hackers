@@ -299,7 +299,9 @@ CONTEXT_NET.add_command(
 
     timer = String.new
     if node.timer.negative?
-      timer += "\e[32m" + "\u25b0" * node.builders + "\e[37m" + "\u25b1" * (profile.builders - node.builders) + "\e[0m "
+      builders_busy = Array.new(node.builders, "\e[32m\u25b0")
+      builders_free = Array.new(profile.builders - node.builders, "\e[37m\u25b1")
+      timer += (builders_busy + builders_free).join(' ') + "\e[0m "
       timer += Hackers::Utils.timer_dhms(node.timer * -1)
     else
       if node_type.kind_of?(Hackers::NodeTypes::Production)
