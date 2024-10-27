@@ -230,7 +230,6 @@ module Printer
   # Logs
   class Logs < BasePrinter
     SUCCESS_CHAR = "\u25b2"
-    FAIL_CHAR = "\u25b3"
 
     def to_s
       parse
@@ -245,9 +244,9 @@ module Printer
 
     def format_success(data)
       line = []
-      line << ((data & Hackers::Network::SUCCESS_CORE).zero? ? FAIL_CHAR : ColorTerm.green(SUCCESS_CHAR))
-      line << ((data & Hackers::Network::SUCCESS_RESOURCES).zero? ? FAIL_CHAR : ColorTerm.green(SUCCESS_CHAR))
-      line << ((data & Hackers::Network::SUCCESS_CONTROL).zero? ? FAIL_CHAR : ColorTerm.green(SUCCESS_CHAR))
+      line << ((data & Hackers::Network::SUCCESS_CORE).zero? ? SUCCESS_CHAR : ColorTerm.green(SUCCESS_CHAR))
+      line << ((data & Hackers::Network::SUCCESS_RESOURCES).zero? ? SUCCESS_CHAR : ColorTerm.green(SUCCESS_CHAR))
+      line << ((data & Hackers::Network::SUCCESS_CONTROL).zero? ? SUCCESS_CHAR : ColorTerm.green(SUCCESS_CHAR))
       line.join
     end
   end
