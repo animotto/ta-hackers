@@ -9,7 +9,7 @@ module Hackers
     SSL = true
     PATH = '/req.php'
     SALT = 'ZqQxXFFy'
-    VERSION = 1224
+    VERSION = 1227
     LANGUAGE = 'en'
     PLATFORM = 'google'
 
