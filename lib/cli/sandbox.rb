@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'json'
+require 'cli/colorterm'
 
 module Sandbox
   ##
@@ -28,29 +29,33 @@ module Sandbox
   ##
   # Logger
   class Logger
-    attr_accessor :logPrefix, :errorPrefix, :infoPrefix,
-                  :logSuffix, :errorSuffix, :infoSuffix
+    attr_accessor :log_cterm, :error_cterm, :info_cterm,
+                  :log_prefix_cterm, :error_prefix_cterm, :info_prefix_cterm,
+                  :log_prefix, :error_prefix, :info_prefix
 
     def initialize(shell)
       @shell = shell
-      @logPrefix = String.new
-      @logSuffix = String.new
-      @errorPrefix = String.new
-      @errorSuffix = String.new
-      @infoPrefix = String.new
-      @infoSuffix = String.new
+      @log_cterm = ColorTerm.white
+      @error_cterm = ColorTerm.white
+      @info_cterm = ColorTerm.white
+      @log_prefix_cterm = ColorTerm.white
+      @error_prefix_cterm = ColorTerm.white
+      @info_prefix_cterm = ColorTerm.white
+      @log_prefix = String.new
+      @error_prefix = String.new
+      @info_prefix = String.new
     end
 
     def log(message)
-      @shell.puts(@logPrefix + message.to_s + @logSuffix)
+      @shell.puts(@log_prefix_cterm.get(@log_prefix) + @log_cterm.get(message.to_s))
     end
 
     def error(message)
-      @shell.puts(@errorPrefix + message.to_s + @errorSuffix)
+      @shell.puts(@error_prefix_cterm.get(@error_prefix) + @error_cterm.get(message.to_s))
     end
 
     def info(message)
-      @shell.puts(@infoPrefix + message.to_s + @infoSuffix)
+      @shell.puts(@info_prefix_cterm.get(@info_prefix) + @info_cterm.get(message.to_s))
     end
   end
 

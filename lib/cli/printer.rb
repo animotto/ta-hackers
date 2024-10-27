@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 module Printer
+  HEADER_CHAR = "\u2022"
+
   ##
   # List
   class List
@@ -13,15 +15,16 @@ module Printer
     end
 
     def to_s
-      list = ["\e[1;35m\u2022 #{@header}\e[0m"]
+      list = [ColorTerm.magenta.bold("#{HEADER_CHAR} #{@header}")]
 
       if @items.empty?
         list << '  Empty'
       else
+        @titles.map! { |t| ColorTerm.magenta.italic(t) }
         title_length = @titles.inject(0) { |a, t| t.length > a ? t.length : a }
         @titles.each_with_index do |title, i|
-          list << Kernel.format(
-            "  \e[35m%-#{title_length}s\e[0m  %s",
+          list << ::Kernel.format(
+            "  %-#{title_length}s  %s",
             title,
             @items[i]
           )
@@ -47,7 +50,7 @@ module Printer
     end
 
     def to_s
-      table = ["\e[1;35m\u2022 #{@header}\e[0m"]
+      table = [ColorTerm.magenta.bold("#{HEADER_CHAR} #{@header}")]
 
       if @items.empty?
         table << '  Empty'
@@ -62,8 +65,8 @@ module Printer
 
         titles = []
         @titles.each_with_index do |title, i|
-          titles << Kernel.format(
-            "\e[35m%-#{column_length[i]}s\e[0m",
+          titles << ::Kernel.format(
+            ColorTerm.magenta.italic("%-#{column_length[i]}s"),
             title
           )
         end
@@ -72,13 +75,13 @@ module Printer
         @items.each.with_index do |item, i|
           row = []
           item.each_with_index do |col, j|
-            row << Kernel.format(
+            row << ::Kernel.format(
               "%-#{column_length[j]}s",
               col
             )
           end
           row = row.join(' ').prepend('  ')
-          row = "\e[37;45m#{row}\e[0m" if @selected.include?(i)
+          row = ColorTerm.white.magenta_back(row) if @selected.include?(i)
           table << row
         end
       end
@@ -142,6 +145,10 @@ module Printer
   ##
   # Profile
   class Profile < BasePrinter
+    BUILDERS_BUSY_CHAR = "\u25b0"
+    BUILDERS_FREE_CHAR = "\u25b1"
+    BITCOIN_CHAR = "\u20bf"
+
     attr_accessor :tutorial, :shield, :builders_busy,
                   :capacity_money, :capacity_bitcoins
 
@@ -188,18 +195,18 @@ module Printer
         bitcoins = @data.bitcoins
       end
 
-      builders_busy = Array.new(@builders_busy, "\e[32m\u25b0")
-      builders_free = Array.new(@data.builders - @builders_busy, "\e[37m\u25b1")
+      builders_busy = Array.new(@builders_busy, ColorTerm.green(BUILDERS_BUSY_CHAR))
+      builders_free = Array.new(@data.builders - @builders_busy, ColorTerm.white(BUILDERS_FREE_CHAR))
 
       @items = [
         @data.id,
         @data.name,
-        "\e[33m$ #{money}\e[0m",
-        "\e[31m\u20bf #{bitcoins}\e[0m",
+        ColorTerm.brown("$ #{money}"),
+        ColorTerm.red("#{BITCOIN_CHAR} #{bitcoins}"),
         @data.credits,
         @data.experience,
         @data.rank,
-        (builders_busy + builders_free).join(' ') + "\e[0m",
+        (builders_busy + builders_free).join(' '),
         @data.x,
         @data.y,
         "#{@game.countries_list.name(@data.country)} (#{@data.country})",
@@ -222,6 +229,9 @@ module Printer
   ##
   # Logs
   class Logs < BasePrinter
+    SUCCESS_CHAR = "\u25b2"
+    FAIL_CHAR = "\u25b3"
+
     def to_s
       parse
       Printer::Table.new(
@@ -235,9 +245,9 @@ module Printer
 
     def format_success(data)
       line = []
-      line << ((data & Hackers::Network::SUCCESS_CORE).zero? ? "\u25b3" : "\e[32m\u25b2\e[0m")
-      line << ((data & Hackers::Network::SUCCESS_RESOURCES).zero? ? "\u25b3" : "\e[32m\u25b2\e[0m")
-      line << ((data & Hackers::Network::SUCCESS_CONTROL).zero? ? "\u25b3" : "\e[32m\u25b2\e[0m")
+      line << ((data & Hackers::Network::SUCCESS_CORE).zero? ? FAIL_CHAR : ColorTerm.green(SUCCESS_CHAR))
+      line << ((data & Hackers::Network::SUCCESS_RESOURCES).zero? ? FAIL_CHAR : ColorTerm.green(SUCCESS_CHAR))
+      line << ((data & Hackers::Network::SUCCESS_CONTROL).zero? ? FAIL_CHAR : ColorTerm.green(SUCCESS_CHAR))
       line.join
     end
   end
@@ -254,7 +264,7 @@ module Printer
       @items = @data.map do |r|
         [
           format_success(r.success),
-          Kernel.format('%+d', r.rank),
+          ::Kernel.format('%+d', r.rank),
           r.id,
           r.datetime,
           r.attacker_level,
@@ -277,7 +287,7 @@ module Printer
       @items = @data.map do |r|
         [
           format_success(r.success),
-          Kernel.format('%+d', r.rank),
+          ::Kernel.format('%+d', r.rank),
           r.id,
           r.datetime,
           r.target_level,
@@ -316,9 +326,9 @@ module Printer
             @game.node_types.get(n.type).name,
             n.type,
             n.level,
-            Kernel.format('%+d', n.x),
-            Kernel.format('%+d', n.y),
-            Kernel.format('%+d', n.z),
+            ::Kernel.format('%+d', n.x),
+            ::Kernel.format('%+d', n.y),
+            ::Kernel.format('%+d', n.z),
             n.relations.map { |r| r.id }
           ]
         end
@@ -350,7 +360,7 @@ module Printer
             p.id,
             @game.experience_list.level(p.experience),
             p.rank,
-            Kernel.format("%s (%d)", @game.countries_list.name(p.country), p.country),
+            ::Kernel.format("%s (%d)", @game.countries_list.name(p.country), p.country),
             p.name
           ]
         end,

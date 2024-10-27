@@ -431,16 +431,16 @@ SHELL.add_command(
 
   GAME.news_list.each do |news|
     shell.puts(
-      format(
-        "\e[34m%s \e[33m%s\e[0m",
-        news.datetime,
-        news.title
+      ::Kernel.format(
+        "%s %s",
+        ColorTerm.blue.bold(news.datetime),
+        ColorTerm.brown.italic(news.title)
       )
     )
     shell.puts(
-      format(
-        "\e[35m%s\e[0m",
-        news.body
+      ::Kernel.format(
+        "%s",
+        ColorTerm.magenta(news.body)
       )
     )
     shell.puts
@@ -778,8 +778,8 @@ SHELL.add_command(
   code = GAME.cp_generate_code
   LOGGER.log(msg)
 
-  shell.puts("\e[1;35m\u2022 Generated code\e[0m")
-  shell.puts("  Code: #{code}")
+  list = Printer::List.new('Generated code', ['Code'], [code])
+  shell.puts(list)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
@@ -799,9 +799,12 @@ SHELL.add_command(
   account = GAME.cp_use_code(tokens[1], tokens[2])
   LOGGER.log(msg)
 
-  shell.puts("\e[1;35m\u2022 Account credentials\e[0m")
-  shell.puts("  ID: #{account.id}")
-  shell.puts("  Password: #{account.password}")
+  list = Printer::List.new(
+    'Account credentials',
+    ['ID', 'Password'],
+    [account.id, account.password]
+  )
+  shell.puts(list)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end

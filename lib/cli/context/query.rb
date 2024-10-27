@@ -31,7 +31,7 @@ CONTEXT_QUERY.add_command(
   msg = "Query: #{query}"
   response = client.request_raw(params)
   LOGGER.log(msg)
-  shell.puts("\e[22;35m#{response}\e[0m")
+  shell.puts(ColorTerm.magenta(response))
 
   QUERY_DUMPS.append(
     {
@@ -67,7 +67,7 @@ CONTEXT_QUERY.add_command(
   msg = "Query: #{query}"
   response = client.request_cmd(params)
   LOGGER.log(msg)
-  shell.puts("\e[22;35m#{response}\e[0m")
+  shell.puts(ColorTerm.magenta(response))
 
   QUERY_DUMPS.append(
     {
@@ -108,7 +108,7 @@ CONTEXT_QUERY.add_command(
   msg = "Query: #{query}"
   response = client.request_session(params, GAME.api.sid)
   LOGGER.log(msg)
-  shell.puts("\e[22;35m#{response}\e[0m")
+  shell.puts(ColorTerm.magenta(response))
 
   QUERY_DUMPS.append(
     {
@@ -160,7 +160,7 @@ CONTEXT_QUERY_SHOW = CONTEXT_QUERY.add_command(
 
   QUERY_DUMPS[id].each do |k, v|
     value = k == :data ? Base64.decode64(v) : v
-    shell.puts("\e[1;32m#{k.capitalize}: \e[22;36m#{value}\e[0m")
+    shell.puts("#{ColorTerm.bold.green(k.capitalize)}: #{ColorTerm.cyan(value)}")
   end
 end
 

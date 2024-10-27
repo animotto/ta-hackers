@@ -25,34 +25,22 @@ CONTEXT_WORLD.add_command(
   world = GAME.world
   targets = world.targets
 
-
-  shell.puts("\e[1;35m\u2022 Targets\e[0m")
-  if targets.empty?
-    shell.puts('  Empty')
-    next
-  end
-
-  shell.puts(
-    format(
-      "  \e[35m%-10s %-6s %-20s %s\e[0m",
-      'ID',
-      'Level',
-      'Country',
-      'Name'
-    )
-  )
-
+  items = []
   targets.each do |target|
-    shell.puts(
-      format(
-        '  %-10d %-6d %-20s %s',
-        target.id,
-        GAME.experience_list.level(target.experience),
-        "#{GAME.countries_list.name(target.country)} (#{target.country})",
-        target.name
-      )
-    )
+    items << [
+      target.id,
+      GAME.experience_list.level(target.experience),
+      "#{GAME.countries_list.name(target.country)} (#{target.country})",
+      target.name
+    ]
   end
+
+  table = Printer::Table.new(
+    'Targets',
+    ['ID', 'Level', 'Country', 'Name'],
+    items
+  )
+  shell.puts(table)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
@@ -74,33 +62,22 @@ CONTEXT_WORLD.add_command(
   world = GAME.world
   targets = world.targets
 
-  shell.puts("\e[1;35m\u2022 Targets\e[0m")
-  if targets.empty?
-    shell.puts('  Empty')
-    next
-  end
-
-  shell.puts(
-    format(
-      "  \e[35m%-10s %-6s %-20s %s\e[0m",
-      'ID',
-      'Level',
-      'Country',
-      'Name'
-    )
-  )
-
+  items = []
   targets.each do |target|
-    shell.puts(
-      format(
-        '  %-10d %-6d %-20s %s',
-        target.id,
-        GAME.experience_list.level(target.experience),
-        "#{GAME.countries_list.name(target.country)} (#{target.country})",
-        target.name
-      )
-    )
+    items << [
+      target.id,
+      GAME.experience_list.level(target.experience),
+      "#{GAME.countries_list.name(target.country)} (#{target.country})",
+      target.name
+    ]
   end
+
+  table = Printer::Table.new(
+    'Targets',
+    ['ID', 'Level', 'Country', 'Name'],
+    items
+  )
+  shell.puts(table)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
@@ -128,29 +105,20 @@ CONTEXT_WORLD.add_command(
   world = GAME.world
   bonuses = world.bonuses
 
-  shell.puts("\e[1;35m\u2022 Bonuses\e[0m")
-  if bonuses.empty?
-    shell.puts('  Empty')
-    next
-  end
-
-  shell.puts(
-    format(
-      "  \e[35m%-12s %-2s\e[0m",
-      'ID',
-      'Amount'
-    )
-  )
-
+  items = []
   bonuses.each do |bonus|
-    shell.puts(
-      format(
-        '  %-12d %-2d',
-        bonus.id,
-        bonus.amount
-      )
-    )
+    items << [
+      bonus.id,
+      bonus.amount
+    ]
   end
+
+  table = Printer::Table.new(
+    'Bonuses',
+    ['ID', 'Amount'],
+    items
+  )
+  shell.puts(table)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
@@ -220,36 +188,24 @@ CONTEXT_WORLD.add_command(
   world = GAME.world
   goals = world.goals
 
-  shell.puts("\e[1;35m\u2022 Goals\e[0m")
-  if goals.empty?
-    shell.puts('  Empty')
-    next
-  end
-
-  shell.puts(
-    format(
-      "  \e[35m%-10s %-7s %-8s %-4s %s\e[0m",
-      'ID',
-      'Credits',
-      'Finished',
-      'Type',
-      'Name'
-    )
-  )
-
+  items = []
   goals.each do |goal|
     goal_type = GAME.goal_types.get(goal.type)
-    shell.puts(
-      format(
-        '  %-10d %-7d %-8d %-4d %s',
-        goal.id,
-        goal_type.credits,
-        goal.finished,
-        goal.type,
-        goal_type.name
-      )
-    )
+    items << [
+      goal.id,
+      goal_type.credits,
+      goal.finished,
+      goal.type,
+      goal_type.name
+    ]
   end
+
+  table = Printer::Table.new(
+    'Goals',
+    ['ID', 'Credits', 'Finished', 'Type', 'Name'],
+    items
+  )
+  shell.puts(table)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end

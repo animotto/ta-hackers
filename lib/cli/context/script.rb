@@ -8,11 +8,15 @@ SCRIPT_VARS = {
   job_counter: 0
 }
 
+SCRIPT_LOG_CHAR = "\u273f"
+
 SCRIPT_LOGGER = Sandbox::Logger.new(SHELL)
-SCRIPT_LOGGER.logPrefix = "\e[1;34m\u273f\e[22;34m "
-SCRIPT_LOGGER.logSuffix = "\e[0m"
-SCRIPT_LOGGER.errorPrefix = "\e[1;31m\u273f\e[22;31m "
-SCRIPT_LOGGER.errorSuffix = "\e[0m"
+SCRIPT_LOGGER.log_prefix = "\u273f "
+SCRIPT_LOGGER.log_prefix_cterm = ColorTerm.blue.bold
+SCRIPT_LOGGER.log_cterm = ColorTerm.blue
+SCRIPT_LOGGER.error_prefix = "\u273f "
+SCRIPT_LOGGER.error_prefix_cterm = ColorTerm.red.bold
+SCRIPT_LOGGER.error_cterm = ColorTerm.red
 
 def script_run(shell, script, args)
   job = SCRIPT_VARS[:job_counter] += 1
@@ -24,12 +28,15 @@ def script_run(shell, script, args)
   file = File.join(SCRIPT_DIR, "#{script}#{SCRIPT_EXT}")
 
   logger = Sandbox::Logger.new(shell)
-  logger.logPrefix = "\e[1;36m\u276f [#{script}]\e[22;36m "
-  logger.logSuffix = "\e[0m"
-  logger.errorPrefix = "\e[1;31m\u276f [#{script}]\e[22;31m "
-  logger.errorSuffix = "\e[0m"
-  logger.infoPrefix = "\e[1;37m\u276f [#{script}]\e[22;37m "
-  logger.errorSuffix = "\e[0m"
+  logger.log_prefix = "\u276f [#{script}] "
+  logger.log_prefix_cterm = ColorTerm.cyan.bold
+  logger.log_cterm = ColorTerm.cyan
+  logger.error_prefix = "\u276f [#{script}] "
+  logger.error_prefix_cterm = ColorTerm.red.bold
+  logger.error_cterm = ColorTerm.red
+  logger.info_prefix = "\u276f [#{script}] "
+  logger.info_prefix_cterm = ColorTerm.white.bold
+  logger.info_cterm = ColorTerm.white
 
   begin
     name = script.capitalize
@@ -177,7 +184,7 @@ CONTEXT_SCRIPT_ADMIN = CONTEXT_SCRIPT.add_command(
   end
 
   shell.puts('Enter ! or ^D to quit')
-  prompt = "\e[1;34m#{SCRIPT_JOBS[job][:script]}:#{job} \u273f\e[0m "
+  prompt = ColorTerm.blue.bold("#{SCRIPT_JOBS[job][:script]}:#{job} #{SCRIPT_LOG_CHAR} ")
   loop do
     line = shell.readline(prompt, true)
     if line.nil?

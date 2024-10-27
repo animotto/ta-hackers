@@ -1,5 +1,10 @@
 # frozen_string_literal
 
+NET_BUSY_CHAR = "\u25b0"
+NET_FREE_CHAR = "\u25b1"
+NET_MONEY_CHAR = '$'
+NET_BITCOIN_CHAR = "\u20bf"
+
 ## Commands
 
 # profile
@@ -299,22 +304,21 @@ CONTEXT_NET.add_command(
 
     timer = String.new
     if node.timer.negative?
-      builders_busy = Array.new(node.builders, "\e[32m\u25b0")
-      builders_free = Array.new(profile.builders - node.builders, "\e[37m\u25b1")
-      timer += (builders_busy + builders_free).join(' ') + "\e[0m "
+      builders_busy = Array.new(node.builders, ColorTerm.green(NET_BUSY_CHAR))
+      builders_free = Array.new(profile.builders - node.builders, ColorTerm.white(NET_FREE_CHAR))
+      timer += (builders_busy + builders_free).join(' ') + ' '
       timer += Hackers::Utils.timer_dhms(node.timer * -1)
     else
       if node_type.kind_of?(Hackers::NodeTypes::Production)
         case node_type.production_currency(node.level)
         when Hackers::Network::CURRENCY_MONEY
-          timer += "\e[33m$ "
+          timer += "#{ColorTerm.brown(NET_MONEY_CHAR)} "
         when Hackers::Network::CURRENCY_BITCOINS
-          timer += "\e[31m\u20bf "
+          timer += "#{ColorTerm.red(NET_BITCOIN_CHAR)} "
         end
         produced = (node_type.production_speed(node.level).to_f / 60 / 60 * node.timer).to_i
         timer += produced < node_type.production_limit(node.level) ? produced.to_s : node_type.production_limit(node.level).to_s
         timer += '/' + node_type.production_limit(node.level).to_s
-        timer += "\e[0m"
       end
     end
 

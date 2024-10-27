@@ -3,6 +3,9 @@
 require 'thread'
 
 CHAT_ROOMS = {}
+CHAT_LOG_CHAR = "\u2764"
+CHAT_LIST_CHAR = "\u2022"
+CHAT_TALK_CHAR = "\u2765"
 
 def chat_read(shell, room)
   loop do
@@ -21,13 +24,14 @@ end
 def chat_log(shell, room, messages)
   messages.each do |message|
     shell.puts(
-      format(
-        "\e[1;33m\u2764 \e[22;34m[%s:%d] \e[22;31m%d \e[1;35m%s \e[22;33m%s\e[0m",
-        GAME.countries_list.name(room),
-        room,
-        GAME.experience_list.level(message.experience),
-        message.name,
-        message.message
+      ::Kernel.format(
+        '%s [%s:%s] %s %s %s',
+        ColorTerm.brown.bold(CHAT_LOG_CHAR),
+        ColorTerm.blue(GAME.countries_list.name(room)),
+        ColorTerm.blue(room),
+        ColorTerm.red(GAME.experience_list.level(message.experience)),
+        ColorTerm.magenta.bold(message.name),
+        ColorTerm.brown(message.message)
       )
     )
   end
@@ -95,10 +99,11 @@ CONTEXT_CHAT.add_command(
   shell.puts "Opened rooms:"
   CHAT_ROOMS.each_key do |k|
     shell.puts(
-      format(
-      " \e[1;33m\u2022\e[0m %-4d (%s)",
-      k,
-      GAME.countries_list.name(k)
+      ::Kernel.format(
+        ' %s %-4d (%s)',
+        ColorTerm.brown.bold(CHAT_LIST_CHAR),
+        k,
+        GAME.countries_list.name(k)
       )
     )
   end
@@ -140,7 +145,7 @@ CONTEXT_CHAT_TALK = CONTEXT_CHAT.add_command(
 
   shell.puts('Enter ! or press ^D to quit')
   loop do
-    prompt = "#{GAME.countries_list.name(room)}:#{room} \e[1;33m\u2765\e[0m "
+    prompt = "#{GAME.countries_list.name(room)}:#{room} #{ColorTerm.brown.bold(CHAT_TALK_CHAR)} "
     message = shell.readline(prompt, true)
     if message.nil?
       shell.puts

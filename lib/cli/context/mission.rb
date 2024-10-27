@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+MISSION_FLAGON_CHAR = "\u2691"
+MISSION_FLAGOFF_CHAR = "\u2690"
+
 ## Commands
 
 # list
@@ -18,49 +21,36 @@ CONTEXT_MISSION.add_command(
 
   missions = GAME.missions
 
-  shell.puts("\e[1;35m\u2022 Missions log\e[0m")
-  if missions.empty?
-    shell.puts('  Empty')
-    next
-  end
-
-  shell.puts(
-    format(
-      "  \e[35m%-1s %-7s %-7s %-8s %-20s %s\e[0m",
-      '',
-      'ID',
-      'Money',
-      'Bitcoins',
-      'Datetime',
-      'Name',
-    )
-  )
-
+  items = []
   missions.each do |mission|
     mission_type = GAME.missions_list.get(mission.id)
 
     status = String.new
     case mission.status
     when Hackers::Missions::AWAITS
-      status = "\e[37m\u2690\e[0m" 
+      status = ColorTerm.white(MISSION_FLAGOFF_CHAR)
     when Hackers::Missions::FINISHED
-      status = "\e[32m\u2691\e[0m"
+      status = ColorTerm.green(MISSION_FLAGON_CHAR)
     when Hackers::Missions::REJECTED
-      status = "\e[31m\u2691\e[0m"
+      status = ColorTerm.red(MISSION_FLAGON_CHAR)
     end
 
-    shell.puts(
-      format(
-        '  %-1s %-7d %-7d %-8d %-20s %s',
-        status,
-        mission.id,
-        mission.money,
-        mission.bitcoins,
-        mission.datetime,
-        mission_type.name
-      )
-    )
+    items << [
+      status,
+      mission.id,
+      mission.money,
+      mission.bitcoins,
+      mission.datetime,
+      mission_type.name
+    ]
   end
+
+  table = Printer::Table.new(
+    'Missions log',
+    ['', 'ID', 'Money', 'Bitcoins', 'Datetime', 'Name'],
+    items
+  )
+  shell.puts(table)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end

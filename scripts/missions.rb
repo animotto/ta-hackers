@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 class Missions < Sandbox::Script
+  FLAGON_CHAR = "\u2691"
+  FLAGOFF_CHAR = "\u2690"
+
   def main
     if @args[0].nil?
       @logger.log("Specify player ID")
@@ -22,48 +25,35 @@ class Missions < Sandbox::Script
       return
     end
 
-    @shell.puts("\e[1;35m\u2022 Missions log\e[0m")
-    if missions.empty?
-      @shell.puts('  Empty')
-      return
-    end
-
-    @shell.puts(
-      format(
-        "  \e[35m%-1s %-7s %-7s %-8s %-20s %s\e[0m",
-        '',
-        'ID',
-        'Money',
-        'Bitcoins',
-        'Datetime',
-        'Name',
-      )
-    )
-
+    items = []
     missions.each do |mission|
       mission_type = @game.missions_list.get(mission.id)
 
       status = String.new
       case mission.status
       when Hackers::Missions::AWAITS
-        status = "\e[37m\u2690\e[0m" 
+        status = ColorTerm.white(FLAGOFF_CHAR)
       when Hackers::Missions::FINISHED
-        status = "\e[32m\u2691\e[0m"
+        status = ColorTerm.green(FLAGON_CHAR)
       when Hackers::Missions::REJECTED
-        status = "\e[31m\u2691\e[0m"
+        status = ColorTerm.red(FLAGON_CHAR)
       end
 
-      @shell.puts(
-        format(
-          '  %-1s %-7d %-7d %-8d %-20s %s',
+      items << [
           status,
           mission.id,
           mission.money,
           mission.bitcoins,
           mission.datetime,
           mission_type.name
-        )
-      )
+      ]
     end
+
+    table = Printer::Table.new(
+      'Missions log',
+      ['', 'ID', 'Money', 'Bitcoins', 'Datetime', 'Name'],
+      items
+    )
+    @shell.puts(table)
   end
 end

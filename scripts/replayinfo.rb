@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 class Replayinfo < Sandbox::Script
+  SUCCESS_CHAR = "\u25b2"
+  FAIL_CHAR = "\u25b3"
+
   def main
     if @args[0].nil?
       @logger.log("Specify replay ID")
@@ -23,10 +26,10 @@ class Replayinfo < Sandbox::Script
     @shell.puts("Replay info: #{id}")
     @shell.puts(" %-15s %s" % ["Datetime", info["datetime"]])
     @shell.puts(" %-15s %s%s%s" % [
-      "Success",
-      info["success"] & Hackers::Game::SUCCESS_CORE == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-      info["success"] & Hackers::Game::SUCCESS_RESOURCES == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
-      info["success"] & Hackers::Game::SUCCESS_CONTROL == 0 ? "\u25b3" : "\e[32m\u25b2\e[0m",
+      'Success',
+      (info['success'] & Hackers::Network::SUCCESS_CORE).zero? ? FAIL_CHAR : ColorTerm.green(SUCCESS_CHAR),
+      (info['success'] & Hackers::Network::SUCCESS_RESOURCES).zero? ? FAIL_CHAR : ColorTerm.green(SUCCESS_CHAR),
+      (info['success'] & Hackers::Network::SUCCESS_CONTROL).zero? ? FAIL_CHAR : ColorTerm.green(SUCCESS_CHAR)
     ])
     @shell.puts(" %-15s %+d" % ["Rank", info["rank"]])
     @shell.puts(" %-15s %d" % ["Money", info["money"]])

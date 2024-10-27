@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'cli/colorterm'
 require 'cli/sandbox'
 require 'cli/printer'
 require 'cli/misc'

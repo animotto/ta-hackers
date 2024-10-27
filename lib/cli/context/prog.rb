@@ -19,35 +19,27 @@ CONTEXT_PROG.add_command(
   player = GAME.player
   programs = player.programs
 
-  shell.puts("\e[1;35m\u2022 Programs\e[0m")
-  shell.puts(
-    format(
-      "  \e[35m%-12s %-12s %-4s %-6s %-5s %-12s\e[0m",
-      'ID',
-      'Name',
-      'Type',
-      'Amount',
-      'Level',
-      'Timer'
-    )
-  )
-
+  items = []
   programs.each do |program|
     timer = String.new
     timer = Hackers::Utils.timer_dhms(program.timer * -1) if program.timer.negative?
 
-    shell.puts(
-      format(
-        '  %-12d %-12s %-4d %-6d %-5d %-12s',
-        program.id,
-        GAME.program_types.get(program.type).name,
-        program.type,
-        program.amount,
-        program.level,
-        timer
-      )
-    )
+    items << [
+      program.id,
+      GAME.program_types.get(program.type).name,
+      program.type,
+      program.amount,
+      program.level,
+      timer
+    ]
   end
+
+  table = Printer::Table.new(
+    'Programs',
+    ['ID', 'Name', 'Type', 'Amount', 'Level', 'Timer'],
+    items
+  )
+  shell.puts(table)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
@@ -70,37 +62,35 @@ CONTEXT_PROG.add_command(
   programs = player.programs
   queue = player.queue
 
-  shell.puts("\e[1;35m\u2022 Programs queue\e[0m")
-  shell.puts(
-    format(
-      "  \e[35m%-12s %-4s %-6s %-5s\e[0m",
-      'Name',
-      'Type',
-      'Amount',
-      'Timer'
-    )
-  )
-
+  items = []
   total = 0
   queue.each do |item|
     program = programs.detect { |p| p.type == item.type }
     program_type = GAME.program_types.get(item.type)
     compile = program_type.compilation_time(program.level)
     total += item.amount * compile - item.timer
-    shell.puts(
-      format(
-        '  %-12s %-4d %-6d %-5d',
-        program_type.name,
-        item.type,
-        item.amount,
-        compile - item.timer
-      )
-    )
+    items << [
+      program_type.name,
+      item.type,
+      item.amount,
+      compile - item.timer
+    ]
   end
 
+  table = Printer::Table.new(
+    'Programs queue',
+    ['Name', 'Type', 'Amount', 'Timer'],
+    items
+  )
+  shell.puts(table)
+
   shell.puts
-  shell.puts("  \e[35mSequence: #{queue.sequence}\e[0m")
-  shell.puts("  \e[35mTotal: #{Hackers::Utils.timer_dhms(total)}\e[0m") unless total.zero?
+  list = Printer::List.new(
+    'Queue info',
+    ['Sequence', 'Total'],
+    [queue.sequence, Hackers::Utils.timer_dhms(total)]
+  )
+  shell.puts(list)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end
@@ -225,34 +215,26 @@ CONTEXT_PROG.add_command(
   programs.update
   LOGGER.log(msg)
 
-  shell.puts("\e[1;35m\u2022 Programs\e[0m")
-  shell.puts(
-    format(
-      "  \e[35m%-12s %-12s %-4s %-6s %-5s %-12s\e[0m",
-      'ID',
-      'Name',
-      'Type',
-      'Amount',
-      'Level',
-      'Timer'
-    )
-  )
-
+  items = []
   programs.each do |program|
     timer = String.new
     timer = Hackers::Utils.timer_dhms(program.timer * -1) if program.timer.negative?
 
-    shell.puts(
-      format(
-        '  %-12d %-12s %-4d %-6d %-5d %-12s',
-        program.id,
-        GAME.program_types.get(program.type).name,
-        program.type,
-        program.amount,
-        program.level,
-        timer
-      )
-    )
+    items << [
+      program.id,
+      GAME.program_types.get(program.type).name,
+      program.type,
+      program.amount,
+      program.level,
+      timer
+    ]
+
+  table = Printer::Table.new(
+    'Programs',
+    ['ID', 'Name', 'Type', 'Amount', 'Level', 'Timer'],
+    items
+  )
+  shell.puts(table)
   end
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
@@ -286,37 +268,35 @@ CONTEXT_PROG.add_command(
   queue.sync
   LOGGER.log(msg)
 
-  shell.puts("\e[1;35m\u2022 Programs queue\e[0m")
-  shell.puts(
-    format(
-      "  \e[35m%-12s %-4s %-6s %-5s\e[0m",
-      'Name',
-      'Type',
-      'Amount',
-      'Timer'
-    )
-  )
-
+  items = []
   total = 0
   queue.each do |item|
     program = programs.detect { |p| p.type == item.type }
     program_type = GAME.program_types.get(item.type)
     compile = program_type.compilation_time(program.level)
     total += item.amount * compile - item.timer
-    shell.puts(
-      format(
-        '  %-12s %-4d %-6d %-5d',
-        program_type.name,
-        item.type,
-        item.amount,
-        compile - item.timer
-      )
-    )
+    items << [
+      program_type.name,
+      item.type,
+      item.amount,
+      compile - item.timer
+    ]
   end
 
+  table = Printer::Table.new(
+    'Programs queue',
+    ['Name', 'Type', 'Amount', 'Timer'],
+    items
+  )
+  shell.puts(table)
+
   shell.puts
-  shell.puts("  \e[35mSequence: #{queue.sequence}\e[0m")
-  shell.puts("  \e[35mTotal: #{Hackers::Utils.timer_dhms(total)}\e[0m") unless total.zero?
+  list = Printer::List.new(
+    'Queue info',
+    ['Sequence', 'Total'],
+    [queue.sequence, Hackers::Utils.timer_dhms(total)]
+  )
+  shell.puts(list)
 rescue Hackers::RequestError => e
   LOGGER.error("#{msg} (#{e})")
 end

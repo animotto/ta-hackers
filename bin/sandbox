@@ -119,17 +119,20 @@ GAME.countries_list.raw_data = File.read(File.join(DATA_DIR, COUNTRIES_FILE))
 GAME.countries_list.load
 
 SHELL = Sandbox::Shell.new(
-  prompt: " \e[1;35m\u25b8\e[0m ",
+  prompt: ColorTerm.magenta.bold(" \u25b8 "),
   banner: BANNER
 )
 
 LOGGER = Sandbox::Logger.new(SHELL)
-LOGGER.logPrefix = "\e[1;32m\u2714\e[22;32m "
-LOGGER.logSuffix = "\e[0m"
-LOGGER.errorPrefix = "\e[1;31m\u2718\e[22;31m "
-LOGGER.errorSuffix = "\e[0m"
-LOGGER.infoPrefix = "\e[1;37m\u2759\e[22;37m "
-LOGGER.infoSuffix = "\e[0m"
+LOGGER.log_prefix = "\u2714 "
+LOGGER.log_prefix_cterm = ColorTerm.green.bold
+LOGGER.log_cterm = ColorTerm.green
+LOGGER.error_prefix = "\u2718 "
+LOGGER.error_prefix_cterm = ColorTerm.red.bold
+LOGGER.error_cterm = ColorTerm.red
+LOGGER.info_prefix = "\u2759 "
+LOGGER.info_prefix_cterm = ColorTerm.white.bold
+LOGGER.info_cterm = ColorTerm.white
 
 require 'cli'
 
