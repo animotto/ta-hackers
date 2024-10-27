@@ -29,7 +29,8 @@ module Hackers
       salt: SALT,
       version: VERSION,
       language: LANGUAGE,
-      platform: PLATFORM
+      platform: PLATFORM,
+      compression: true
     )
       @host = host
       @port = port
@@ -39,8 +40,9 @@ module Hackers
       @version = version
       @language = language
       @platform = platform
+      @compression = compression
 
-      @client = Client.new(@host, @port, @ssl, @path, @salt)
+      @client = Client.new(@host, @port, @ssl, @path, @salt, @compression)
     end
 
     ##

@@ -26,6 +26,7 @@ module Hackers
       api_config[:version] = @config['version'] if @config.key?('version')
       api_config[:language] = @config['language'] if @config.key?('language')
       api_config[:platform] = @config['platform'] if @config.key?('platform')
+      api_config[:compression] = @config['compression'] if @config.key?('compression')
 
       @api = API.new(**api_config)
       @api.id = @config['id']

@@ -13,15 +13,25 @@ module Hackers
     HEADERS = {
       'Content-Type' => 'application/x-www-form-urlencoded',
       'Accept-Charset' => 'utf-8',
-      'Accept-Encoding' => 'gzip, identity',
+      'Accept-Encoding' => '',
       'User-Agent' => 'BestHTTP/2 v2.2.0'
     }.freeze
 
+    ENCODING_GZIP = 'gzip'
+    ENCODING_IDENTITY = 'identity'
+
     ##
     # Creates a new client
-    def initialize(host, port, ssl, path, salt, amount = 5)
+    def initialize(host, port, ssl, path, salt, compression = true, amount = 5)
       @path = path
       @salt = salt
+      @compression = compression
+
+      @headers = HEADERS.dup
+      accept_encoding = [ENCODING_IDENTITY]
+      accept_encoding.unshift(ENCODING_GZIP) if @compression
+      @headers['Accept-Encoding'] = accept_encoding.join(', ')
+
       @clients = {}
       amount.times do
         client = Net::HTTP.new(host, port.to_i)
@@ -60,7 +70,7 @@ module Hackers
       response = nil
       mutex.synchronize do
         client.start unless client.started?
-        response = data.empty? ? client.get(uri, HEADERS) : client.post(uri, URI.encode_www_form(data), HEADERS)
+        response = data.empty? ? client.get(uri, @headers) : client.post(uri, URI.encode_www_form(data), @headers)
       rescue StandardError => e
         raise RequestError.new(e.class.to_s, e.message)
       end
